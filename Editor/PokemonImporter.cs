@@ -8,10 +8,11 @@ using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
 using UnityEditor;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace P3DS2U.Editor
 {
-    public class PokemonImporter : MonoBehaviour
+    public class PokemonImporter : EditorWindow
     {
         private static readonly int BaseMap = Shader.PropertyToID ("_BaseMap");
         private static readonly int NormalMap = Shader.PropertyToID ("_NormalMap");
@@ -20,27 +21,68 @@ namespace P3DS2U.Editor
         private static readonly int NormalMapTiling = Shader.PropertyToID ("_NormalMapTiling");
         private static readonly int OcclusionMapTiling = Shader.PropertyToID ("_OcclusionMapTiling");
 
+        private const string ImportPath = "Assets/Bin3DS/";
+        private const string ExportPath = "Assets/Exported/";
+
+        private static int _processedCount;
+
         [MenuItem ("3DStoUnity/Import Pokemon (Bin)")]
-        private static void TestImportRaw ()
+        private static void StartImportingBinaries ()
         {
-            var h3DScene = new H3D ();
-
-            // var fileNames = new []{"Assets/Raw/Textures/0195 - Flareon.bin","Assets/Raw/Models/0195 - Flareon.bin"};
-            var fileNames = new[] {"Assets/Raw/Textures/0008 - Charizard.bin", "Assets/Raw/Models/0008 - Charizard.bin"};
-            foreach (var fileName in fileNames) {
-                H3DDict<H3DBone> skeleton = null;
-
-                if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
-
-                var data = FormatIdentifier.IdentifyAndOpen (fileName, skeleton);
-
-                if (data != null) h3DScene.Merge (data);
+            if (!Directory.Exists (ImportPath)) {
+                Directory.CreateDirectory (ImportPath);
+                EditorUtility.DisplayDialog ("Created Folder " + ImportPath,
+                    "Created Folder" + ImportPath +" \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
+                    "ok");
+                return;
             }
 
-            GenerateTextureFiles (h3DScene);
-            var meshDict = GenerateMeshInUnityScene (h3DScene);
-            var matDict = GenerateMaterialFiles (h3DScene);
-            AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
+            var allFiles = DirectoryUtils.GetAllFilesRecursive ("Assets/Bin3DS/");
+            var scenesDict = new Dictionary<string, List<string>> ();
+            foreach (var singleFile in allFiles) {
+                var trimmedName = Path.GetFileName (singleFile);
+                if (!scenesDict.ContainsKey (trimmedName)) {
+                    scenesDict.Add(trimmedName, new List<string> {singleFile});
+                } else {
+                    scenesDict[trimmedName].Add (singleFile);
+                }
+            }
+
+            _processedCount = 0;
+            foreach (var kvp in scenesDict) {
+                EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
+                    (float) _processedCount / scenesDict.Count);
+
+                var h3DScene = new H3D ();
+                
+                foreach (var singleFileToBeMerged in kvp.Value) {
+                    H3DDict<H3DBone> skeleton = null;
+                    if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
+                    var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
+                    if (data != null) h3DScene.Merge (data);
+                }
+
+                var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin","/Files/");
+                if (!Directory.Exists (combinedExportFolder)) {
+                    Directory.CreateDirectory (combinedExportFolder);
+                }
+                GenerateTextureFiles (h3DScene, combinedExportFolder);
+                var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
+                var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
+                AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
+
+                var go = GameObject.Find ("GeneratedUnityObject");
+                go.name = kvp.Key.Replace (".bin", "");
+                var prefabPath = AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name +"/" + go.name + ".prefab");
+                PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
+                
+                go.transform.localPosition = new Vector3 {
+                    x = Random.Range (-500f, 500f),
+                    y = 0,
+                    z = Random.Range (-500f, 500f)
+                };
+            }
+            EditorUtility.ClearProgressBar();
         }
 
         private static void AddMaterialsToGeneratedMeshes (IReadOnlyDictionary<string, SkinnedMeshRenderer> meshDict,
@@ -58,7 +100,7 @@ namespace P3DS2U.Editor
             AssetDatabase.Refresh ();
         }
 
-        private static void GenerateTextureFiles (H3D h3DScene)
+        private static void GenerateTextureFiles (H3D h3DScene, string exportPath)
         {
             //Get raw texture data from Scene
             var textureDict = new Dictionary<string, Texture2D> ();
@@ -85,12 +127,12 @@ namespace P3DS2U.Editor
             }
 
             foreach (var kvp in textureDict)
-                File.WriteAllBytes ("Assets/Raw/test/" + kvp.Key + ".png", kvp.Value.EncodeToPNG ());
+                File.WriteAllBytes (exportPath + kvp.Key + ".png", kvp.Value.EncodeToPNG ());
 
             AssetDatabase.Refresh ();
         }
 
-        private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene)
+        private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath)
         {
             var textureDict = new Dictionary<string, TextureUtils.H3DTextureRepresentation> ();
             foreach (var h3DMaterial in h3DScene.Models[0].Materials) {
@@ -110,12 +152,12 @@ namespace P3DS2U.Editor
                 }
             }
 
-            var PATH = "Assets/Raw/test/";
+            
             var matDict = new Dictionary<string, Material> ();
             foreach (var h3dMaterial in h3DScene.Models[0].Materials) {
                 var newMaterial = new Material (Shader.Find ("Shader Graphs/LitPokemonShader"));
 
-                var mainTexturePath = PATH + h3dMaterial.Texture0Name + ".png";
+                var mainTexturePath = exportPath + h3dMaterial.Texture0Name + ".png";
                 var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
                 if (mainTexture != null) {
                     var mainTextureRepresentation = textureDict[h3dMaterial.Texture0Name];
@@ -135,7 +177,7 @@ namespace P3DS2U.Editor
                     newMaterial.mainTexture = mainTexture;
                 }
 
-                var normalMapPath = PATH + h3dMaterial.Texture2Name + ".png";
+                var normalMapPath = exportPath + h3dMaterial.Texture2Name + ".png";
                 var normalTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (normalMapPath, typeof(Texture2D));
                 if (normalTexture != null) {
                     var normalTextureRepresentation = textureDict[h3dMaterial.Texture2Name];
@@ -155,7 +197,7 @@ namespace P3DS2U.Editor
                     newMaterial.SetTexture (NormalMap, normalTexture);
                 }
 
-                var occlusionMapPath = PATH + h3dMaterial.Texture1Name + ".png";
+                var occlusionMapPath = exportPath + h3dMaterial.Texture1Name + ".png";
                 var occlusionTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (occlusionMapPath, typeof(Texture2D));
                 if (occlusionTexture != null) {
                     var occlusionMapRepresentation = textureDict[h3dMaterial.Texture2Name];
@@ -174,7 +216,7 @@ namespace P3DS2U.Editor
                     newMaterial.SetTexture (OcclusionMap, occlusionTexture);
                 }
 
-                AssetDatabase.CreateAsset (newMaterial, PATH + h3dMaterial.Name + ".mat");
+                AssetDatabase.CreateAsset (newMaterial, exportPath + h3dMaterial.Name + ".mat");
                 matDict.Add (h3dMaterial.Name, newMaterial);
             }
 
@@ -183,20 +225,17 @@ namespace P3DS2U.Editor
         }
 
 
-        private static Dictionary<string, SkinnedMeshRenderer> GenerateMeshInUnityScene (H3D h3DScene)
+        private static Dictionary<string, SkinnedMeshRenderer> GenerateMeshInUnityScene (H3D h3DScene, string exportPath)
         {
             var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
-            //To be removed after testing
-            var toBeDestroyed = GameObject.Find ("Test");
+            var toBeDestroyed = GameObject.Find ("GeneratedUnityObject");
             if (toBeDestroyed != null) DestroyImmediate (toBeDestroyed);
 
             var h3DModel = h3DScene.Models[0];
 
             var emptyGo = new GameObject ("EmptyGo");
-            var sceneGo = new GameObject ("Test");
-
-            var whiteMat = AssetDatabase.LoadAssetAtPath<Material> ("Assets/Scripts/RawImportScripts/TestMat.mat");
-
+            var sceneGo = new GameObject ("GeneratedUnityObject");
+            
             var skeletonRoot = SkeletonUtils.GenerateSkeletonForModel (h3DModel);
             if (skeletonRoot == null) {
                 //Skeleton not present in model
@@ -295,7 +334,6 @@ namespace P3DS2U.Editor
 
                     var meshRenderer = modelGo.AddComponent<SkinnedMeshRenderer> ();
                     meshRenderer.quality = SkinQuality.Bone4;
-                    meshRenderer.material = whiteMat;
                     meshRenderer.sharedMesh = mesh;
                     var bonesTransform = sceneGo.transform.GetChild (0).GetComponentsInChildren<Transform> ();
                     meshRenderer.rootBone = bonesTransform[0];
@@ -305,7 +343,7 @@ namespace P3DS2U.Editor
                         .Select (t => t.worldToLocalMatrix * bonesTransform[0].localToWorldMatrix).ToArray ();
 
                     meshFilter.sharedMesh = mesh;
-                    SaveMeshAtPath (mesh, "Assets/Raw/test/" + subMeshName + ".asset");
+                    SaveMeshAtPath (mesh, exportPath + subMeshName + ".asset");
                     meshDict.Add (subMeshName, meshRenderer);
                 }
             }

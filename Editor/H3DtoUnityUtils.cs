@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using P3DS2U.Editor.SPICA.Commands;
 using P3DS2U.Editor.SPICA.Converters;
@@ -9,6 +10,27 @@ using UnityEngine;
 
 namespace P3DS2U.Editor
 {
+    public static class DirectoryUtils
+    {
+        public static IEnumerable<string> GetAllFilesRecursive(string path, bool includeMetaFiles = false)
+        {
+            var retVal = new List<string> ();
+            try
+            {
+                foreach (var d in Directory.GetDirectories(path)) {
+                    retVal.AddRange (Directory.GetFiles (d).Where (f => includeMetaFiles || !f.Contains (".meta")));
+                    GetAllFilesRecursive(d);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError (e.Message);
+            }
+            return retVal;
+        }
+    }
+
+    
     public static class H3DMaterialExtensions
     {
         public static int GetTextureIndex (this H3DMaterial h3DMaterial, string name)
