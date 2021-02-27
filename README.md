@@ -3,8 +3,14 @@ ChangeLog:
 - v1.1: sample toon shader, asset creation
 - v1: basic skeleton, model, texture generation
 
+![2021-02-27 22_43_19-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/109395153-e4543300-7950-11eb-8351-e42af713c374.png)
+![2021-02-27 23_07_57-PokeUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 8f1 Personal](https://user-images.githubusercontent.com/3764951/109395156-e918e700-7950-11eb-83c9-4923417450f1.png)
+
+
 Usage:
 -
+![2021-02-27 22_53_24-Pokemon3DStoUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 18f1](https://user-images.githubusercontent.com/3764951/109395128-c8509180-7950-11eb-8b5b-2243dcf1f899.png)
+
 - From the top bar click 3DStoUnity and hit import
 - Place your 3DS files in `Assets/Bin3DS` that would've been created
 - Hit import again
