@@ -24,7 +24,7 @@ namespace P3DS2U.Editor
         private static void TestImportRaw ()
         {
             var h3DScene = new H3D ();
-
+   
             // var fileNames = new []{"Assets/Raw/Textures/0195 - Flareon.bin","Assets/Raw/Models/0195 - Flareon.bin"};
             var fileNames = new[] {"Assets/Raw/Textures/0008 - Charizard.bin", "Assets/Raw/Models/0008 - Charizard.bin"};
             foreach (var fileName in fileNames) {
