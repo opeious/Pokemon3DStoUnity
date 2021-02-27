@@ -1,9 +1,8 @@
 ﻿using System.IO;
-using SPICA.Formats.Common;
-using SPICA.PICA;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.PICA;
 
-namespace SPICA.Formats.GFL2.Model
+namespace P3DS2U.Editor.SPICA.GFL2.Model
 {
     public class GFLUT : INamed
     {

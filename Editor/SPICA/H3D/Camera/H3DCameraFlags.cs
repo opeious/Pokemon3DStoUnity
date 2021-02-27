@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SPICA.Formats.CtrH3D.Camera
+namespace P3DS2U.Editor.SPICA.H3D.Camera
 {
     [Flags]
     public enum H3DCameraFlags : byte

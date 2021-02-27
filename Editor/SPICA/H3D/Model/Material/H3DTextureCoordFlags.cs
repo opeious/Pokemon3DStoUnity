@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SPICA.Formats.CtrH3D.Model.Material
+namespace P3DS2U.Editor.SPICA.H3D.Model.Material
 {
     [Flags]
     public enum H3DTextureCoordFlags : byte

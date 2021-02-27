@@ -2,7 +2,7 @@
 using System.Numerics;
 using System.Xml.Serialization;
 
-namespace SPICA.Formats.Generic.COLLADA
+namespace P3DS2U.Editor.SPICA.COLLADA
 {
     public class DAENode
     {

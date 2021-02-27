@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using SPICA.Formats.CtrH3D.Animation;
+using P3DS2U.Editor.SPICA.H3D.Animation;
 
-namespace SPICA.Formats.GFL2.Motion
+namespace P3DS2U.Editor.SPICA.GFL2.Motion
 {
     public class GFVisibilityMot
     {

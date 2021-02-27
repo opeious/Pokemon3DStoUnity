@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
-using SPICA.Formats.CtrH3D.Model.Material;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.H3D.Model.Material;
 
-namespace SPICA.Formats.Generic.COLLADA
+namespace P3DS2U.Editor.SPICA.COLLADA
 {
     public class DAEEffect
     {

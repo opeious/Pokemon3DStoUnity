@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.LUT;
-using SPICA.Formats.GFL2.Model;
-using SPICA.Formats.GFL2.Shader;
-using SPICA.Formats.GFL2.Texture;
+using P3DS2U.Editor.SPICA.GFL2.Model;
+using P3DS2U.Editor.SPICA.GFL2.Shader;
+using P3DS2U.Editor.SPICA.GFL2.Texture;
+using P3DS2U.Editor.SPICA.H3D.LUT;
 
-namespace SPICA.Formats.GFL2
+namespace P3DS2U.Editor.SPICA.GFL2
 {
     public class GFModelPack
     {
@@ -67,9 +66,9 @@ namespace SPICA.Formats.GFL2
             }
         }
 
-        public H3D ToH3D ()
+        public H3D.H3D ToH3D ()
         {
-            var Output = new H3D ();
+            var Output = new H3D.H3D ();
 
             var L = new H3DLUT ();
 

@@ -5,15 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Xml.Serialization;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.Animation;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.CtrH3D.Model.Mesh;
-using SPICA.Math3D;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.H3D.Animation;
+using P3DS2U.Editor.SPICA.H3D.Model;
+using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.Generic.COLLADA
+namespace P3DS2U.Editor.SPICA.COLLADA
 {
     [XmlRoot ("COLLADA", Namespace = "http://www.collada.org/2005/11/COLLADASchema")]
     public class DAE
@@ -35,7 +33,7 @@ namespace SPICA.Formats.Generic.COLLADA
         {
         }
 
-        public DAE (H3D Scene, int MdlIndex, int AnimIndex = -1)
+        public DAE (H3D.H3D Scene, int MdlIndex, int AnimIndex = -1)
         {
             if (MdlIndex != -1) {
                 library_visual_scenes = new List<DAEVisualScene> ();

@@ -1,4 +1,4 @@
-﻿namespace SPICA.PICA.Commands
+﻿namespace P3DS2U.Editor.SPICA.Commands
 {
     public enum PICATextureCombinerColorOp
     {

@@ -1,8 +1,7 @@
 ﻿using System.Numerics;
-using SPICA.Formats.Common;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.CtrH3D.Model.Material
+namespace P3DS2U.Editor.SPICA.H3D.Model.Material
 {
     public struct H3DTextureCoord
     {

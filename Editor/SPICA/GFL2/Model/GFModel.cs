@@ -4,17 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.CtrH3D.Model.Material;
-using SPICA.Formats.CtrH3D.Model.Mesh;
-using SPICA.Formats.GFL2.Model.Material;
-using SPICA.Formats.GFL2.Model.Mesh;
-using SPICA.Math3D;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.GFL2.Model.Material;
+using P3DS2U.Editor.SPICA.GFL2.Model.Mesh;
+using P3DS2U.Editor.SPICA.H3D;
+using P3DS2U.Editor.SPICA.H3D.Model;
+using P3DS2U.Editor.SPICA.H3D.Model.Material;
+using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.GFL2.Model
+namespace P3DS2U.Editor.SPICA.GFL2.Model
 {
     public class GFModel
     {

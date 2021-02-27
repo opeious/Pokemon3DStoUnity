@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SPICA.PICA.Converters
+namespace P3DS2U.Editor.SPICA.Converters
 {
     public struct BoneIndices
     {

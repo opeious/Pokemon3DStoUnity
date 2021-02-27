@@ -1,4 +1,4 @@
-﻿namespace SPICA.Formats.GFL2.Model.Material
+﻿namespace P3DS2U.Editor.SPICA.GFL2.Model.Material
 {
     public enum GFMinFilter : uint
     {

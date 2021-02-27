@@ -1,7 +1,6 @@
 ﻿using System.IO;
-using SPICA.Formats.Common;
 
-namespace SPICA.Formats.GFL2
+namespace P3DS2U.Editor.SPICA.GFL2
 {
     internal class GFSection
     {

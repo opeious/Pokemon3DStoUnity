@@ -1,20 +1,19 @@
 ﻿using System.IO;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D.Animation;
-using SPICA.Formats.CtrH3D.Camera;
-using SPICA.Formats.CtrH3D.Fog;
-using SPICA.Formats.CtrH3D.Light;
-using SPICA.Formats.CtrH3D.LUT;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.CtrH3D.Model.Material;
-using SPICA.Formats.CtrH3D.Scene;
-using SPICA.Formats.CtrH3D.Shader;
-using SPICA.Formats.CtrH3D.Texture;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
-using SPICA.Serialization.Serializer;
+using P3DS2U.Editor.SPICA.H3D.Animation;
+using P3DS2U.Editor.SPICA.H3D.Camera;
+using P3DS2U.Editor.SPICA.H3D.Fog;
+using P3DS2U.Editor.SPICA.H3D.Light;
+using P3DS2U.Editor.SPICA.H3D.LUT;
+using P3DS2U.Editor.SPICA.H3D.Model;
+using P3DS2U.Editor.SPICA.H3D.Model.Material;
+using P3DS2U.Editor.SPICA.H3D.Scene;
+using P3DS2U.Editor.SPICA.H3D.Shader;
+using P3DS2U.Editor.SPICA.H3D.Texture;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Serialization.Serializer;
 
-namespace SPICA.Formats.CtrH3D
+namespace P3DS2U.Editor.SPICA.H3D
 {
     internal enum H3DSectionId
     {

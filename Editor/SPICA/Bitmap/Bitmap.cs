@@ -1,27 +1,30 @@
 ﻿using System;
 
-public class Bitmap : IDisposable
+namespace P3DS2U.Editor.SPICA.Bitmap
 {
-    public PixelFormat PixelFormat;
-    public int Width, Height;
-
-    public Bitmap (string fileName)
+    public class Bitmap : IDisposable
     {
-    }
+        public PixelFormat PixelFormat;
+        public int Width, Height;
 
-    public Bitmap (Bitmap bmp)
-    {
-    }
+        public Bitmap (string fileName)
+        {
+        }
 
-    public Bitmap (Bitmap bmp, int width, int height)
-    {
-    }
+        public Bitmap (Bitmap bmp)
+        {
+        }
 
-    public Bitmap (int width, int height, PixelFormat format32BppArgb)
-    {
-    }
+        public Bitmap (Bitmap bmp, int width, int height)
+        {
+        }
 
-    public void Dispose ()
-    {
+        public Bitmap (int width, int height, PixelFormat format32BppArgb)
+        {
+        }
+
+        public void Dispose ()
+        {
+        }
     }
 }

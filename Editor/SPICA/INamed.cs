@@ -1,4 +1,4 @@
-﻿namespace SPICA.Formats.Common
+﻿namespace P3DS2U.Editor.SPICA
 {
     public interface INamed
     {

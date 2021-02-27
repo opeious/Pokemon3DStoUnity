@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace SPICA.Formats.CtrH3D.Light
+namespace P3DS2U.Editor.SPICA.H3D.Light
 {
     public class H3DVertexLight
     {

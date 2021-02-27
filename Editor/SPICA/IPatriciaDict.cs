@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 
-namespace SPICA.Formats.Common
+namespace P3DS2U.Editor.SPICA
 {
     public interface IPatriciaDict<T> : INotifyCollectionChanged, ICollection<T>, INameIndexed
     {

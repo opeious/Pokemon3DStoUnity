@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 
-namespace SPICA.Serialization.Serializer
+namespace P3DS2U.Editor.SPICA.Serialization.Serializer
 {
     internal class RefValue
     {

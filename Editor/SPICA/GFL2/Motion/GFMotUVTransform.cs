@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 
-namespace SPICA.Formats.GFL2.Motion
+namespace P3DS2U.Editor.SPICA.GFL2.Motion
 {
     public class GFMotUVTransform
     {

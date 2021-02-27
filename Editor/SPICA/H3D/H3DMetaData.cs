@@ -1,9 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using SPICA.Formats.Common;
 
-namespace SPICA.Formats.CtrH3D
+namespace P3DS2U.Editor.SPICA.H3D
 {
     public class H3DMetaData : IPatriciaDict<H3DMetaDataValue>
     {

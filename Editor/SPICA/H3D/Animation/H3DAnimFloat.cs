@@ -1,7 +1,7 @@
-﻿using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
+﻿using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
-namespace SPICA.Formats.CtrH3D.Animation
+namespace P3DS2U.Editor.SPICA.H3D.Animation
 {
     public class H3DAnimFloat : ICustomSerialization
     {

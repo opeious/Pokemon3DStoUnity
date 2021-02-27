@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SPICA.Formats.Common;
-using SPICA.Math3D;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
-namespace SPICA.Formats.CtrH3D.Animation
+namespace P3DS2U.Editor.SPICA.H3D.Animation
 {
     public class H3DFloatKeyFrameGroup : H3DAnimationCurve, ICustomSerialization
     {

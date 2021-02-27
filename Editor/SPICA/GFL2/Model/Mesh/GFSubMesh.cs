@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
 
-namespace SPICA.Formats.GFL2.Model.Mesh
+namespace P3DS2U.Editor.SPICA.GFL2.Model.Mesh
 {
     public class GFSubMesh
     {

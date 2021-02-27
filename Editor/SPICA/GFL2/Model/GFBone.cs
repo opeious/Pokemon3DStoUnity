@@ -1,9 +1,8 @@
 ﻿using System.IO;
 using System.Numerics;
-using SPICA.Formats.Common;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.GFL2.Model
+namespace P3DS2U.Editor.SPICA.GFL2.Model
 {
     public struct GFBone
     {

@@ -2,17 +2,15 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using ExtensionMethods;
 using JetBrains.Annotations;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.CtrH3D.Model.Mesh;
-using SPICA.WinForms.Formats;
+using P3DS2U.Editor.SPICA;
+using P3DS2U.Editor.SPICA.H3D;
+using P3DS2U.Editor.SPICA.H3D.Model;
+using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
 using UnityEditor;
 using UnityEngine;
 
-namespace _3DStoUnity
+namespace P3DS2U.Editor
 {
     public class PokemonImporter : MonoBehaviour
     {

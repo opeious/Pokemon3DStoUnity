@@ -7,10 +7,10 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using SPICA.Math3D;
-using SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
-namespace SPICA.Serialization
+namespace P3DS2U.Editor.SPICA.Serialization
 {
     internal class BinaryDeserializer : BinarySerialization
     {

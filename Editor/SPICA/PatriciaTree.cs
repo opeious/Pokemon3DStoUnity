@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SPICA.Formats.Common
+namespace P3DS2U.Editor.SPICA
 {
     internal static class PatriciaTree
     {

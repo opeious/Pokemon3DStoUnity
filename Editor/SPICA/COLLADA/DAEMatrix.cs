@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using System.Xml.Serialization;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.Generic.COLLADA
+namespace P3DS2U.Editor.SPICA.COLLADA
 {
     public class DAEMatrix
     {

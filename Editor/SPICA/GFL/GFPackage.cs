@@ -1,8 +1,6 @@
 using System.IO;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D;
 
-namespace SPICA.Formats.Packages
+namespace P3DS2U.Editor.SPICA.GFL
 {
     public class GFPackage
     {
@@ -33,9 +31,9 @@ namespace SPICA.Formats.Packages
             }
         }
 
-        public H3D CreateH3DFromContent ()
+        public H3D.H3D CreateH3DFromContent ()
         {
-            var Output = new H3D ();
+            var Output = new H3D.H3D ();
 
             foreach (var File in Files) {
                 if (File.Length < 4) continue;
@@ -44,7 +42,7 @@ namespace SPICA.Formats.Packages
                     File[1] == 'C' &&
                     File[2] == 'H' &&
                     File[3] == '\0')
-                    Output.Merge (H3D.Open (File));
+                    Output.Merge (H3D.H3D.Open (File));
             }
 
             return Output;

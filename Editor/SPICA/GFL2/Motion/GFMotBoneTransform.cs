@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.GFL2.Motion
+namespace P3DS2U.Editor.SPICA.GFL2.Motion
 {
     public class GFMotBoneTransform
     {

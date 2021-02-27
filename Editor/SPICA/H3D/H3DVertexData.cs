@@ -1,10 +1,10 @@
 ﻿using System.IO;
-using SPICA.PICA.Commands;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
-using SPICA.Serialization.Serializer;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Serialization.Serializer;
 
-namespace SPICA.Formats.CtrH3D
+namespace P3DS2U.Editor.SPICA.H3D
 {
     public struct H3DVertexData : ICustomSerialization
     {

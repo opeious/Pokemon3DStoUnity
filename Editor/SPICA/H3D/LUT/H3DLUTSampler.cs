@@ -1,9 +1,8 @@
-﻿using SPICA.Formats.Common;
-using SPICA.PICA;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
+﻿using P3DS2U.Editor.SPICA.PICA;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
-namespace SPICA.Formats.CtrH3D.LUT
+namespace P3DS2U.Editor.SPICA.H3D.LUT
 {
     [Inline]
     public class H3DLUTSampler : ICustomSerialization, INamed

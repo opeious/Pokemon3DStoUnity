@@ -1,14 +1,14 @@
 ﻿using System;
 using System.IO;
-using SPICA.Formats.Common;
-using SPICA.PICA;
-using SPICA.PICA.Commands;
-using SPICA.PICA.Converters;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
-using SPICA.Serialization.Serializer; // using System.Drawing.Imaging;
+using P3DS2U.Editor.SPICA.Bitmap;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.Converters;
+using P3DS2U.Editor.SPICA.PICA;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Serialization.Serializer; // using System.Drawing.Imaging;
 
-namespace SPICA.Formats.CtrH3D.Texture
+namespace P3DS2U.Editor.SPICA.H3D.Texture
 {
     public class H3DTexture : ICustomSerialization, ICustomSerializeCmd, INamed
     {
@@ -36,9 +36,9 @@ namespace SPICA.Formats.CtrH3D.Texture
 
         public H3DTexture (string FileName)
         {
-            var Img = new Bitmap (FileName);
+            var Img = new Bitmap.Bitmap (FileName);
 
-            if (Img.PixelFormat != PixelFormat.Format32bppArgb) Img = new Bitmap (Img);
+            if (Img.PixelFormat != PixelFormat.Format32bppArgb) Img = new Bitmap.Bitmap (Img);
 
             using (Img) {
                 Name = Path.GetFileNameWithoutExtension (FileName);
@@ -49,7 +49,7 @@ namespace SPICA.Formats.CtrH3D.Texture
             }
         }
 
-        public H3DTexture (string Name, Bitmap Img, PICATextureFormat Format = 0)
+        public H3DTexture (string Name, Bitmap.Bitmap Img, PICATextureFormat Format = 0)
         {
             this.Name = Name;
             this.Format = Format;
@@ -208,7 +208,7 @@ namespace SPICA.Formats.CtrH3D.Texture
 
         public string Name { get; set; }
 
-        private void H3DTextureImpl (Bitmap Img)
+        private void H3DTextureImpl (Bitmap.Bitmap Img)
         {
             MipmapSize = 1;
 
@@ -221,7 +221,7 @@ namespace SPICA.Formats.CtrH3D.Texture
                      * 3DS GPU only accepts textures with power of 2 sizes.
                      * If the texture doesn't have a power of 2 size, we need to resize it then.
                      */
-                using (var NewImg = new Bitmap (Img, Width, Height)) {
+                using (var NewImg = new Bitmap.Bitmap (Img, Width, Height)) {
                     RawBufferXPos = TextureConverter.Encode (NewImg, Format);
                 }
             else
@@ -233,7 +233,7 @@ namespace SPICA.Formats.CtrH3D.Texture
             return TextureConverter.DecodeBuffer (BufferFromFace (Face), Width, Height, Format);
         }
 
-        public Bitmap ToBitmap (int Face = 0)
+        public Bitmap.Bitmap ToBitmap (int Face = 0)
         {
             return TextureConverter.DecodeBitmap (BufferFromFace (Face), Width, Height, Format);
         }

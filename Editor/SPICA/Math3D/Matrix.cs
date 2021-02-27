@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Numerics;
 
-namespace SPICA.Math3D
+namespace P3DS2U.Editor.SPICA.Math3D
 {
     internal static class MatrixExtensions
     {

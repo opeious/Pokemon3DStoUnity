@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SPICA.Formats.CtrH3D.Animation
+namespace P3DS2U.Editor.SPICA.H3D.Animation
 {
     public class H3DMaterialAnim : H3DAnimation
     {

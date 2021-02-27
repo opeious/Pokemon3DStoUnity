@@ -1,8 +1,8 @@
 ﻿using System.IO;
-using SPICA.Math3D;
-using SPICA.PICA.Commands; // using SPICA.PICA.Shader;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.Math3D; // using SPICA.PICA.Shader;
 
-namespace SPICA.Formats.GFL2.Shader
+namespace P3DS2U.Editor.SPICA.GFL2.Shader
 {
     public class GFShader
     {

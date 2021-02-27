@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using SPICA.Formats.Common;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
 
-namespace SPICA.PICA
+namespace P3DS2U.Editor.SPICA.PICA
 {
     internal class PICACommandReader
     {

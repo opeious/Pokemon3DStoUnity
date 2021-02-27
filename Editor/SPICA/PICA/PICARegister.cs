@@ -1,4 +1,4 @@
-﻿namespace SPICA.PICA
+﻿namespace P3DS2U.Editor.SPICA.PICA
 {
     internal enum PICARegister
     {

@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Numerics;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D.Texture;
-using SPICA.Math3D;
-using SPICA.PICA;
-using SPICA.PICA.Commands;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
-using SPICA.Serialization.Serializer;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.H3D.Texture;
+using P3DS2U.Editor.SPICA.Math3D;
+using P3DS2U.Editor.SPICA.PICA;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Serialization.Serializer;
 
-namespace SPICA.Formats.CtrH3D.Model.Material
+namespace P3DS2U.Editor.SPICA.H3D.Model.Material
 {
     [Inline]
     public class H3DMaterial : ICustomSerialization, INamed

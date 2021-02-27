@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.CtrH3D.Animation
+namespace P3DS2U.Editor.SPICA.H3D.Animation
 {
     public class H3DAnimMtxTransform : H3DAnimationCurve
     {

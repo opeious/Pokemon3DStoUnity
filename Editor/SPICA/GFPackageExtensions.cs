@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 
-namespace SPICA.WinForms.Formats
+namespace P3DS2U.Editor.SPICA
 {
     internal static class GFPackageExtensions
     {

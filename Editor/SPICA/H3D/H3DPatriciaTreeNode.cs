@@ -1,6 +1,4 @@
-﻿using SPICA.Formats.Common;
-
-namespace SPICA.Formats.CtrH3D
+﻿namespace P3DS2U.Editor.SPICA.H3D
 {
     public struct H3DPatriciaTreeNode : IPatriciaTreeNode
     {

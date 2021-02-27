@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace SPICA.Formats.GFL2.Model
+namespace P3DS2U.Editor.SPICA.GFL2.Model
 {
     public struct GFHashName
     {

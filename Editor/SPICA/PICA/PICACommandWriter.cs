@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace SPICA.PICA
+namespace P3DS2U.Editor.SPICA.PICA
 {
     internal class PICACommandWriter
     {

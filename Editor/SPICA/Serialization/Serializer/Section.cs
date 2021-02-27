@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace SPICA.Serialization.Serializer
+namespace P3DS2U.Editor.SPICA.Serialization.Serializer
 {
     internal class Section
     {

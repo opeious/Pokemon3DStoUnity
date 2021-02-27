@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using SPICA.Formats.GFL2.Motion;
+using P3DS2U.Editor.SPICA.GFL2.Motion;
 
-namespace SPICA.Formats.GFL2
+namespace P3DS2U.Editor.SPICA.GFL2
 {
     public class GFMotionPack : IEnumerable<GFMotion>
     {

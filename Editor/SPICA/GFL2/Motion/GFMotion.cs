@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.Animation;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.GFL2.Model;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.GFL2.Model;
+using P3DS2U.Editor.SPICA.H3D;
+using P3DS2U.Editor.SPICA.H3D.Animation;
+using P3DS2U.Editor.SPICA.H3D.Model;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.GFL2.Motion
+namespace P3DS2U.Editor.SPICA.GFL2.Motion
 {
     public class GFMotion
     {

@@ -1,17 +1,17 @@
 ﻿using System.IO;
 using System.Text;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.GFL2;
-using SPICA.Formats.GFL2.Model;
-using SPICA.Formats.GFL2.Motion;
-using SPICA.Formats.GFL2.Texture;
+using P3DS2U.Editor.SPICA.GFL2;
+using P3DS2U.Editor.SPICA.GFL2.Model;
+using P3DS2U.Editor.SPICA.GFL2.Motion;
+using P3DS2U.Editor.SPICA.GFL2.Texture;
+using P3DS2U.Editor.SPICA.H3D;
+using P3DS2U.Editor.SPICA.H3D.Model;
 
-namespace SPICA.WinForms.Formats
+namespace P3DS2U.Editor.SPICA
 {
     internal static class FormatIdentifier
     {
-        public static H3D IdentifyAndOpen (string FileName, H3DDict<H3DBone> Skeleton = null)
+        public static H3D.H3D IdentifyAndOpen (string FileName, H3DDict<H3DBone> Skeleton = null)
         {
             //Formats that can by identified by extensions
             var FilePath = Path.GetDirectoryName (FileName);
@@ -31,7 +31,7 @@ namespace SPICA.WinForms.Formats
             // }
 
             //Formats that can only be indetified by "magic numbers"
-            H3D Output = null;
+            H3D.H3D Output = null;
 
             using (var FS = new FileStream (FileName, FileMode.Open)) {
                 if (FS.Length > 4) {
@@ -46,7 +46,7 @@ namespace SPICA.WinForms.Formats
                     FS.Seek (0, SeekOrigin.Begin);
 
                     if (Magic.StartsWith ("BCH")) {
-                        return H3D.Open (Reader.ReadBytes ((int) FS.Length));
+                        return H3D.H3D.Open (Reader.ReadBytes ((int) FS.Length));
                     }
 
                     if (Magic.StartsWith ("MOD")) {
@@ -82,14 +82,14 @@ namespace SPICA.WinForms.Formats
                         } else {
                             switch (MagicNum) {
                                 case 0x15122117:
-                                    Output = new H3D ();
+                                    Output = new H3D.H3D ();
 
                                     Output.Models.Add (new GFModel (Reader, "Model").ToH3DModel ());
 
                                     break;
 
                                 case 0x15041213:
-                                    Output = new H3D ();
+                                    Output = new H3D.H3D ();
 
                                     Output.Textures.Add (new GFTexture (Reader).ToH3DTexture ());
 
@@ -100,7 +100,7 @@ namespace SPICA.WinForms.Formats
                                     break;
                                 case 0x00060000:
                                     if (Skeleton != null) {
-                                        Output = new H3D ();
+                                        Output = new H3D.H3D ();
 
                                         var Motion = new GFMotion (Reader, 0);
 

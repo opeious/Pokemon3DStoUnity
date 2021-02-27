@@ -1,9 +1,8 @@
 ﻿using System.IO;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D.Texture;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.H3D.Texture;
 
-namespace SPICA.Formats.GFL2.Texture
+namespace P3DS2U.Editor.SPICA.GFL2.Texture
 {
     public class GFTexture
     {

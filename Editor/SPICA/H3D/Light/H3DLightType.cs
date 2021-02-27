@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SPICA.Formats.CtrH3D.Light
+namespace P3DS2U.Editor.SPICA.H3D.Light
 {
     [Flags]
     public enum H3DLightType : byte

@@ -1,6 +1,4 @@
-﻿using SPICA.Formats.Common;
-
-namespace SPICA.Formats.CtrH3D.Shader
+﻿namespace P3DS2U.Editor.SPICA.H3D.Shader
 {
     public class H3DShader : INamed
     {

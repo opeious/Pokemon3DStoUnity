@@ -1,6 +1,4 @@
-﻿using SPICA.Formats.Common;
-
-namespace SPICA.Formats.CtrH3D.Fog
+﻿namespace P3DS2U.Editor.SPICA.H3D.Fog
 {
     public class H3DFog : INamed
     {

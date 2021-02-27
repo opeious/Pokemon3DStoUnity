@@ -1,9 +1,10 @@
 ﻿using System;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Bitmap;
+using P3DS2U.Editor.SPICA.Commands;
 using UnityEngine; // using System.Drawing;
 // using System.Drawing.Imaging;
 
-namespace SPICA.PICA.Converters
+namespace P3DS2U.Editor.SPICA.Converters
 {
     internal static class TextureConverter
     {
@@ -192,7 +193,7 @@ namespace SPICA.PICA.Converters
                 (Buffer[Address + 1] << 8));
         }
 
-        public static Bitmap DecodeBitmap (byte[] Input, int Width, int Height, PICATextureFormat Format)
+        public static Bitmap.Bitmap DecodeBitmap (byte[] Input, int Width, int Height, PICATextureFormat Format)
         {
             var Buffer = DecodeBuffer (Input, Width, Height, Format);
 
@@ -218,7 +219,7 @@ namespace SPICA.PICA.Converters
             return GetBitmap (Output, Width, Height);
         }
 
-        public static byte[] Encode (Bitmap Img, PICATextureFormat Format)
+        public static byte[] Encode (Bitmap.Bitmap Img, PICATextureFormat Format)
         {
             var Input = GetBuffer (Img);
 
@@ -265,11 +266,11 @@ namespace SPICA.PICA.Converters
             return Length;
         }
 
-        public static Bitmap GetBitmap (byte[] Buffer, int Width, int Height)
+        public static Bitmap.Bitmap GetBitmap (byte[] Buffer, int Width, int Height)
         {
             var Rect = new Rect (0, 0, Width, Height);
 
-            var Img = new Bitmap (Width, Height, PixelFormat.Format32bppArgb);
+            var Img = new Bitmap.Bitmap (Width, Height, PixelFormat.Format32bppArgb);
 
             // BitmapData ImgData = Img.LockBits(Rect, ImageLockMode.WriteOnly, Img.PixelFormat);
 
@@ -280,7 +281,7 @@ namespace SPICA.PICA.Converters
             return Img;
         }
 
-        public static byte[] GetBuffer (Bitmap Img)
+        public static byte[] GetBuffer (Bitmap.Bitmap Img)
         {
             var Rect = new Rect (0, 0, Img.Width, Img.Height);
 

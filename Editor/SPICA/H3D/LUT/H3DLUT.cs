@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using SPICA.Formats.Common;
 
-namespace SPICA.Formats.CtrH3D.LUT
+namespace P3DS2U.Editor.SPICA.H3D.LUT
 {
     public class H3DLUT : INamed
     {

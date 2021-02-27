@@ -1,6 +1,4 @@
-﻿using SPICA.Formats.Common;
-
-namespace SPICA.Formats.CtrH3D.Scene
+﻿namespace P3DS2U.Editor.SPICA.H3D.Scene
 {
     public class H3DScene : INamed
     {

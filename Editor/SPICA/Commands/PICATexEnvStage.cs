@@ -1,6 +1,6 @@
-﻿using SPICA.Math3D;
+﻿using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.PICA.Commands
+namespace P3DS2U.Editor.SPICA.Commands
 {
     public class PICATexEnvStage
     {

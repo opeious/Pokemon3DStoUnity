@@ -1,8 +1,8 @@
-﻿using SPICA.Math3D;
-using SPICA.PICA.Commands;
-using SPICA.Serialization.Attributes;
+﻿using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
-namespace SPICA.Formats.CtrH3D.Model.Material
+namespace P3DS2U.Editor.SPICA.H3D.Model.Material
 {
     public struct H3DTextureMapper
     {

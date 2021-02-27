@@ -1,19 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using SPICA.Formats.Common;
-using SPICA.Formats.CtrH3D.Model.Material;
-using SPICA.PICA;
-using SPICA.PICA.Commands;
-using SPICA.PICA.Converters;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
-using SPICA.Serialization.Serializer;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.Converters;
+using P3DS2U.Editor.SPICA.H3D.Model.Material;
+using P3DS2U.Editor.SPICA.PICA;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Serialization.Serializer;
 using UnityEngine;
 using Vector3 = System.Numerics.Vector3;
 using Vector4 = System.Numerics.Vector4;
 
-namespace SPICA.Formats.CtrH3D.Model.Mesh
+namespace P3DS2U.Editor.SPICA.H3D.Model.Mesh
 {
     [Inline]
     public class H3DMesh : ICustomSerialization, ICustomSerializeCmd

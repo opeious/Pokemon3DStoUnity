@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace SPICA.Formats.CtrH3D.Camera
+namespace P3DS2U.Editor.SPICA.H3D.Camera
 {
     public class H3DCameraViewAim
     {

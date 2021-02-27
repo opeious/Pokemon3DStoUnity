@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace SPICA.Serialization
+namespace P3DS2U.Editor.SPICA.Serialization
 {
     internal class BitReader
     {

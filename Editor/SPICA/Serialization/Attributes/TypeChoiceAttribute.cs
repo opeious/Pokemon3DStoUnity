@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SPICA.Serialization.Attributes
+namespace P3DS2U.Editor.SPICA.Serialization.Attributes
 {
     [AttributeUsage (AttributeTargets.Class | AttributeTargets.Field, AllowMultiple = true)]
     internal class TypeChoiceAttribute : Attribute

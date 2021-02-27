@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using SPICA.Formats.Common;
-using SPICA.Serialization;
-using SPICA.Serialization.Attributes;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
-namespace SPICA.Formats.CtrH3D
+namespace P3DS2U.Editor.SPICA.H3D
 {
     [Inline]
     public class H3DMetaDataValue : INamed

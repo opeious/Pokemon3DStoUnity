@@ -2,12 +2,11 @@
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using SPICA.Formats.Common;
-using SPICA.Math3D;
-using SPICA.PICA;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
+using P3DS2U.Editor.SPICA.Math3D;
+using P3DS2U.Editor.SPICA.PICA;
 
-namespace SPICA.Formats.GFL2.Model.Mesh
+namespace P3DS2U.Editor.SPICA.GFL2.Model.Mesh
 {
     public class GFMesh : INamed
     {

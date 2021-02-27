@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
-using SPICA.Formats.Common;
 using UnityEngine;
 
-namespace SPICA.PICA.Converters
+namespace P3DS2U.Editor.SPICA.Converters
 {
     internal static class TextureCompression
     {

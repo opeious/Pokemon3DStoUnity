@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
-using SPICA.Formats.CtrH3D.Animation;
-using SPICA.Formats.GFL2.Model;
+using P3DS2U.Editor.SPICA.GFL2.Model;
+using P3DS2U.Editor.SPICA.H3D.Animation;
 
-namespace SPICA.Formats.GFL2.Motion
+namespace P3DS2U.Editor.SPICA.GFL2.Motion
 {
     public class GFSkeletonMot
     {

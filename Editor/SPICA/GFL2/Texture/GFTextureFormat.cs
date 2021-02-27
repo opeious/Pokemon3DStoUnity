@@ -1,7 +1,7 @@
 ﻿using System;
-using SPICA.PICA.Commands;
+using P3DS2U.Editor.SPICA.Commands;
 
-namespace SPICA.Formats.GFL2.Texture
+namespace P3DS2U.Editor.SPICA.GFL2.Texture
 {
     public enum GFTextureFormat : ushort
     {

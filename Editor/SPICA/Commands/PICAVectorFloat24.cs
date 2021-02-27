@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
-using SPICA.Formats.Common;
 
-namespace SPICA.PICA.Commands
+namespace P3DS2U.Editor.SPICA.Commands
 {
     public struct PICAVectorFloat24
     {

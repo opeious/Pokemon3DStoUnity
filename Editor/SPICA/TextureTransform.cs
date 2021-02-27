@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Math3D;
 
-namespace SPICA.Formats.Common
+namespace P3DS2U.Editor.SPICA
 {
     internal static class TextureTransform
     {

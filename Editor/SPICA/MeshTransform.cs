@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.CtrH3D.Model.Mesh;
-using SPICA.PICA.Converters;
+using P3DS2U.Editor.SPICA.Converters;
+using P3DS2U.Editor.SPICA.H3D;
+using P3DS2U.Editor.SPICA.H3D.Model;
+using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
 
-namespace SPICA.Formats.Common
+namespace P3DS2U.Editor.SPICA
 {
     internal static class MeshTransform
     {

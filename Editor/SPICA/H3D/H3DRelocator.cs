@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
-using SPICA.Serialization;
-using SPICA.Serialization.Serializer;
+using P3DS2U.Editor.SPICA.Serialization;
+using P3DS2U.Editor.SPICA.Serialization.Serializer;
 
-namespace SPICA.Formats.CtrH3D
+namespace P3DS2U.Editor.SPICA.H3D
 {
     internal class H3DRelocator
     {

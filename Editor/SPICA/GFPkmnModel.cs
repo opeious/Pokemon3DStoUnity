@@ -1,13 +1,13 @@
 ﻿using System.IO;
-using SPICA.Formats.CtrH3D;
-using SPICA.Formats.CtrH3D.Model;
-using SPICA.Formats.GFL2;
-using SPICA.Formats.GFL2.Model;
-using SPICA.Formats.GFL2.Motion;
-using SPICA.Formats.GFL2.Shader;
-using SPICA.Formats.GFL2.Texture;
+using P3DS2U.Editor.SPICA.GFL2;
+using P3DS2U.Editor.SPICA.GFL2.Model;
+using P3DS2U.Editor.SPICA.GFL2.Motion;
+using P3DS2U.Editor.SPICA.GFL2.Shader;
+using P3DS2U.Editor.SPICA.GFL2.Texture;
+using P3DS2U.Editor.SPICA.H3D;
+using P3DS2U.Editor.SPICA.H3D.Model;
 
-namespace SPICA.WinForms.Formats
+namespace P3DS2U.Editor.SPICA
 {
     internal class GFPkmnModel
     {
@@ -17,9 +17,9 @@ namespace SPICA.WinForms.Formats
 
         private const uint BCHConstant = 0x00484342;
 
-        public static H3D OpenAsH3D (Stream Input, GFPackageExtensions.Header Header, H3DDict<H3DBone> Skeleton = null)
+        public static H3D.H3D OpenAsH3D (Stream Input, GFPackageExtensions.Header Header, H3DDict<H3DBone> Skeleton = null)
         {
-            H3D Output = default;
+            H3D.H3D Output = default;
 
             var Reader = new BinaryReader (Input);
 
@@ -70,7 +70,7 @@ namespace SPICA.WinForms.Formats
                     break;
 
                 case GFTextureConstant:
-                    Output = new H3D ();
+                    Output = new H3D.H3D ();
 
                     foreach (var Entry in Header.Entries) {
                         Input.Seek (Entry.Address, SeekOrigin.Begin);
@@ -81,7 +81,7 @@ namespace SPICA.WinForms.Formats
                     break;
 
                 case GFMotionConstant:
-                    Output = new H3D ();
+                    Output = new H3D.H3D ();
 
                     if (Skeleton == null) break;
 
@@ -121,7 +121,7 @@ namespace SPICA.WinForms.Formats
                     break;
 
                 case BCHConstant:
-                    Output = new H3D ();
+                    Output = new H3D.H3D ();
 
                     foreach (var Entry in Header.Entries) {
                         Input.Seek (Entry.Address, SeekOrigin.Begin);
@@ -134,7 +134,7 @@ namespace SPICA.WinForms.Formats
 
                         var Buffer = Reader.ReadBytes (Entry.Length);
 
-                        Output.Merge (H3D.Open (Buffer));
+                        Output.Merge (H3D.H3D.Open (Buffer));
                     }
 
                     break;

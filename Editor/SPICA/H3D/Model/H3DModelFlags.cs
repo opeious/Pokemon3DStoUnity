@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SPICA.Formats.CtrH3D.Model
+namespace P3DS2U.Editor.SPICA.H3D.Model
 {
     [Flags]
     public enum H3DModelFlags : byte

@@ -1,4 +1,4 @@
-﻿namespace SPICA.Formats.CtrH3D
+﻿namespace P3DS2U.Editor.SPICA.H3D
 {
     internal enum H3DSection
     {

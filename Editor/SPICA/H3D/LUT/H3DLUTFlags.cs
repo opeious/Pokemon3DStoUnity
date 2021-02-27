@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SPICA.Formats.CtrH3D.LUT
+namespace P3DS2U.Editor.SPICA.H3D.LUT
 {
     [Flags]
     public enum H3DLUTFlags : byte

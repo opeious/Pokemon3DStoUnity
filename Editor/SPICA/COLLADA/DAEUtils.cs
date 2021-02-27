@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Globalization;
-using SPICA.Math3D;
+using P3DS2U.Editor.SPICA.Math3D;
 using UnityEngine;
 using Vector2 = System.Numerics.Vector2;
 using Vector4 = System.Numerics.Vector4;
 
-namespace SPICA.Formats.Generic.COLLADA
+namespace P3DS2U.Editor.SPICA.COLLADA
 {
     internal static class DAEUtils
     {
