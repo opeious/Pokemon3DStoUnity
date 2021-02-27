@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using JetBrains.Annotations;
 using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.H3D;
 using P3DS2U.Editor.SPICA.H3D.Model;
@@ -339,7 +338,7 @@ namespace P3DS2U.Editor
             foreach (var singleNode in root.Nodes) SpawnBones (singleNode, rootGo, nodeGo);
         }
 
-        private static void SaveMeshAtPath ([NotNull] Mesh mesh, string path)
+        private static void SaveMeshAtPath (Mesh mesh, string path)
         {
             if (mesh == null) throw new ArgumentNullException (nameof(mesh));
             if (File.Exists (path)) File.Delete (path);
