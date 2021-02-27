@@ -1,0 +1,9 @@
+﻿{
+	"name": "opeious.pokemon3dsto.Editor",
+	"references": [
+		"opeious.Pokemon3DStoUnity"
+	],
+	"includePlatforms": [
+		"Editor"
+	]
+}
