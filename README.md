@@ -1,3 +1,19 @@
+What does the package do at the moment:
+-
+- Open the Binary in SPICA
+- Translate the 3D model to Unity Mesh system and skinned mesh renderers
+- Generate material files from the textures 
+- Automatically copy over some of the shader settings to the newly created materials
+- Saves the translated mon as prefab
+
+To do:
+-
+- Normal/Occlusion shaded materials
+- Auto creating texture atlas for each mon
+- Fixing the skeleton rotation issue for some mons
+- Translating the animation binaries to Unity clips and controllers
+- Material animations
+
 ChangeLog:
 -
 - v1.1: sample toon shader, asset creation
