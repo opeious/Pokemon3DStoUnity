@@ -22,12 +22,11 @@ namespace P3DS2U.Editor.SPICA.GFL2.Motion
 
             var Position = Reader.BaseStream.Position;
 
-            var BoneNames = Reader.ReadString ();
+            var BoneNames = Reader.ReadStringArray (BoneNamesCount);
 
             Reader.BaseStream.Seek (Position + BoneNamesLength, SeekOrigin.Begin);
 
-            foreach (var name in BoneNames) {
-                var Name = name + "";
+            foreach (var Name in BoneNames) {
                 Bones.Add (new GFMotBoneTransform (Reader, Name, FramesCount));
             }
         }

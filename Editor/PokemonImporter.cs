@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.H3D;
+using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
+using P3DS2U.Editor.SPICA.Math3D;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -55,7 +57,19 @@ namespace P3DS2U.Editor
 
                 var h3DScene = new H3D ();
                 
+                //Add all non-animation binaries first
                 foreach (var singleFileToBeMerged in kvp.Value) {
+                    var fileType = BinaryUtils.GetBinaryFileType (singleFileToBeMerged);
+                    if (fileType == BinaryUtils.FileType.Animation) continue;
+                    H3DDict<H3DBone> skeleton = null;
+                    if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
+                    var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
+                    if (data != null) h3DScene.Merge (data);
+                }
+                //Merge animation binaries
+                foreach (var singleFileToBeMerged in kvp.Value) {
+                    var fileType = BinaryUtils.GetBinaryFileType (singleFileToBeMerged);
+                    if (fileType != BinaryUtils.FileType.Animation) continue;
                     H3DDict<H3DBone> skeleton = null;
                     if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
                     var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
@@ -65,11 +79,15 @@ namespace P3DS2U.Editor
                 var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin","/Files/");
                 if (!Directory.Exists (combinedExportFolder)) {
                     Directory.CreateDirectory (combinedExportFolder);
+                } else {
+                    Directory.Delete (ExportPath + kvp.Key.Replace (".bin", "/"), true);
+                    Directory.CreateDirectory (combinedExportFolder);
                 }
                 GenerateTextureFiles (h3DScene, combinedExportFolder);
                 var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
                 var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
                 AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
+                // GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
 
                 var go = GameObject.Find ("GeneratedUnityObject");
                 go.name = kvp.Key.Replace (".bin", "");
@@ -83,6 +101,243 @@ namespace P3DS2U.Editor
                 };
             }
             EditorUtility.ClearProgressBar();
+        }
+
+        private static void GenerateSkeletalAnimations (H3D h3DScene, string combinedExportFolder)
+        {
+            var go = GameObject.Find ("GeneratedUnityObject");
+            var skeletonTransform = go.transform.GetChild (0);
+            var boneTransformDict = skeletonTransform.GetComponentsInChildren<Transform> ()
+                .ToDictionary (boneTransform => boneTransform.name);
+            var animation = skeletonTransform.gameObject.AddComponent<Animation> ();
+            foreach (var h3dSkeletalAnimation in h3DScene.SkeletalAnimations) {
+                var unityClip = new AnimationClip {name = h3dSkeletalAnimation.Name};
+
+                var clipSettings = AnimationUtility.GetAnimationClipSettings (unityClip);
+                clipSettings.loopTime = h3dSkeletalAnimation.AnimationFlags == H3DAnimationFlags.IsLooping;
+                
+                AnimationUtility.SetAnimationClipSettings(unityClip, clipSettings);
+            
+                
+                
+                
+                var FramesCount = (int) h3dSkeletalAnimation.FramesCount + 1;
+
+                foreach (var Elem in h3dSkeletalAnimation.Elements) {
+                    // if (Elem.PrimitiveType != H3DPrimitiveType.Transform &&
+                    //     Elem.PrimitiveType != H3DPrimitiveType.QuatTransform) continue;
+                    //
+                    // for (int i = 0; i < 5; i++) {
+                    //     var AnimTimes = new string[FramesCount];
+                    //     var AnimPoses = new string[FramesCount];
+                    //     var AnimLerps = new string[FramesCount];
+                    //
+                    //     var IsRotation = i > 0 && i < 4; //1,2,3
+                    //     bool Skip;
+                    //     switch (Elem.Content) {
+                    //         case H3DAnimTransform h3DAnimTransform:
+                    //             switch (i) {
+                    //                 case 0:
+                    //                     Skip = !h3DAnimTransform.TranslationExists;
+                    //                     break;
+                    //                 case 1:
+                    //                     Skip = !h3DAnimTransform.RotationX.Exists;
+                    //                     break;
+                    //                 case 2:
+                    //                     Skip = !h3DAnimTransform.RotationY.Exists;
+                    //                     break;
+                    //                 case 3:
+                    //                     Skip = !h3DAnimTransform.RotationZ.Exists;
+                    //                     break;
+                    //                 case 4:
+                    //                     Skip = !h3DAnimTransform.ScaleExists;
+                    //                     break;
+                    //             }
+                    //
+                    //             break;
+                    //         case H3DAnimQuatTransform h3DAnimQuatTransform:
+                    //             switch (i) {
+                    //                 case 0:
+                    //                     Skip = !h3DAnimQuatTransform.HasTranslation;
+                    //                     break;
+                    //                 case 1:
+                    //                     Skip = !h3DAnimQuatTransform.HasRotation;
+                    //                     break;
+                    //                 case 2:
+                    //                     Skip = !h3DAnimQuatTransform.HasRotation;
+                    //                     break;
+                    //                 case 3:
+                    //                     Skip = !h3DAnimQuatTransform.HasRotation;
+                    //                     break;
+                    //                 case 4:
+                    //                     Skip = !h3DAnimQuatTransform.HasScale;
+                    //                     break;
+                    //             }
+                    //
+                    //             break;
+                    //     }
+                    //     if (Skip) continue;
+                    //     
+                    //     for (var Frame = 0; Frame < FramesCount; Frame++) {
+                    //         var StrTrans = string.Empty;
+                    //
+                    //         var PElem = SklAnim.Elements.FirstOrDefault (x => x.Name == Parent?.Name);
+                    //
+                    //         var InvScale = Vector3.one;
+                    //
+                    //         if (Elem.Content is H3DAnimTransform h3DAnimTransform) {
+                    //             //Compensate parent bone scale (basically, don't inherit scales)
+                    //             if (Parent != null && (SklBone.Flags & H3DBoneFlags.IsSegmentScaleCompensate) != 0) {
+                    //                 if (PElem != null) {
+                    //                     var PTrans = (H3DAnimTransform) PElem.Content;
+                    //
+                    //                     InvScale /= new Vector3 (
+                    //                         PTrans.ScaleX.Exists ? PTrans.ScaleX.GetFrameValue (Frame) : Parent.Scale.X,
+                    //                         PTrans.ScaleY.Exists ? PTrans.ScaleY.GetFrameValue (Frame) : Parent.Scale.Y,
+                    //                         PTrans.ScaleZ.Exists
+                    //                             ? PTrans.ScaleZ.GetFrameValue (Frame)
+                    //                             : Parent.Scale.Z);
+                    //                 } else {
+                    //                     InvScale /= Parent.Scale;
+                    //                 }
+                    //             }
+                    //
+                    //             switch (i) {
+                    //                 //Translation
+                    //                 case 0:
+                    //                     StrTrans = DAEUtils.VectorStr (new Vector3 (
+                    //                         h3DAnimTransform.TranslationX.Exists //X
+                    //                             ? h3DAnimTransform.TranslationX.GetFrameValue (Frame)
+                    //                             : SklBone.Translation.X,
+                    //                         h3DAnimTransform.TranslationY.Exists //Y
+                    //                             ? h3DAnimTransform.TranslationY.GetFrameValue (Frame)
+                    //                             : SklBone.Translation.Y,
+                    //                         h3DAnimTransform.TranslationZ.Exists //Z
+                    //                             ? h3DAnimTransform.TranslationZ.GetFrameValue (Frame)
+                    //                             : SklBone.Translation.Z));
+                    //                     break;
+                    //
+                    //                 //Scale
+                    //                 case 4:
+                    //                     StrTrans = DAEUtils.VectorStr (InvScale * new Vector3 (
+                    //                         h3DAnimTransform.ScaleX.Exists //X
+                    //                             ? h3DAnimTransform.ScaleX.GetFrameValue (Frame)
+                    //                             : SklBone.Scale.X,
+                    //                         h3DAnimTransform.ScaleY.Exists //Y
+                    //                             ? h3DAnimTransform.ScaleY.GetFrameValue (Frame)
+                    //                             : SklBone.Scale.Y,
+                    //                         h3DAnimTransform.ScaleZ.Exists //Z
+                    //                             ? h3DAnimTransform.ScaleZ.GetFrameValue (Frame)
+                    //                             : SklBone.Scale.Z));
+                    //                     break;
+                    //
+                    //                 //Rotation
+                    //                 case 1:
+                    //                     StrTrans = DAEUtils.RadToDegStr (h3DAnimTransform.RotationX.GetFrameValue (Frame));
+                    //                     break;
+                    //                 case 2:
+                    //                     StrTrans = DAEUtils.RadToDegStr (h3DAnimTransform.RotationY.GetFrameValue (Frame));
+                    //                     break;
+                    //                 case 3:
+                    //                     StrTrans = DAEUtils.RadToDegStr (h3DAnimTransform.RotationZ.GetFrameValue (Frame));
+                    //                     break;
+                    //             }
+                    //         } else if (Elem.Content is H3DAnimQuatTransform QuatTransform) {
+                    //             //Compensate parent bone scale (basically, don't inherit scales)
+                    //             if (Parent != null && (SklBone.Flags & H3DBoneFlags.IsSegmentScaleCompensate) != 0) {
+                    //                 if (PElem != null)
+                    //                     InvScale /= ((H3DAnimQuatTransform) PElem.Content).GetScaleValue (Frame);
+                    //                 else
+                    //                     InvScale /= Parent.Scale;
+                    //             }
+                    //
+                    //             switch (i) {
+                    //                 case 0:
+                    //                     StrTrans = DAEUtils.VectorStr (QuatTransform.GetTranslationValue (Frame));
+                    //                     break;
+                    //                 case 1:
+                    //                     StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
+                    //                         .ToEuler ().X);
+                    //                     break;
+                    //                 case 2:
+                    //                     StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
+                    //                         .ToEuler ().Y);
+                    //                     break;
+                    //                 case 3:
+                    //                     StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
+                    //                         .ToEuler ().Z);
+                    //                     break;
+                    //                 case 4:
+                    //                     StrTrans = DAEUtils.VectorStr (InvScale * QuatTransform.GetScaleValue (Frame));
+                    //                     break;
+                    //             }
+                    //         }
+                    //
+                    //         //This is the Time in seconds, so we divide by the target FPS
+                    //         AnimTimes[Frame] = (Frame / 30f).ToString (CultureInfo.InvariantCulture);
+                    //         AnimPoses[Frame] = StrTrans;
+                    //         AnimLerps[Frame] = "LINEAR";
+                    //     }
+                    //
+                    // }
+                }
+
+
+
+
+
+                foreach (var animationElement in h3dSkeletalAnimation.Elements) {
+                    var boneTransform = boneTransformDict[animationElement.Name];
+                    var curveBindingPath = AnimationUtility.CalculateTransformPath (boneTransform, animation.transform);
+                    if (animationElement.Content is H3DAnimQuatTransform quatTransform) {
+                        var cx = new AnimationCurve();
+                        var cy = new AnimationCurve();
+                        var cz = new AnimationCurve();
+                        var crx = new AnimationCurve();
+                        var cry = new AnimationCurve();
+                        var crz = new AnimationCurve();   
+                        var crw = new AnimationCurve();      
+                        var csx = new AnimationCurve();
+                        var csy = new AnimationCurve();
+                        var csz = new AnimationCurve();
+                        
+                        for (var i = 0; i < h3dSkeletalAnimation.FramesCount; i++) {
+                            cx.AddKey (i, quatTransform.Translations[i].X);
+                            cy.AddKey (i, quatTransform.Translations[i].Y);
+                            cz.AddKey (i, quatTransform.Translations[i].Z);
+                            var rot = new Quaternion {eulerAngles = new Vector3 {
+                                x = SkeletonUtils.RadToDeg (quatTransform.GetRotationValue (i).ToEuler ().X),
+                                y = SkeletonUtils.RadToDeg (quatTransform.GetRotationValue (i).ToEuler ().Y),
+                                z = SkeletonUtils.RadToDeg (quatTransform.GetRotationValue (i).ToEuler ().Z)
+                            }};
+                            crx.AddKey (i, rot.x);
+                            cry.AddKey (i, rot.y);
+                            crz.AddKey (i, rot.z);
+                            crw.AddKey (i, rot.w);
+                            csx.AddKey (i, quatTransform.Scales[i].X);
+                            csy.AddKey (i, quatTransform.Scales[i].Y);
+                            csz.AddKey (i, quatTransform.Scales[i].Z);
+                        }
+                        unityClip.SetCurve (curveBindingPath, typeof(Transform), "localPosition.x", cx);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localPosition.y", cy);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localPosition.z", cz);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.x", crx);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.y", cry);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.z", crz);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.w", crw);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localScale.x", csx);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localScale.y", csy);
+                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localScale.z", csz);
+                    }               
+                }
+
+                AssetDatabase.CreateAsset (unityClip, combinedExportFolder + unityClip.name + ".anim");
+                // animation.AddClip (unityClip, unityClip.name);
+                animation.clip = unityClip;
+            }
+            
+            
+            
         }
 
         private static void AddMaterialsToGeneratedMeshes (IReadOnlyDictionary<string, SkinnedMeshRenderer> meshDict,

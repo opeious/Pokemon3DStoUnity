@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.Commands;
 using P3DS2U.Editor.SPICA.Converters;
 using P3DS2U.Editor.SPICA.H3D.Model;
@@ -10,6 +12,55 @@ using UnityEngine;
 
 namespace P3DS2U.Editor
 {
+    public static class BinaryUtils
+    {
+        private const uint MODEL = 0x15122117;
+        private const uint TEXTURE = 0x15041213;
+        private const uint MOTION = 0x00060000;
+        
+        public enum FileType
+        {
+            Undefined,
+            Model,
+            Texture,
+            Animation,
+        }
+
+        public static FileType GetBinaryFileType (string fileName)
+        {
+            using (var fs = new FileStream (fileName, FileMode.Open)) {
+                if (fs.Length > 4) {
+                    var reader = new BinaryReader (fs);
+                    var magicNum = reader.ReadUInt32 ();
+                    fs.Seek (-4, SeekOrigin.Current);
+                    var magic = Encoding.ASCII.GetString (reader.ReadBytes (4));
+                    fs.Seek (0, SeekOrigin.Begin);
+                    if (GFPackageExtensions.IsValidPackage (fs)) {
+                        var packHeader = GFPackageExtensions.GetPackageHeader (fs);
+                        if (packHeader.Magic == "PC") {
+                            fs.Seek (packHeader.Entries[0].Address, SeekOrigin.Begin);
+                            var magicNum2 = reader.ReadUInt32 ();
+                            switch (magicNum2) {
+                                case MODEL:
+                                    return FileType.Model;
+                                case TEXTURE:
+                                    return FileType.Texture;
+                                case MOTION:
+                                    return FileType.Animation;
+                            }
+                        }
+                    }
+                }
+            }   
+            return FileType.Undefined;
+        }
+    }
+
+    public static class AnimationUtils
+    {
+        
+    }
+    
     public static class DirectoryUtils
     {
         public static IEnumerable<string> GetAllFilesRecursive(string path, bool includeMetaFiles = false)
@@ -187,7 +238,7 @@ namespace P3DS2U.Editor
             return rootNode;
         }
 
-        private static float RadToDeg (float radians)
+        public static float RadToDeg (float radians)
         {
             return radians * RadToDegConstant;
         }
