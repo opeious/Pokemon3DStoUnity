@@ -5,6 +5,7 @@ What does the package do at the moment:
 - Generate material files from the textures 
 - Automatically copy over some of the shader settings to the newly created materials
 - Saves the translated mon as prefab
+- Supports bulk processing
 
 To do:
 -
