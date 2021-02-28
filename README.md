@@ -38,3 +38,7 @@ Installation:
 `"com.opeious.pokemon3dstounity": "https://github.com/opeious/Pokemon3DStoUnity.git",`
 
 - If you don't have git setup, download and put the entire project into your Assets Folder
+
+Updating:
+-
+- Unity package manager doesn't currently support version of git packages, for now just remove the project as a dependency and add it again
