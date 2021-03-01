@@ -583,6 +583,7 @@ namespace P3DS2U.Editor
                     mesh.normals = unityMeshNormals.ToArray ();
                     mesh.tangents = unityMeshTangents.ToArray ();
                     mesh.uv = unityMeshUV.ToArray ();
+                    unityMeshTriangles.Reverse ();
                     mesh.SetTriangles (unityMeshTriangles, 0);
 
                     mesh.boneWeights = unityVertexBones.ToArray ();

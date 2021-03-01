@@ -139,13 +139,13 @@ namespace P3DS2U.Editor
         public static IEnumerable<Vector3> PicaToUnityVertex (IEnumerable<PICAVertex> picaVertices)
         {
             return picaVertices.Select (picaVertex =>
-                new Vector3 (picaVertex.Position.X, picaVertex.Position.Y, picaVertex.Position.Z)).ToList ();
+                new Vector3 (picaVertex.Position.X * -1, picaVertex.Position.Y, picaVertex.Position.Z)).ToList ();
         }
 
         public static IEnumerable<Vector4> PicaToUnityTangents (IEnumerable<PICAVertex> picaVertices)
         {
             return picaVertices.Select (picaVertex =>
-                    new Vector4 (picaVertex.Tangent.X, picaVertex.Tangent.Y, picaVertex.Tangent.Z, picaVertex.Tangent.W))
+                    new Vector4 (picaVertex.Tangent.X * -1, picaVertex.Tangent.Y, picaVertex.Tangent.Z, picaVertex.Tangent.W))
                 .ToList ();
         }
 
@@ -158,7 +158,7 @@ namespace P3DS2U.Editor
         public static IEnumerable<Vector3> PicaToUnityNormals (IEnumerable<PICAVertex> picaVertices)
         {
             return picaVertices
-                .Select (picaVertex => new Vector3 (picaVertex.Normal.X, picaVertex.Normal.Y, picaVertex.Normal.Z))
+                .Select (picaVertex => new Vector3 (picaVertex.Normal.X * -1, picaVertex.Normal.Y, picaVertex.Normal.Z))
                 .ToList ();
         }
     }
