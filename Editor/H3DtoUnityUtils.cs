@@ -259,7 +259,7 @@ namespace P3DS2U.Editor
                 Translation = t;
                 Rotation[0] = new Vector4 (0, 0, 1, RadToDeg (r.z));
                 Rotation[1] = new Vector4 (0, 1, 0, RadToDeg (r.y));
-                Rotation[2] = new Vector4 (1, 0, 0, RadToDeg (r.x));
+                Rotation[2] = new Vector4 (-1, 0, 0, RadToDeg (r.x));
                 Scale = s;
             }
         }
