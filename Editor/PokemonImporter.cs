@@ -15,6 +15,7 @@ using Random = UnityEngine.Random;
 /*
  *TODO: Import folder structure options via popup at start
  *TODO: Shaders in ase format (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null && UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().ToString().Contains("UniversalRenderPipelineAsset"))
+ *TODO: Duplicate animation content instead of re-saving, to remove read only lock on animations
  */
 
 namespace P3DS2U.Editor
@@ -43,75 +44,86 @@ namespace P3DS2U.Editor
         [MenuItem ("3DStoUnity/Import Pokemon (Bin)")]
         private static void StartImportingBinaries ()
         {
-            if (!Directory.Exists (ImportPath)) {
-                Directory.CreateDirectory (ImportPath);
-                EditorUtility.DisplayDialog ("Created Folder " + ImportPath,
-                    "Created Folder" + ImportPath +" \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
-                    "ok");
-                return;
-            }
+            try {
+                if (!Directory.Exists (ImportPath)) {
+                    Directory.CreateDirectory (ImportPath);
+                    EditorUtility.DisplayDialog ("Created Folder " + ImportPath,
+                        "Created Folder" + ImportPath +
+                        " \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
+                        "ok");
+                    return;
+                }
 
-            var allFiles = DirectoryUtils.GetAllFilesRecursive ("Assets/Bin3DS/");
-            var scenesDict = new Dictionary<string, List<string>> ();
-            foreach (var singleFile in allFiles) {
-                var trimmedName = Path.GetFileName (singleFile);
-                if (!scenesDict.ContainsKey (trimmedName)) {
-                    scenesDict.Add(trimmedName, new List<string> {singleFile});
-                } else {
-                    scenesDict[trimmedName].Add (singleFile);
+                var allFiles = DirectoryUtils.GetAllFilesRecursive ("Assets/Bin3DS/");
+                var scenesDict = new Dictionary<string, List<string>> ();
+                foreach (var singleFile in allFiles) {
+                    var trimmedName = Path.GetFileName (singleFile);
+                    if (!scenesDict.ContainsKey (trimmedName)) {
+                        scenesDict.Add (trimmedName, new List<string> {singleFile});
+                    } else {
+                        scenesDict[trimmedName].Add (singleFile);
+                    }
+                }
+
+                _processedCount = 0;
+                foreach (var kvp in scenesDict) {
+                    EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
+                        (float) _processedCount / scenesDict.Count);
+
+                    h3DScene = new H3D ();
+
+                    //Add all non-animation binaries first
+                    foreach (var singleFileToBeMerged in kvp.Value) {
+                        var fileType = BinaryUtils.GetBinaryFileType (singleFileToBeMerged);
+                        if (fileType == BinaryUtils.FileType.Animation) continue;
+                        H3DDict<H3DBone> skeleton = null;
+                        if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
+                        var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
+                        if (data != null) h3DScene.Merge (data);
+                    }
+
+                    //Merge animation binaries
+                    foreach (var singleFileToBeMerged in kvp.Value) {
+                        var fileType = BinaryUtils.GetBinaryFileType (singleFileToBeMerged);
+                        if (fileType != BinaryUtils.FileType.Animation) continue;
+                        H3DDict<H3DBone> skeleton = null;
+                        if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
+                        var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
+                        if (data != null) h3DScene.Merge (data);
+                    }
+
+                    var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin", "/Files/");
+                    if (!Directory.Exists (combinedExportFolder)) {
+                        Directory.CreateDirectory (combinedExportFolder);
+                    } else {
+                        Directory.Delete (ExportPath + kvp.Key.Replace (".bin", "/"), true);
+                        Directory.CreateDirectory (combinedExportFolder);
+                    }
+
+                    GenerateTextureFiles (h3DScene, combinedExportFolder);
+                    var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
+                    var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
+                    AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
+                    GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
+
+                    var go = GameObject.Find ("GeneratedUnityObject");
+                    go.name = kvp.Key.Replace (".bin", "");
+                    var prefabPath =
+                        AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name + "/" + go.name + ".prefab");
+                    PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
+
+                    go.transform.localPosition = new Vector3 {
+                        x = Random.Range (-500f, 500f),
+                        y = 0,
+                        z = Random.Range (-500f, 500f)
+                    };
                 }
             }
-
-            _processedCount = 0;
-            foreach (var kvp in scenesDict) {
-                EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
-                    (float) _processedCount / scenesDict.Count);
-
-                h3DScene = new H3D ();
-                
-                //Add all non-animation binaries first
-                foreach (var singleFileToBeMerged in kvp.Value) {
-                    var fileType = BinaryUtils.GetBinaryFileType (singleFileToBeMerged);
-                    if (fileType == BinaryUtils.FileType.Animation) continue;
-                    H3DDict<H3DBone> skeleton = null;
-                    if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
-                    var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
-                    if (data != null) h3DScene.Merge (data);
-                }
-                //Merge animation binaries
-                foreach (var singleFileToBeMerged in kvp.Value) {
-                    var fileType = BinaryUtils.GetBinaryFileType (singleFileToBeMerged);
-                    if (fileType != BinaryUtils.FileType.Animation) continue;
-                    H3DDict<H3DBone> skeleton = null;
-                    if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
-                    var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
-                    if (data != null) h3DScene.Merge (data);
-                }
-
-                var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin","/Files/");
-                if (!Directory.Exists (combinedExportFolder)) {
-                    Directory.CreateDirectory (combinedExportFolder);
-                } else {
-                    Directory.Delete (ExportPath + kvp.Key.Replace (".bin", "/"), true);
-                    Directory.CreateDirectory (combinedExportFolder);
-                }
-                GenerateTextureFiles (h3DScene, combinedExportFolder);
-                var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
-                var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
-                AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
-                GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
-
-                var go = GameObject.Find ("GeneratedUnityObject");
-                go.name = kvp.Key.Replace (".bin", "");
-                var prefabPath = AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name +"/" + go.name + ".prefab");
-                PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
-                
-                go.transform.localPosition = new Vector3 {
-                    x = Random.Range (-500f, 500f),
-                    y = 0,
-                    z = Random.Range (-500f, 500f)
-                };
+            catch (Exception e) {
+                Debug.LogError ("Something went horribly wrong! Hmu, I'll try to fix it.\n" + e.Message + "\n" +
+                                e.StackTrace);
             }
+
             EditorUtility.ClearProgressBar();
         }
 
@@ -133,6 +145,7 @@ namespace P3DS2U.Editor
         //Hit me up, if you know a better way of loading the animations from the binaries
         private static void GenerateSkeletalAnimations (H3D h3DScene, string combinedExportFolder)
         {
+            var tempFilePath = Application.dataPath + "/BinInterimAnimation.dae";
             CurrentAnimationExportFolder = combinedExportFolder + "/Animations/";
             if (!Directory.Exists (CurrentAnimationExportFolder)) {
                 Directory.CreateDirectory (CurrentAnimationExportFolder);
@@ -141,13 +154,18 @@ namespace P3DS2U.Editor
             for (var i = 0; i < h3DScene.SkeletalAnimations.Count; i++) {
                 OnAnimationImportedEvent += OnAnimationPostprocessed;
                 var dae = new DaeAnimations (h3DScene, 0, i);
-                dae.Save (Application.dataPath + "/BinInterimAnimation.dae");
+                dae.Save (tempFilePath);
                 PokemonAnimationImporter.IsEnabled = true;
-                AssetDatabase.ImportAsset (Application.dataPath + "BinInterimAnimation.dae");
+                AssetDatabase.ImportAsset (tempFilePath);
                 AssetDatabase.Refresh(); //<- continue from AssetImporter.cs
                 OnAnimationImportedEvent -= OnAnimationPostprocessed;   
             }
             PokemonAnimationImporter.IsEnabled = false;
+
+            if (File.Exists (tempFilePath)) {
+                File.Delete (tempFilePath);
+            }
+            AssetDatabase.Refresh ();
         }
 
         private static void AddMaterialsToGeneratedMeshes (IReadOnlyDictionary<string, SkinnedMeshRenderer> meshDict,
