@@ -3,14 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using P3DS2U.Editor.SPICA;
+using P3DS2U.Editor.SPICA.COLLADA;
 using P3DS2U.Editor.SPICA.H3D;
 using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
-using P3DS2U.Editor.SPICA.Math3D;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
+
+/*
+ *TODO: Import folder structure options via popup at start
+ *TODO: Shaders in ase format (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null && UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().ToString().Contains("UniversalRenderPipelineAsset"))
+ */
 
 namespace P3DS2U.Editor
 {
@@ -28,6 +33,13 @@ namespace P3DS2U.Editor
 
         private static int _processedCount;
 
+        private delegate void OnAnimationImported (AnimationClip clip);
+        private static OnAnimationImported OnAnimationImportedEvent;
+        public static void RaiseOnAnimationImportedEvent (AnimationClip clip) => OnAnimationImportedEvent?.Invoke (clip);
+        private static H3D h3DScene = null;
+        private static int CurrentAnimationIndex = 0;
+        private static string CurrentAnimationExportFolder = "";
+        
         [MenuItem ("3DStoUnity/Import Pokemon (Bin)")]
         private static void StartImportingBinaries ()
         {
@@ -55,7 +67,7 @@ namespace P3DS2U.Editor
                 EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
                     (float) _processedCount / scenesDict.Count);
 
-                var h3DScene = new H3D ();
+                h3DScene = new H3D ();
                 
                 //Add all non-animation binaries first
                 foreach (var singleFileToBeMerged in kvp.Value) {
@@ -87,7 +99,7 @@ namespace P3DS2U.Editor
                 var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
                 var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
                 AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
-                // GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
+                GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
 
                 var go = GameObject.Find ("GeneratedUnityObject");
                 go.name = kvp.Key.Replace (".bin", "");
@@ -103,241 +115,39 @@ namespace P3DS2U.Editor
             EditorUtility.ClearProgressBar();
         }
 
+        private static void OnAnimationPostprocessed (AnimationClip clip)
+        {
+            var clipSettings = AnimationUtility.GetAnimationClipSettings (clip);
+            clipSettings.loopTime = h3DScene.SkeletalAnimations[0].AnimationFlags == H3DAnimationFlags.IsLooping;
+            AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
+            if (!string.IsNullOrEmpty (CurrentAnimationExportFolder)) {
+                PokemonAnimationImporter.IsEnabled = false;
+                AssetDatabase.CreateAsset (clip, CurrentAnimationExportFolder + "anim" + CurrentAnimationIndex++ +".anim");
+                AssetDatabase.Refresh ();
+            }
+        }
+
+        
+        //NOTE: doing it this way because unity does keyframe compression on asset import.
+        //which won't happen if I generate the animation inside of Unity, also generating animations is hard =/
+        //Hit me up, if you know a better way of loading the animations from the binaries
         private static void GenerateSkeletalAnimations (H3D h3DScene, string combinedExportFolder)
         {
-            var go = GameObject.Find ("GeneratedUnityObject");
-            var skeletonTransform = go.transform.GetChild (0);
-            var boneTransformDict = skeletonTransform.GetComponentsInChildren<Transform> ()
-                .ToDictionary (boneTransform => boneTransform.name);
-            var animation = skeletonTransform.gameObject.AddComponent<Animation> ();
-            foreach (var h3dSkeletalAnimation in h3DScene.SkeletalAnimations) {
-                var unityClip = new AnimationClip {name = h3dSkeletalAnimation.Name};
-
-                var clipSettings = AnimationUtility.GetAnimationClipSettings (unityClip);
-                clipSettings.loopTime = h3dSkeletalAnimation.AnimationFlags == H3DAnimationFlags.IsLooping;
-                
-                AnimationUtility.SetAnimationClipSettings(unityClip, clipSettings);
-            
-                
-                
-                
-                var FramesCount = (int) h3dSkeletalAnimation.FramesCount + 1;
-
-                foreach (var Elem in h3dSkeletalAnimation.Elements) {
-                    // if (Elem.PrimitiveType != H3DPrimitiveType.Transform &&
-                    //     Elem.PrimitiveType != H3DPrimitiveType.QuatTransform) continue;
-                    //
-                    // for (int i = 0; i < 5; i++) {
-                    //     var AnimTimes = new string[FramesCount];
-                    //     var AnimPoses = new string[FramesCount];
-                    //     var AnimLerps = new string[FramesCount];
-                    //
-                    //     var IsRotation = i > 0 && i < 4; //1,2,3
-                    //     bool Skip;
-                    //     switch (Elem.Content) {
-                    //         case H3DAnimTransform h3DAnimTransform:
-                    //             switch (i) {
-                    //                 case 0:
-                    //                     Skip = !h3DAnimTransform.TranslationExists;
-                    //                     break;
-                    //                 case 1:
-                    //                     Skip = !h3DAnimTransform.RotationX.Exists;
-                    //                     break;
-                    //                 case 2:
-                    //                     Skip = !h3DAnimTransform.RotationY.Exists;
-                    //                     break;
-                    //                 case 3:
-                    //                     Skip = !h3DAnimTransform.RotationZ.Exists;
-                    //                     break;
-                    //                 case 4:
-                    //                     Skip = !h3DAnimTransform.ScaleExists;
-                    //                     break;
-                    //             }
-                    //
-                    //             break;
-                    //         case H3DAnimQuatTransform h3DAnimQuatTransform:
-                    //             switch (i) {
-                    //                 case 0:
-                    //                     Skip = !h3DAnimQuatTransform.HasTranslation;
-                    //                     break;
-                    //                 case 1:
-                    //                     Skip = !h3DAnimQuatTransform.HasRotation;
-                    //                     break;
-                    //                 case 2:
-                    //                     Skip = !h3DAnimQuatTransform.HasRotation;
-                    //                     break;
-                    //                 case 3:
-                    //                     Skip = !h3DAnimQuatTransform.HasRotation;
-                    //                     break;
-                    //                 case 4:
-                    //                     Skip = !h3DAnimQuatTransform.HasScale;
-                    //                     break;
-                    //             }
-                    //
-                    //             break;
-                    //     }
-                    //     if (Skip) continue;
-                    //     
-                    //     for (var Frame = 0; Frame < FramesCount; Frame++) {
-                    //         var StrTrans = string.Empty;
-                    //
-                    //         var PElem = SklAnim.Elements.FirstOrDefault (x => x.Name == Parent?.Name);
-                    //
-                    //         var InvScale = Vector3.one;
-                    //
-                    //         if (Elem.Content is H3DAnimTransform h3DAnimTransform) {
-                    //             //Compensate parent bone scale (basically, don't inherit scales)
-                    //             if (Parent != null && (SklBone.Flags & H3DBoneFlags.IsSegmentScaleCompensate) != 0) {
-                    //                 if (PElem != null) {
-                    //                     var PTrans = (H3DAnimTransform) PElem.Content;
-                    //
-                    //                     InvScale /= new Vector3 (
-                    //                         PTrans.ScaleX.Exists ? PTrans.ScaleX.GetFrameValue (Frame) : Parent.Scale.X,
-                    //                         PTrans.ScaleY.Exists ? PTrans.ScaleY.GetFrameValue (Frame) : Parent.Scale.Y,
-                    //                         PTrans.ScaleZ.Exists
-                    //                             ? PTrans.ScaleZ.GetFrameValue (Frame)
-                    //                             : Parent.Scale.Z);
-                    //                 } else {
-                    //                     InvScale /= Parent.Scale;
-                    //                 }
-                    //             }
-                    //
-                    //             switch (i) {
-                    //                 //Translation
-                    //                 case 0:
-                    //                     StrTrans = DAEUtils.VectorStr (new Vector3 (
-                    //                         h3DAnimTransform.TranslationX.Exists //X
-                    //                             ? h3DAnimTransform.TranslationX.GetFrameValue (Frame)
-                    //                             : SklBone.Translation.X,
-                    //                         h3DAnimTransform.TranslationY.Exists //Y
-                    //                             ? h3DAnimTransform.TranslationY.GetFrameValue (Frame)
-                    //                             : SklBone.Translation.Y,
-                    //                         h3DAnimTransform.TranslationZ.Exists //Z
-                    //                             ? h3DAnimTransform.TranslationZ.GetFrameValue (Frame)
-                    //                             : SklBone.Translation.Z));
-                    //                     break;
-                    //
-                    //                 //Scale
-                    //                 case 4:
-                    //                     StrTrans = DAEUtils.VectorStr (InvScale * new Vector3 (
-                    //                         h3DAnimTransform.ScaleX.Exists //X
-                    //                             ? h3DAnimTransform.ScaleX.GetFrameValue (Frame)
-                    //                             : SklBone.Scale.X,
-                    //                         h3DAnimTransform.ScaleY.Exists //Y
-                    //                             ? h3DAnimTransform.ScaleY.GetFrameValue (Frame)
-                    //                             : SklBone.Scale.Y,
-                    //                         h3DAnimTransform.ScaleZ.Exists //Z
-                    //                             ? h3DAnimTransform.ScaleZ.GetFrameValue (Frame)
-                    //                             : SklBone.Scale.Z));
-                    //                     break;
-                    //
-                    //                 //Rotation
-                    //                 case 1:
-                    //                     StrTrans = DAEUtils.RadToDegStr (h3DAnimTransform.RotationX.GetFrameValue (Frame));
-                    //                     break;
-                    //                 case 2:
-                    //                     StrTrans = DAEUtils.RadToDegStr (h3DAnimTransform.RotationY.GetFrameValue (Frame));
-                    //                     break;
-                    //                 case 3:
-                    //                     StrTrans = DAEUtils.RadToDegStr (h3DAnimTransform.RotationZ.GetFrameValue (Frame));
-                    //                     break;
-                    //             }
-                    //         } else if (Elem.Content is H3DAnimQuatTransform QuatTransform) {
-                    //             //Compensate parent bone scale (basically, don't inherit scales)
-                    //             if (Parent != null && (SklBone.Flags & H3DBoneFlags.IsSegmentScaleCompensate) != 0) {
-                    //                 if (PElem != null)
-                    //                     InvScale /= ((H3DAnimQuatTransform) PElem.Content).GetScaleValue (Frame);
-                    //                 else
-                    //                     InvScale /= Parent.Scale;
-                    //             }
-                    //
-                    //             switch (i) {
-                    //                 case 0:
-                    //                     StrTrans = DAEUtils.VectorStr (QuatTransform.GetTranslationValue (Frame));
-                    //                     break;
-                    //                 case 1:
-                    //                     StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
-                    //                         .ToEuler ().X);
-                    //                     break;
-                    //                 case 2:
-                    //                     StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
-                    //                         .ToEuler ().Y);
-                    //                     break;
-                    //                 case 3:
-                    //                     StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
-                    //                         .ToEuler ().Z);
-                    //                     break;
-                    //                 case 4:
-                    //                     StrTrans = DAEUtils.VectorStr (InvScale * QuatTransform.GetScaleValue (Frame));
-                    //                     break;
-                    //             }
-                    //         }
-                    //
-                    //         //This is the Time in seconds, so we divide by the target FPS
-                    //         AnimTimes[Frame] = (Frame / 30f).ToString (CultureInfo.InvariantCulture);
-                    //         AnimPoses[Frame] = StrTrans;
-                    //         AnimLerps[Frame] = "LINEAR";
-                    //     }
-                    //
-                    // }
-                }
-
-
-
-
-
-                foreach (var animationElement in h3dSkeletalAnimation.Elements) {
-                    var boneTransform = boneTransformDict[animationElement.Name];
-                    var curveBindingPath = AnimationUtility.CalculateTransformPath (boneTransform, animation.transform);
-                    if (animationElement.Content is H3DAnimQuatTransform quatTransform) {
-                        var cx = new AnimationCurve();
-                        var cy = new AnimationCurve();
-                        var cz = new AnimationCurve();
-                        var crx = new AnimationCurve();
-                        var cry = new AnimationCurve();
-                        var crz = new AnimationCurve();   
-                        var crw = new AnimationCurve();      
-                        var csx = new AnimationCurve();
-                        var csy = new AnimationCurve();
-                        var csz = new AnimationCurve();
-                        
-                        for (var i = 0; i < h3dSkeletalAnimation.FramesCount; i++) {
-                            cx.AddKey (i, quatTransform.Translations[i].X);
-                            cy.AddKey (i, quatTransform.Translations[i].Y);
-                            cz.AddKey (i, quatTransform.Translations[i].Z);
-                            var rot = new Quaternion {eulerAngles = new Vector3 {
-                                x = SkeletonUtils.RadToDeg (quatTransform.GetRotationValue (i).ToEuler ().X),
-                                y = SkeletonUtils.RadToDeg (quatTransform.GetRotationValue (i).ToEuler ().Y),
-                                z = SkeletonUtils.RadToDeg (quatTransform.GetRotationValue (i).ToEuler ().Z)
-                            }};
-                            crx.AddKey (i, rot.x);
-                            cry.AddKey (i, rot.y);
-                            crz.AddKey (i, rot.z);
-                            crw.AddKey (i, rot.w);
-                            csx.AddKey (i, quatTransform.Scales[i].X);
-                            csy.AddKey (i, quatTransform.Scales[i].Y);
-                            csz.AddKey (i, quatTransform.Scales[i].Z);
-                        }
-                        unityClip.SetCurve (curveBindingPath, typeof(Transform), "localPosition.x", cx);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localPosition.y", cy);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localPosition.z", cz);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.x", crx);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.y", cry);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.z", crz);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localRotation.w", crw);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localScale.x", csx);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localScale.y", csy);
-                        unityClip.SetCurve(curveBindingPath, typeof(Transform), "localScale.z", csz);
-                    }               
-                }
-
-                AssetDatabase.CreateAsset (unityClip, combinedExportFolder + unityClip.name + ".anim");
-                // animation.AddClip (unityClip, unityClip.name);
-                animation.clip = unityClip;
+            CurrentAnimationExportFolder = combinedExportFolder + "/Animations/";
+            if (!Directory.Exists (CurrentAnimationExportFolder)) {
+                Directory.CreateDirectory (CurrentAnimationExportFolder);
             }
-            
-            
-            
+            CurrentAnimationIndex = 0;
+            for (var i = 0; i < h3DScene.SkeletalAnimations.Count; i++) {
+                OnAnimationImportedEvent += OnAnimationPostprocessed;
+                var dae = new DaeAnimations (h3DScene, 0, i);
+                dae.Save (Application.dataPath + "/BinInterimAnimation.dae");
+                PokemonAnimationImporter.IsEnabled = true;
+                AssetDatabase.ImportAsset (Application.dataPath + "BinInterimAnimation.dae");
+                AssetDatabase.Refresh(); //<- continue from AssetImporter.cs
+                OnAnimationImportedEvent -= OnAnimationPostprocessed;   
+            }
+            PokemonAnimationImporter.IsEnabled = false;
         }
 
         private static void AddMaterialsToGeneratedMeshes (IReadOnlyDictionary<string, SkinnedMeshRenderer> meshDict,
@@ -381,8 +191,12 @@ namespace P3DS2U.Editor
                 textureDict.Add (texture.name, texture);
             }
 
+            var currentTextureExportFolder = exportPath + "/Textures/";
+            if (!Directory.Exists (currentTextureExportFolder)) {
+                Directory.CreateDirectory (currentTextureExportFolder);
+            }
             foreach (var kvp in textureDict)
-                File.WriteAllBytes (exportPath + kvp.Key + ".png", kvp.Value.EncodeToPNG ());
+                File.WriteAllBytes (currentTextureExportFolder + kvp.Key + ".png", kvp.Value.EncodeToPNG ());
 
             AssetDatabase.Refresh ();
         }
@@ -406,13 +220,17 @@ namespace P3DS2U.Editor
                     textureDict[h3DTextureName].TextureMapper = h3DMaterial.TextureMappers[textureIndex];
                 }
             }
-
+            
+            var currentMaterialExportFolder = exportPath + "/Materials/";
+            if (!Directory.Exists (currentMaterialExportFolder)) {
+                Directory.CreateDirectory (currentMaterialExportFolder);
+            }
             
             var matDict = new Dictionary<string, Material> ();
             foreach (var h3dMaterial in h3DScene.Models[0].Materials) {
                 var newMaterial = new Material (Shader.Find ("Shader Graphs/LitPokemonShader"));
 
-                var mainTexturePath = exportPath + h3dMaterial.Texture0Name + ".png";
+                var mainTexturePath = exportPath + "/Textures/" + h3dMaterial.Texture0Name + ".png";
                 var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
                 if (mainTexture != null) {
                     var mainTextureRepresentation = textureDict[h3dMaterial.Texture0Name];
@@ -432,7 +250,7 @@ namespace P3DS2U.Editor
                     newMaterial.mainTexture = mainTexture;
                 }
 
-                var normalMapPath = exportPath + h3dMaterial.Texture2Name + ".png";
+                var normalMapPath = exportPath +  "/Textures/" + h3dMaterial.Texture2Name + ".png";
                 var normalTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (normalMapPath, typeof(Texture2D));
                 if (normalTexture != null) {
                     var normalTextureRepresentation = textureDict[h3dMaterial.Texture2Name];
@@ -452,7 +270,7 @@ namespace P3DS2U.Editor
                     newMaterial.SetTexture (NormalMap, normalTexture);
                 }
 
-                var occlusionMapPath = exportPath + h3dMaterial.Texture1Name + ".png";
+                var occlusionMapPath = exportPath +  "/Textures/"  + h3dMaterial.Texture1Name + ".png";
                 var occlusionTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (occlusionMapPath, typeof(Texture2D));
                 if (occlusionTexture != null) {
                     var occlusionMapRepresentation = textureDict[h3dMaterial.Texture2Name];
@@ -470,8 +288,8 @@ namespace P3DS2U.Editor
                             occlusionMapRepresentation.TextureCoord.Scale.Y, 0, 0));
                     newMaterial.SetTexture (OcclusionMap, occlusionTexture);
                 }
-
-                AssetDatabase.CreateAsset (newMaterial, exportPath + h3dMaterial.Name + ".mat");
+                
+                AssetDatabase.CreateAsset (newMaterial, currentMaterialExportFolder + h3dMaterial.Name + ".mat");
                 matDict.Add (h3dMaterial.Name, newMaterial);
             }
 
@@ -496,6 +314,11 @@ namespace P3DS2U.Editor
                 //Skeleton not present in model
             } else {
                 SpawnBones (skeletonRoot, sceneGo, emptyGo);
+            }
+            
+            var currentMeshExportFolder = exportPath + "/Meshes/";
+            if (!Directory.Exists (currentMeshExportFolder)) {
+                Directory.CreateDirectory (currentMeshExportFolder);
             }
 
             foreach (var h3DMesh in h3DModel.Meshes) {
@@ -599,7 +422,7 @@ namespace P3DS2U.Editor
                         .Select (t => t.worldToLocalMatrix * bonesTransform[0].localToWorldMatrix).ToArray ();
 
                     meshFilter.sharedMesh = mesh;
-                    SaveMeshAtPath (mesh, exportPath + subMeshName + ".asset");
+                    SaveMeshAtPath (mesh, currentMeshExportFolder + subMeshName + ".asset");
                     meshDict.Add (subMeshName, meshRenderer);
                 }
             }
