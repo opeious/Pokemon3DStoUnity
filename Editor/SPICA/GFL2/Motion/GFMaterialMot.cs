@@ -26,13 +26,13 @@ namespace P3DS2U.Editor.SPICA.GFL2.Motion
 
             var Position = Reader.BaseStream.Position;
 
-            var MaterialNames = Reader.ReadString ();
+            var MaterialNames = Reader.ReadStringArray(MaterialNamesCount);
 
             Reader.BaseStream.Seek (Position + MaterialNamesLength, SeekOrigin.Begin);
 
             for (var Index = 0; Index < MaterialNames.Length; Index++) {
                 for (var Unit = 0; Unit < Units[Index]; Unit++) {
-                    Materials.Add (new GFMotUVTransform (Reader, MaterialNames[Index] + "", FramesCount));
+                    Materials.Add (new GFMotUVTransform (Reader, MaterialNames[Index], FramesCount));
                 }
             }
         }
