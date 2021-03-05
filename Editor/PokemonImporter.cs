@@ -42,7 +42,8 @@ namespace P3DS2U.Editor
         private static readonly int NormalMapTiling = Shader.PropertyToID ("_NormalMapTiling");
         private static readonly int OcclusionMapTiling = Shader.PropertyToID ("_OcclusionMapTiling");
 
-        private const string ImportPath = "Assets/Bin3DS/";
+
+        public const string ImportPath = "Assets/Bin3DS/";
         private const string ExportPath = "Assets/Exported/";
 
         private static int _processedCount;
@@ -53,31 +54,23 @@ namespace P3DS2U.Editor
         private static H3D h3DScene = null;
         private static int CurrentAnimationIndex = 0;
         private static string CurrentAnimationExportFolder = "";
+
+        [MenuItem ("3DStoUnity/Open Pokemon Binary Importer")]
+        private static void ImportPokemonAction ()
+        {
+            if (!Directory.Exists (ImportPath)) {
+                Directory.CreateDirectory (ImportPath);
+                EditorUtility.DisplayDialog ("Created Folder " + ImportPath,
+                    "Created Folder" + ImportPath +
+                    " \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
+                    "ok");
+            }
+            SettingsUtils.GetOrCreateSettings ();
+        }
         
-        [MenuItem ("3DStoUnity/Import Pokemon (Bin)")]
-        private static void StartImportingBinaries ()
+        public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
         {
             try {
-                if (!Directory.Exists (ImportPath)) {
-                    Directory.CreateDirectory (ImportPath);
-                    EditorUtility.DisplayDialog ("Created Folder " + ImportPath,
-                        "Created Folder" + ImportPath +
-                        " \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
-                        "ok");
-                    return;
-                }
-
-                var allFiles = DirectoryUtils.GetAllFilesRecursive ("Assets/Bin3DS/");
-                var scenesDict = new Dictionary<string, List<string>> ();
-                foreach (var singleFile in allFiles) {
-                    var trimmedName = Path.GetFileName (singleFile);
-                    if (!scenesDict.ContainsKey (trimmedName)) {
-                        scenesDict.Add (trimmedName, new List<string> {singleFile});
-                    } else {
-                        scenesDict[trimmedName].Add (singleFile);
-                    }
-                }
-
                 _processedCount = 0;
                 foreach (var kvp in scenesDict) {
                     EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
@@ -117,8 +110,8 @@ namespace P3DS2U.Editor
                     var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
                     var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
                     AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
-                    GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
-                    GenerateMaterialAnimations (h3DScene, combinedExportFolder, matDict);
+                    // GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
+                    // GenerateMaterialAnimations (h3DScene, combinedExportFolder, matDict);
 
                     var go = GameObject.Find ("GeneratedUnityObject");
                     go.name = kvp.Key.Replace (".bin", "");
@@ -147,7 +140,7 @@ namespace P3DS2U.Editor
             
             //TODO: rewrite this whole thing
             
-            Transform testTransform = GameObject.Find ("0999 - Sylveon").transform;
+            Transform testTransform = GameObject.Find ("GeneratedUnityObject").transform;
 
             for (int i = 0; i < h3DScene.MaterialAnimations.Count; i++) {
                 var currentAnim = h3DScene.MaterialAnimations[i];
