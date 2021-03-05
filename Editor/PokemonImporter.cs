@@ -10,39 +10,25 @@ using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
 using UnityEditor;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 /*
- *TODO: Import folder structure options via popup at start
+ *TODO: Fix iris shaders and materials
+ *TODO: Material Animations
+ *TODO: Visibility Animations
+ *TODO: Better more optimized Toon shader
+ *TODO: Flame shader
  *TODO: Shaders in ase format (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null && UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().ToString().Contains("UniversalRenderPipelineAsset"))
- *TODO: Duplicate animation content instead of re-saving, to remove read only lock on animations
- *
- *
- * @opeious will you solve problem with repeating skeleton animations? I used this solution in my spica fork (GFPkmnModel):
-                        List<uint> sklAdresses = new List<uint>();
-                        if (SklAnim != null)
-                        {
-                            if (!sklAdresses.Contains(Header.Entries[Index].Address))
-                            {
-                                Output.SkeletalAnimations.Add(SklAnim);
-                                sklAdresses.Add(Header.Entries[Index].Address);
-                            }
-                       }
+ *TODO: AssetBundles/Addressable build size optimizations
+ *TODO: Environments/Characters
  */
 
 namespace P3DS2U.Editor
 {
     public class PokemonImporter : EditorWindow
     {
-        private static readonly int BaseMap = Shader.PropertyToID ("_BaseMap");
-        private static readonly int NormalMap = Shader.PropertyToID ("_NormalMap");
-        private static readonly int OcclusionMap = Shader.PropertyToID ("_OcclusionMap");
-        private static readonly int BaseMapTiling = Shader.PropertyToID ("_BaseMapTiling");
-        private static readonly int NormalMapTiling = Shader.PropertyToID ("_NormalMapTiling");
-        private static readonly int OcclusionMapTiling = Shader.PropertyToID ("_OcclusionMapTiling");
-
-
         public const string ImportPath = "Assets/Bin3DS/";
         private const string ExportPath = "Assets/Exported/";
 
@@ -73,6 +59,7 @@ namespace P3DS2U.Editor
             try {
                 _processedCount = 0;
                 foreach (var kvp in scenesDict) {
+                    EditorUtility.ClearProgressBar ();
                     EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
                         (float) _processedCount / scenesDict.Count);
 
@@ -98,32 +85,60 @@ namespace P3DS2U.Editor
                         if (data != null) h3DScene.Merge (data);
                     }
 
-                    var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin", "/Files/");
+                    var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin", "") + "/Files/";
                     if (!Directory.Exists (combinedExportFolder)) {
                         Directory.CreateDirectory (combinedExportFolder);
                     } else {
-                        Directory.Delete (ExportPath + kvp.Key.Replace (".bin", "/"), true);
+                        Directory.Delete (ExportPath + kvp.Key.Replace (".bin", "") + "/", true);
                         Directory.CreateDirectory (combinedExportFolder);
                     }
 
-                    GenerateTextureFiles (h3DScene, combinedExportFolder);
-                    var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
-                    var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
-                    AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
-                    // GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
-                    // GenerateMaterialAnimations (h3DScene, combinedExportFolder, matDict);
+                    if (importSettings.whatToImport.ImportTextures) {
+                        GenerateTextureFiles (h3DScene, combinedExportFolder);   
+                    }
+
+                    var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
+                    if (importSettings.whatToImport.ImportModel) {
+                        try {
+                            meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
+                        }
+                        catch (Exception e) {
+                            Debug.LogError (
+                                "Check your settings! Are you sure, you are using the correct input format, is each pokemon's binaries in a separate folder?\n" +
+                                e.Message + "\n" + e.StackTrace);
+                        }
+                    }
+
+                    var matDict = new Dictionary<string, Material> ();
+                    if (importSettings.whatToImport.ImportMaterials) {
+                        matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder, importSettings.customShaderSettings);   
+                    }
+
+                    if (importSettings.whatToImport.ApplyMaterials) {
+                        AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);   
+                    }
+
+                    if (importSettings.whatToImport.SkeletalAnimations) {
+                        GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
+                    }
+
+                    if (importSettings.whatToImport.MaterialAnimationsWip) {
+                        GenerateMaterialAnimations (h3DScene, combinedExportFolder, matDict);   
+                    }
 
                     var go = GameObject.Find ("GeneratedUnityObject");
-                    go.name = kvp.Key.Replace (".bin", "");
-                    var prefabPath =
-                        AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name + "/" + go.name + ".prefab");
-                    PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
+                    if (go != null) {
+                        go.name = kvp.Key.Replace (".bin", "");
+                        var prefabPath =
+                            AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name + "/" + go.name + ".prefab");
+                        PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
 
-                    go.transform.localPosition = new Vector3 {
-                        x = Random.Range (-500f, 500f),
-                        y = 0,
-                        z = Random.Range (-500f, 500f)
-                    };
+                        go.transform.localPosition = new Vector3 {
+                            x = Random.Range (-100f, 100f),
+                            y = 0,
+                            z = Random.Range (-100f, 100f)
+                        };   
+                    }
                 }
             }
             catch (Exception e) {
@@ -368,25 +383,31 @@ namespace P3DS2U.Editor
             //Get raw texture data from Scene
             var textureDict = new Dictionary<string, Texture2D> ();
             foreach (var h3DTexture in h3DScene.Textures) {
-                var width = h3DTexture.Width;
-                var height = h3DTexture.Height;
+                try {
+                    var width = h3DTexture.Width;
+                    var height = h3DTexture.Height;
 
-                var colorArray = new List<Color32> ();
-                var buffer = h3DTexture.ToRGBA ();
-                for (var i = 0; i < buffer.Length; i += 4) {
-                    var col = new Color32 (buffer[i + 0], buffer[i + 1], buffer[i + 2],
-                        buffer[i + 3]);
-                    colorArray.Add (col);
+                    var colorArray = new List<Color32> ();
+                    var buffer = h3DTexture.ToRGBA ();
+                    for (var i = 0; i < buffer.Length; i += 4) {
+                        var col = new Color32 (buffer[i + 0], buffer[i + 1], buffer[i + 2],
+                            buffer[i + 3]);
+                        colorArray.Add (col);
+                    }
+
+                    var texture = new Texture2D (width, height, TextureFormat.ARGB32, false) {name = h3DTexture.Name};
+                    var colorCounter = 0;
+                    for (var y = 0; y < texture.height; y++)
+                    for (var x = 0; x < texture.width; x++)
+                        texture.SetPixel (x, y, colorArray[colorCounter++]);
+
+                    texture.Apply ();
+                    textureDict.Add (texture.name, texture);
                 }
-
-                var texture = new Texture2D (width, height, TextureFormat.ARGB32, false) {name = h3DTexture.Name};
-                var colorCounter = 0;
-                for (var y = 0; y < texture.height; y++)
-                for (var x = 0; x < texture.width; x++)
-                    texture.SetPixel (x, y, colorArray[colorCounter++]);
-
-                texture.Apply ();
-                textureDict.Add (texture.name, texture);
+                catch (Exception e) {
+                    Debug.LogError ("Error importing texture: " + h3DTexture.Name + "\n" + e.Message + "\n" +
+                                    e.StackTrace);
+                }
             }
 
             var currentTextureExportFolder = exportPath + "/Textures/";
@@ -399,7 +420,8 @@ namespace P3DS2U.Editor
             AssetDatabase.Refresh ();
         }
 
-        private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath)
+        private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath,
+            P3ds2UShaderProperties shaderImportSettings)
         {
             var textureDict = new Dictionary<string, TextureUtils.H3DTextureRepresentation> ();
             foreach (var h3DMaterial in h3DScene.Models[0].Materials) {
@@ -426,7 +448,10 @@ namespace P3DS2U.Editor
             
             var matDict = new Dictionary<string, Material> ();
             foreach (var h3dMaterial in h3DScene.Models[0].Materials) {
-                var newMaterial = new Material (Shader.Find ("Shader Graphs/LitPokemonShader"));
+                var filePath = currentMaterialExportFolder + h3dMaterial.Name + ".mat";
+                var newMaterial = File.Exists (filePath)
+                    ? AssetDatabase.LoadAssetAtPath<Material> (filePath)
+                    : new Material (shaderImportSettings.bodyShader);
 
                 var mainTexturePath = exportPath + "/Textures/" + h3dMaterial.Texture0Name + ".png";
                 var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
@@ -441,10 +466,11 @@ namespace P3DS2U.Editor
                     importer.maxTextureSize = 256;
                     AssetDatabase.ImportAsset (mainTexturePath, ImportAssetOptions.ForceUpdate);
 
-                    newMaterial.SetVector (BaseMapTiling,
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.BaseMapTiling),
                         new Vector4 (mainTextureRepresentation.TextureCoord.Scale.X,
                             mainTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
-                    newMaterial.SetTexture (BaseMap, mainTexture);
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.BaseMap),
+                        mainTexture);
                     newMaterial.mainTexture = mainTexture;
                 }
 
@@ -462,10 +488,11 @@ namespace P3DS2U.Editor
                     importer.maxTextureSize = 256;
                     AssetDatabase.ImportAsset (normalMapPath, ImportAssetOptions.ForceUpdate);
 
-                    newMaterial.SetVector (NormalMapTiling,
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.NormalMapTiling),
                         new Vector4 (normalTextureRepresentation.TextureCoord.Scale.X,
                             normalTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
-                    newMaterial.SetTexture (NormalMap, normalTexture);
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.NormalMap),
+                        normalTexture);
                 }
 
                 var occlusionMapPath = exportPath +  "/Textures/"  + h3dMaterial.Texture1Name + ".png";
@@ -481,13 +508,17 @@ namespace P3DS2U.Editor
                     importer.maxTextureSize = 256;
                     AssetDatabase.ImportAsset (occlusionMapPath, ImportAssetOptions.ForceUpdate);
 
-                    newMaterial.SetVector (OcclusionMapTiling,
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.OcclusionMapTiling),
                         new Vector4 (occlusionMapRepresentation.TextureCoord.Scale.X,
                             occlusionMapRepresentation.TextureCoord.Scale.Y, 0, 0));
-                    newMaterial.SetTexture (OcclusionMap, occlusionTexture);
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.OcclusionMap),
+                        occlusionTexture);
                 }
-                
-                AssetDatabase.CreateAsset (newMaterial, currentMaterialExportFolder + h3dMaterial.Name + ".mat");
+
+                if (!File.Exists (filePath)) {
+                    AssetDatabase.CreateAsset (newMaterial, currentMaterialExportFolder + h3dMaterial.Name + ".mat");
+                }
+
                 matDict.Add (h3dMaterial.Name, newMaterial);
             }
 

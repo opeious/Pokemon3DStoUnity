@@ -24,7 +24,7 @@ namespace P3DS2U.Editor
 
         private static void OnCheckPostProcessBinary (IEnumerable<string> newOrModifiedFiles)
         {
-            if (newOrModifiedFiles.Any (file => file.Contains (".bin") && P3ds2USettingsScriptableObject.Instance != null)) {
+            if (P3ds2USettingsScriptableObject.ImportInProgress && newOrModifiedFiles.Any (file => file.Contains (".bin") && P3ds2USettingsScriptableObject.Instance != null)) {
                 P3ds2USettingsScriptableObject.Instance.RegeneratePreview ();
             }
         }
