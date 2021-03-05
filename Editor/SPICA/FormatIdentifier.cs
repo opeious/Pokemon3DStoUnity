@@ -11,7 +11,7 @@ namespace P3DS2U.Editor.SPICA
 {
     internal static class FormatIdentifier
     {
-        public static H3D.H3D IdentifyAndOpen (string FileName, H3DDict<H3DBone> Skeleton = null)
+        public static H3D.H3D IdentifyAndOpen (string FileName, H3DDict<H3DBone> Skeleton = null, int animFilesCount = -1)
         {
             //Formats that can by identified by extensions
             var FilePath = Path.GetDirectoryName (FileName);
@@ -71,7 +71,7 @@ namespace P3DS2U.Editor.SPICA
                                 // case "GR": Output = GFOWMapModel.OpenAsH3D(FS, PackHeader); break;
                                 // case "MM": Output = GFOWCharaModel.OpenAsH3D(FS, PackHeader); break;
                                 case "PC":
-                                    Output = GFPkmnModel.OpenAsH3D (FS, PackHeader, Skeleton);
+                                    Output = GFPkmnModel.OpenAsH3D (FS, PackHeader, Skeleton, animFilesCount);
                                     break;
                                 // case "PT": Output = GFPackedTexture.OpenAsH3D(FS, PackHeader, 0); break;
                                 case "PK":

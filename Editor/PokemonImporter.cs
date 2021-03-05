@@ -75,13 +75,15 @@ namespace P3DS2U.Editor
                         if (data != null) h3DScene.Merge (data);
                     }
 
+                    int animFilesCount = 0;
                     //Merge animation binaries
                     foreach (var singleFileToBeMerged in kvp.Value) {
                         var fileType = BinaryUtils.GetBinaryFileType (singleFileToBeMerged);
                         if (fileType != BinaryUtils.FileType.Animation) continue;
                         H3DDict<H3DBone> skeleton = null;
                         if (h3DScene.Models.Count > 0) skeleton = h3DScene.Models[0].Skeleton;
-                        var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton);
+                        var data = FormatIdentifier.IdentifyAndOpen (singleFileToBeMerged, skeleton, animFilesCount);
+                        animFilesCount++;
                         if (data != null) h3DScene.Merge (data);
                     }
 
@@ -328,7 +330,7 @@ namespace P3DS2U.Editor
             AnimationUtility.SetAnimationClipSettings(newClip, clipSettings);
             if (!string.IsNullOrEmpty (CurrentAnimationExportFolder)) {
                 PokemonAnimationImporter.IsEnabled = false;
-                AssetDatabase.CreateAsset (newClip, CurrentAnimationExportFolder + "anim" + CurrentAnimationIndex++ +".anim");
+                AssetDatabase.CreateAsset (newClip, CurrentAnimationExportFolder + h3DScene.SkeletalAnimations[CurrentAnimationIndex++].Name + ".anim");
                 AssetDatabase.Refresh ();
             }
         }
