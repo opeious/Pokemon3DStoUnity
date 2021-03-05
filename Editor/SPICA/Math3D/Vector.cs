@@ -79,10 +79,54 @@ namespace P3DS2U.Editor.SPICA.Math3D
 
         public static Vector3 ToEuler (this Quaternion q)
         {
-            return new Vector3 (
-                (float) Math.Atan2 (2 * (q.X * q.W + q.Y * q.Z), 1 - 2 * (q.X * q.X + q.Y * q.Y)),
-                -(float) Math.Asin (2 * (q.X * q.Z - q.W * q.Y)),
-                (float) Math.Atan2 (2 * (q.X * q.Y + q.Z * q.W), 1 - 2 * (q.Y * q.Y + q.Z * q.Z)));
+            var x = new Vector3 (
+            (float) Math.Atan2 (2 * (q.X * q.W + q.Y * q.Z), 1 - 2 * (q.X * q.X + q.Y * q.Y)),
+            -(float) Math.Asin (2 * (q.X * q.Z - q.W * q.Y)),
+            (float) Math.Atan2 (2 * (q.X * q.Y + q.Z * q.W), 1 - 2 * (q.Y * q.Y + q.Z * q.Z)));
+            // var x = q.CoputeAngles ();
+            if (x.X != x.X) {
+                x.X = 0;
+            }
+
+            if (x.Y != x.Y) {
+                x.Y = 0;
+            }
+
+            if (x.Z != x.Z) {
+                x.Z = 0;
+            } 
+            return x;
         }
+    }
+}
+
+public static class QuaternionExtensions
+{
+    public static float ComputeXAngle(this Quaternion q)
+    {
+        float sinr_cosp = 2 * (q.W * q.X + q.Y * q.Z);
+        float cosr_cosp = 1 - 2 * (q.X * q.X + q.Y * q.Y);
+        return (float) Math.Atan2(sinr_cosp, cosr_cosp);
+    }
+
+    public static float ComputeYAngle(this Quaternion q)
+    {
+        float sinp = 2 * (q.W * q.Y - q.Z * q.X);
+        if (Math.Abs(sinp) >= 1)
+            return (float) (Math.PI / 2 * Math.Sign(sinp)); // use 90 degrees if out of range
+        else
+            return (float) Math.Asin(sinp);
+    }
+
+    public static float ComputeZAngle(this Quaternion q)
+    {
+        float siny_cosp = 2 * (q.W * q.Z + q.X * q.Y);
+        float cosy_cosp = 1 - 2 * (q.Y * q.Y + q.Z * q.Z);
+        return (float) Math.Atan2(siny_cosp, cosy_cosp);
+    }
+
+    public static Vector3 CoputeAngles(this Quaternion q)
+    {
+        return new Vector3(ComputeXAngle(q), ComputeYAngle(q), ComputeZAngle(q));
     }
 }
