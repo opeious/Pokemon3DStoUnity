@@ -6,6 +6,7 @@ using System.Text;
 using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.Commands;
 using P3DS2U.Editor.SPICA.Converters;
+using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Material;
 using UnityEngine;
@@ -58,7 +59,26 @@ namespace P3DS2U.Editor
 
     public static class AnimationUtils
     {
-        
+        public static AnimationCurve GetOrAddCurve(Dictionary<string, AnimationCurve> curvesDict, string curveName)
+        {
+            if (curvesDict.ContainsKey (curveName)) {
+                return curvesDict[curveName];
+            }
+            var newCurve = new AnimationCurve();
+            curvesDict.Add (curveName, newCurve);
+            return newCurve;
+        }
+
+        public static float GetTimeAtFrame (AnimationClip clip, int frame, H3DAnimation h3DAnimation)
+        {
+            if (clip.averageDuration > 0f) {
+                if (frame == 0) {
+                    return 0;
+                }
+                return frame / (clip.averageDuration * clip.frameRate);
+            }
+            return frame == 0 ? 0 : frame / h3DAnimation.FramesCount;
+        }
     }
     
     public static class DirectoryUtils

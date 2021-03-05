@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CurveExtended;
 using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.COLLADA;
 using P3DS2U.Editor.SPICA.H3D;
@@ -9,27 +10,26 @@ using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
 using UnityEditor;
+using UnityEditor.VersionControl;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 /*
- *TODO: Import folder structure options via popup at start
+ *TODO: Fix iris shaders and materials
+ *TODO: Material Animations
+ *TODO: Visibility Animations
+ *TODO: Better more optimized Toon shader
+ *TODO: Flame shader
  *TODO: Shaders in ase format (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null && UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().ToString().Contains("UniversalRenderPipelineAsset"))
- *TODO: Duplicate animation content instead of re-saving, to remove read only lock on animations
+ *TODO: AssetBundles/Addressable build size optimizations
+ *TODO: Environments/Characters
  */
 
 namespace P3DS2U.Editor
 {
     public class PokemonImporter : EditorWindow
     {
-        private static readonly int BaseMap = Shader.PropertyToID ("_BaseMap");
-        private static readonly int NormalMap = Shader.PropertyToID ("_NormalMap");
-        private static readonly int OcclusionMap = Shader.PropertyToID ("_OcclusionMap");
-        private static readonly int BaseMapTiling = Shader.PropertyToID ("_BaseMapTiling");
-        private static readonly int NormalMapTiling = Shader.PropertyToID ("_NormalMapTiling");
-        private static readonly int OcclusionMapTiling = Shader.PropertyToID ("_OcclusionMapTiling");
-
-        private const string ImportPath = "Assets/Bin3DS/";
+        public const string ImportPath = "Assets/Bin3DS/";
         private const string ExportPath = "Assets/Exported/";
 
         private static int _processedCount;
@@ -40,33 +40,26 @@ namespace P3DS2U.Editor
         private static H3D h3DScene = null;
         private static int CurrentAnimationIndex = 0;
         private static string CurrentAnimationExportFolder = "";
+
+        [MenuItem ("3DStoUnity/Open Pokemon Binary Importer")]
+        private static void ImportPokemonAction ()
+        {
+            if (!Directory.Exists (ImportPath)) {
+                Directory.CreateDirectory (ImportPath);
+                EditorUtility.DisplayDialog ("Created Folder " + ImportPath,
+                    "Created Folder" + ImportPath +
+                    " \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
+                    "ok");
+            }
+            SettingsUtils.GetOrCreateSettings ();
+        }
         
-        [MenuItem ("3DStoUnity/Import Pokemon (Bin)")]
-        private static void StartImportingBinaries ()
+        public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
         {
             try {
-                if (!Directory.Exists (ImportPath)) {
-                    Directory.CreateDirectory (ImportPath);
-                    EditorUtility.DisplayDialog ("Created Folder " + ImportPath,
-                        "Created Folder" + ImportPath +
-                        " \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
-                        "ok");
-                    return;
-                }
-
-                var allFiles = DirectoryUtils.GetAllFilesRecursive ("Assets/Bin3DS/");
-                var scenesDict = new Dictionary<string, List<string>> ();
-                foreach (var singleFile in allFiles) {
-                    var trimmedName = Path.GetFileName (singleFile);
-                    if (!scenesDict.ContainsKey (trimmedName)) {
-                        scenesDict.Add (trimmedName, new List<string> {singleFile});
-                    } else {
-                        scenesDict[trimmedName].Add (singleFile);
-                    }
-                }
-
                 _processedCount = 0;
                 foreach (var kvp in scenesDict) {
+                    EditorUtility.ClearProgressBar ();
                     EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
                         (float) _processedCount / scenesDict.Count);
 
@@ -94,31 +87,60 @@ namespace P3DS2U.Editor
                         if (data != null) h3DScene.Merge (data);
                     }
 
-                    var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin", "/Files/");
+                    var combinedExportFolder = ExportPath + kvp.Key.Replace (".bin", "") + "/Files/";
                     if (!Directory.Exists (combinedExportFolder)) {
                         Directory.CreateDirectory (combinedExportFolder);
                     } else {
-                        Directory.Delete (ExportPath + kvp.Key.Replace (".bin", "/"), true);
+                        Directory.Delete (ExportPath + kvp.Key.Replace (".bin", "") + "/", true);
                         Directory.CreateDirectory (combinedExportFolder);
                     }
 
-                    GenerateTextureFiles (h3DScene, combinedExportFolder);
-                    var meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
-                    var matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder);
-                    AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
-                    GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
+                    if (importSettings.whatToImport.ImportTextures) {
+                        GenerateTextureFiles (h3DScene, combinedExportFolder);   
+                    }
+
+                    var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
+                    if (importSettings.whatToImport.ImportModel) {
+                        try {
+                            meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
+                        }
+                        catch (Exception e) {
+                            Debug.LogError (
+                                "Check your settings! Are you sure, you are using the correct input format, is each pokemon's binaries in a separate folder?\n" +
+                                e.Message + "\n" + e.StackTrace);
+                        }
+                    }
+
+                    var matDict = new Dictionary<string, Material> ();
+                    if (importSettings.whatToImport.ImportMaterials) {
+                        matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder, importSettings.customShaderSettings);   
+                    }
+
+                    if (importSettings.whatToImport.ApplyMaterials) {
+                        AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);   
+                    }
+
+                    if (importSettings.whatToImport.SkeletalAnimations) {
+                        GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
+                    }
+
+                    if (importSettings.whatToImport.MaterialAnimationsWip) {
+                        GenerateMaterialAnimations (h3DScene, combinedExportFolder, matDict);   
+                    }
 
                     var go = GameObject.Find ("GeneratedUnityObject");
-                    go.name = kvp.Key.Replace (".bin", "");
-                    var prefabPath =
-                        AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name + "/" + go.name + ".prefab");
-                    PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
+                    if (go != null) {
+                        go.name = kvp.Key.Replace (".bin", "");
+                        var prefabPath =
+                            AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name + "/" + go.name + ".prefab");
+                        PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
 
-                    go.transform.localPosition = new Vector3 {
-                        x = Random.Range (-500f, 500f),
-                        y = 0,
-                        z = Random.Range (-500f, 500f)
-                    };
+                        go.transform.localPosition = new Vector3 {
+                            x = Random.Range (-100f, 100f),
+                            y = 0,
+                            z = Random.Range (-100f, 100f)
+                        };   
+                    }
                 }
             }
             catch (Exception e) {
@@ -128,15 +150,187 @@ namespace P3DS2U.Editor
 
             EditorUtility.ClearProgressBar();
         }
-
-        private static void OnAnimationPostprocessed (AnimationClip clip)
+        
+        private static void GenerateMaterialAnimations (H3D h3DScene, string combinedExportFolder,
+            Dictionary<string, Material> materialMappingDictionary)
         {
-            var clipSettings = AnimationUtility.GetAnimationClipSettings (clip);
+            
+            //TODO: rewrite this whole thing
+            
+            Transform testTransform = GameObject.Find ("GeneratedUnityObject").transform;
+
+            for (int i = 0; i < h3DScene.MaterialAnimations.Count; i++) {
+                var currentAnim = h3DScene.MaterialAnimations[i];
+                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (combinedExportFolder + "/Animations/" + "anim" + i + ".anim");
+                if (animationClip == null) {
+                    animationClip = new AnimationClip ();
+                    var clipSettings = AnimationUtility.GetAnimationClipSettings (animationClip);
+                    clipSettings.loopTime = currentAnim.AnimationFlags == H3DAnimationFlags.IsLooping;
+                    AnimationUtility.SetAnimationClipSettings (animationClip, clipSettings);
+                }
+
+                var newCurvesDict = new Dictionary<string, AnimationCurve> ();
+                
+                foreach (var element in currentAnim.Elements) {
+                    var didntHandle = false;
+                    //TODO: get all the keyframes first then make curves, to support custom shaders in the future
+                    switch (element.PrimitiveType) {
+                        case H3DPrimitiveType.Boolean:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.Float:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.Integer:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.Vector2D:
+
+                            switch (element.TargetType) {
+                                case H3DTargetType.MaterialTexCoord0Scale:
+                                    var curveBs = AnimationUtils.GetOrAddCurve (newCurvesDict, "bs");
+                                    // SetVector2(Vector, ref TC[0].Scale);       
+                                    break;
+                                case H3DTargetType.MaterialTexCoord1Scale:
+                                    // SetVector2(Vector, ref TC[1].Scale);       
+                                    break;
+                                case H3DTargetType.MaterialTexCoord2Scale:
+                                    // SetVector2(Vector, ref TC[2].Scale);       
+                                    break;
+                                case H3DTargetType.MaterialTexCoord0Trans:
+                                    var curveBt = AnimationUtils.GetOrAddCurve (newCurvesDict, "bty");
+                                    if (element.Content is H3DAnimVector2D h3DAnimVector2DBt) {
+                                        foreach (var singleYFrame in h3DAnimVector2DBt.Y.KeyFrames) {
+                                            var lhs = singleYFrame.InSlope;
+                                            var rhs = singleYFrame.OutSlope;
+                                            TangentMode tangentMode;
+                                            if (lhs == 0 && rhs == 0) {
+                                                tangentMode = TangentMode.Stepped;
+                                            } else {
+                                                tangentMode = TangentMode.Linear;
+                                            }
+
+                                            curveBt.AddKey (KeyframeUtil.GetNew (
+                                                AnimationUtils.GetTimeAtFrame (animationClip,
+                                                    (int) singleYFrame.Frame, currentAnim),
+                                                singleYFrame.Value,
+                                                tangentMode));
+                                            if (tangentMode == TangentMode.Linear) {
+                                                curveBt.UpdateAllLinearTangents ();
+                                            }
+                                        }
+                                    }
+                                    var skms = testTransform.GetComponentsInChildren<SkinnedMeshRenderer> ();
+                                    foreach (var skm in skms) {
+                                        if (skm.material.name.Replace (" (Instance)", "") == element.Name) {
+                                            var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
+                                                testTransform);
+                                            animationClip.SetCurve (cbp, typeof(SkinnedMeshRenderer),
+                                                "material._BaseMapOffset.y", newCurvesDict["bty"]);
+                                        }
+                                    }
+                                    break;
+                                case H3DTargetType.MaterialTexCoord1Trans:
+                                    // SetVector2(Vector, ref TC[1].Translation);
+                                    break;
+                                case H3DTargetType.MaterialTexCoord2Trans:
+                                    // var curveNt = AnimationUtils.GetOrAddCurve (newCurvesDict, "ntx");
+                                    // if (element.Content is H3DAnimVector2D h3DAnimVector2DNt) {
+                                    //     foreach (var singleXFrame in h3DAnimVector2DNt.X.KeyFrames) {
+                                    //         var lhs = singleXFrame.InSlope;
+                                    //         var rhs = singleXFrame.OutSlope;
+                                    //         TangentMode tangentMode;
+                                    //         if (lhs == 0 && rhs == 0) {
+                                    //             tangentMode = TangentMode.Stepped;
+                                    //         } else {
+                                    //             tangentMode = TangentMode.Linear;
+                                    //         }
+                                    //
+                                    //         curveNt.AddKey (KeyframeUtil.GetNew (
+                                    //             AnimationUtils.GetTimeAtFrame (animationClip,
+                                    //                 (int) singleXFrame.Frame, currentAnim),
+                                    //             singleXFrame.Value,
+                                    //             tangentMode));
+                                    //         if (tangentMode == TangentMode.Linear) {
+                                    //             curveNt.UpdateAllLinearTangents ();
+                                    //         }
+                                    //     }
+                                    // }
+
+                                    break;
+                            }
+
+                            // if (newCurvesDict.ContainsKey ("ntx")) {
+                            //     var skms = testTransform.GetComponentsInChildren<SkinnedMeshRenderer> ();
+                            //     foreach (var skm in skms) {
+                            //         if (skm.material.name.Replace (" (Instance)", "") == element.Name) {
+                            //             var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
+                            //                 testTransform);
+                            //             animationClip.SetCurve (cbp, typeof(SkinnedMeshRenderer),
+                            //                 "material._NormalMapOffset.x", newCurvesDict["ntx"]);
+                            //         }
+                            //     }
+                            // }
+                            
+                            if (newCurvesDict.ContainsKey ("bty")) {
+
+                            }
+                            // var x = element.TargetType;
+                            // Debug.LogError (x);
+                            // var newCurve = new AnimationCurve();
+                            // var y = element.Content.GetType ();
+                            //
+                            
+                            break;
+                        case H3DPrimitiveType.Vector3D:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.Transform:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.RGBA:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.Texture:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.QuatTransform:
+                            didntHandle = true;
+                            break;
+                        case H3DPrimitiveType.MtxTransform:
+                            didntHandle = true;
+                            break;
+                        default:
+                            didntHandle = true;
+                            break;
+                    }
+
+                    if (didntHandle) {
+                        //TODO: Handle all the didnt handles
+                        Debug.LogError ("Didn't handle for this type: " + element.PrimitiveType);
+                    }
+                }
+                
+            }
+        }
+        
+
+        private static void OnAnimationPostprocessed (AnimationClip daeClip)
+        {
+            var newClip = new AnimationClip ();
+
+            var x = AnimationUtility.GetCurveBindings (daeClip);
+            foreach (var y in x) {
+                AnimationUtility.SetEditorCurve (newClip, y,
+                    AnimationUtility.GetEditorCurve (daeClip, y));
+            }
+            
+            var clipSettings = AnimationUtility.GetAnimationClipSettings (newClip);
             clipSettings.loopTime = h3DScene.SkeletalAnimations[0].AnimationFlags == H3DAnimationFlags.IsLooping;
-            AnimationUtility.SetAnimationClipSettings(clip, clipSettings);
+            AnimationUtility.SetAnimationClipSettings(newClip, clipSettings);
             if (!string.IsNullOrEmpty (CurrentAnimationExportFolder)) {
                 PokemonAnimationImporter.IsEnabled = false;
-                AssetDatabase.CreateAsset (clip, CurrentAnimationExportFolder + h3DScene.SkeletalAnimations[CurrentAnimationIndex++].Name + ".anim");
+                AssetDatabase.CreateAsset (newClip, CurrentAnimationExportFolder + h3DScene.SkeletalAnimations[CurrentAnimationIndex++].Name + ".anim");
                 AssetDatabase.Refresh ();
             }
         }
@@ -166,6 +360,7 @@ namespace P3DS2U.Editor
 
             if (File.Exists (tempFilePath)) {
                 File.Delete (tempFilePath);
+                File.Delete (tempFilePath + ".meta");
             }
             AssetDatabase.Refresh ();
         }
@@ -190,25 +385,31 @@ namespace P3DS2U.Editor
             //Get raw texture data from Scene
             var textureDict = new Dictionary<string, Texture2D> ();
             foreach (var h3DTexture in h3DScene.Textures) {
-                var width = h3DTexture.Width;
-                var height = h3DTexture.Height;
+                try {
+                    var width = h3DTexture.Width;
+                    var height = h3DTexture.Height;
 
-                var colorArray = new List<Color32> ();
-                var buffer = h3DTexture.ToRGBA ();
-                for (var i = 0; i < buffer.Length; i += 4) {
-                    var col = new Color32 (buffer[i + 0], buffer[i + 1], buffer[i + 2],
-                        buffer[i + 3]);
-                    colorArray.Add (col);
+                    var colorArray = new List<Color32> ();
+                    var buffer = h3DTexture.ToRGBA ();
+                    for (var i = 0; i < buffer.Length; i += 4) {
+                        var col = new Color32 (buffer[i + 0], buffer[i + 1], buffer[i + 2],
+                            buffer[i + 3]);
+                        colorArray.Add (col);
+                    }
+
+                    var texture = new Texture2D (width, height, TextureFormat.ARGB32, false) {name = h3DTexture.Name};
+                    var colorCounter = 0;
+                    for (var y = 0; y < texture.height; y++)
+                    for (var x = 0; x < texture.width; x++)
+                        texture.SetPixel (x, y, colorArray[colorCounter++]);
+
+                    texture.Apply ();
+                    textureDict.Add (texture.name, texture);
                 }
-
-                var texture = new Texture2D (width, height, TextureFormat.ARGB32, false) {name = h3DTexture.Name};
-                var colorCounter = 0;
-                for (var y = 0; y < texture.height; y++)
-                for (var x = 0; x < texture.width; x++)
-                    texture.SetPixel (x, y, colorArray[colorCounter++]);
-
-                texture.Apply ();
-                textureDict.Add (texture.name, texture);
+                catch (Exception e) {
+                    Debug.LogError ("Error importing texture: " + h3DTexture.Name + "\n" + e.Message + "\n" +
+                                    e.StackTrace);
+                }
             }
 
             var currentTextureExportFolder = exportPath + "/Textures/";
@@ -221,7 +422,8 @@ namespace P3DS2U.Editor
             AssetDatabase.Refresh ();
         }
 
-        private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath)
+        private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath,
+            P3ds2UShaderProperties shaderImportSettings)
         {
             var textureDict = new Dictionary<string, TextureUtils.H3DTextureRepresentation> ();
             foreach (var h3DMaterial in h3DScene.Models[0].Materials) {
@@ -248,7 +450,10 @@ namespace P3DS2U.Editor
             
             var matDict = new Dictionary<string, Material> ();
             foreach (var h3dMaterial in h3DScene.Models[0].Materials) {
-                var newMaterial = new Material (Shader.Find ("Shader Graphs/LitPokemonShader"));
+                var filePath = currentMaterialExportFolder + h3dMaterial.Name + ".mat";
+                var newMaterial = File.Exists (filePath)
+                    ? AssetDatabase.LoadAssetAtPath<Material> (filePath)
+                    : new Material (shaderImportSettings.bodyShader);
 
                 var mainTexturePath = exportPath + "/Textures/" + h3dMaterial.Texture0Name + ".png";
                 var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
@@ -263,10 +468,11 @@ namespace P3DS2U.Editor
                     importer.maxTextureSize = 256;
                     AssetDatabase.ImportAsset (mainTexturePath, ImportAssetOptions.ForceUpdate);
 
-                    newMaterial.SetVector (BaseMapTiling,
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.BaseMapTiling),
                         new Vector4 (mainTextureRepresentation.TextureCoord.Scale.X,
                             mainTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
-                    newMaterial.SetTexture (BaseMap, mainTexture);
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.BaseMap),
+                        mainTexture);
                     newMaterial.mainTexture = mainTexture;
                 }
 
@@ -284,10 +490,11 @@ namespace P3DS2U.Editor
                     importer.maxTextureSize = 256;
                     AssetDatabase.ImportAsset (normalMapPath, ImportAssetOptions.ForceUpdate);
 
-                    newMaterial.SetVector (NormalMapTiling,
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.NormalMapTiling),
                         new Vector4 (normalTextureRepresentation.TextureCoord.Scale.X,
                             normalTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
-                    newMaterial.SetTexture (NormalMap, normalTexture);
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.NormalMap),
+                        normalTexture);
                 }
 
                 var occlusionMapPath = exportPath +  "/Textures/"  + h3dMaterial.Texture1Name + ".png";
@@ -303,13 +510,17 @@ namespace P3DS2U.Editor
                     importer.maxTextureSize = 256;
                     AssetDatabase.ImportAsset (occlusionMapPath, ImportAssetOptions.ForceUpdate);
 
-                    newMaterial.SetVector (OcclusionMapTiling,
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.OcclusionMapTiling),
                         new Vector4 (occlusionMapRepresentation.TextureCoord.Scale.X,
                             occlusionMapRepresentation.TextureCoord.Scale.Y, 0, 0));
-                    newMaterial.SetTexture (OcclusionMap, occlusionTexture);
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.OcclusionMap),
+                        occlusionTexture);
                 }
-                
-                AssetDatabase.CreateAsset (newMaterial, currentMaterialExportFolder + h3dMaterial.Name + ".mat");
+
+                if (!File.Exists (filePath)) {
+                    AssetDatabase.CreateAsset (newMaterial, currentMaterialExportFolder + h3dMaterial.Name + ".mat");
+                }
+
                 matDict.Add (h3dMaterial.Name, newMaterial);
             }
 
@@ -481,6 +692,19 @@ namespace P3DS2U.Editor
             if (File.Exists (path)) File.Delete (path);
             AssetDatabase.CreateAsset (mesh, path);
             AssetDatabase.SaveAssets ();
+        }
+        
+        [MenuItem ("3DStoUnity/Build Asset Bundles")]
+        private static void BuildPokemonAssetBundles()
+        {
+            EditorUtility.DisplayDialog ("Placeholder Action",
+                "Feature in the pipeline, will consider Addressables in the future too. Going either route way will reduce the final build size significantly and allow for DLC content in your project",
+                "ok");
+            return;
+            if (!Directory.Exists ("Assets/TestPath")) {
+                Directory.CreateDirectory ("Assets/TestPath");
+            }
+            BuildPipeline.BuildAssetBundles ("Assets/TestPath", BuildAssetBundleOptions.None, BuildTarget.Android);
         }
     }
 }
