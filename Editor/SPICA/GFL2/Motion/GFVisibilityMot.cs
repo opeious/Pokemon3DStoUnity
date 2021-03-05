@@ -19,14 +19,12 @@ namespace P3DS2U.Editor.SPICA.GFL2.Motion
             var MeshNamesLength = Reader.ReadUInt32 ();
 
             var Position = Reader.BaseStream.Position;
-
-            var MeshNames = Reader.ReadString ();
-            // string[] MeshNames = Reader.ReadStringArray(MeshNamesCount);
+            
+            string[] MeshNames = Reader.ReadStringArray(MeshNamesCount);
 
             Reader.BaseStream.Seek (Position + MeshNamesLength, SeekOrigin.Begin);
 
-            foreach (var name in MeshNames) {
-                var Name = name + "";
+            foreach (var Name in MeshNames) {
                 Visibilities.Add (new GFMotBoolean (Reader, Name, (int) (FramesCount + 1)));
             }
         }
