@@ -9,7 +9,6 @@ using P3DS2U.Editor.SPICA.H3D;
 using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
-using P3DS2U.Editor.SPICA.H3D.Scene;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -138,11 +137,19 @@ namespace P3DS2U.Editor
                         GenerateMaterialAnimations (h3DScene, combinedExportFolder);   
                     }
 
-                    var go = GameObject.Find ("GeneratedUnityObject");
-                    if (go != null) {
-                        go.name = kvp.Key.Replace (".bin", "");
+                    var modelGo = GameObject.Find ("GeneratedUnityObject");
+                    if (modelGo != null) {
+                        if (importSettings.whatToImport.SkeletalAnimations) {
+                            GenerateAnimationController (modelGo, combinedExportFolder);
+                        }
+                        
+                        var go = new GameObject ("GeneratedUnityObject");
+                        modelGo.transform.SetParent (go.transform);
+                        modelGo.name = "Model";
+                        
+                        go.name = kvp.Key.Replace (".bin", "") + "Container";
                         var prefabPath =
-                            AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name + "/" + go.name + ".prefab");
+                            AssetDatabase.GenerateUniqueAssetPath (ExportPath + kvp.Key.Replace (".bin", "") + "/" + kvp.Key.Replace (".bin", "") + ".prefab");
                         PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
 
                         go.transform.localPosition = new Vector3 {
@@ -159,6 +166,29 @@ namespace P3DS2U.Editor
             }
 
             EditorUtility.ClearProgressBar();
+        }
+
+        private static void GenerateAnimationController (GameObject modelGo, string combinedExportFolder)
+        {
+            var animationsFolderPath = combinedExportFolder + "/Animations/";
+            var animator = modelGo.AddComponent<Animator> ();
+
+            var animatorController = new UnityEditor.Animations.AnimatorController ();
+
+            var files = Directory.GetFiles (animationsFolderPath);
+            
+            animatorController.AddLayer ("AllAnims");
+            // animatorController.layers[0].stateMachine.AddState ("1");
+            foreach (var animationFilePath in files) {
+                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (animationFilePath);
+                if (animationClip != null) {
+                    animatorController.AddMotion (animationClip);
+                }
+            }
+
+            animator.runtimeAnimatorController = animatorController;
+            AssetDatabase.CreateAsset (animatorController,  animationsFolderPath + "animController.controller");
+            AssetDatabase.Refresh();
         }
 
         private static void GenerateVisibilityAnimations (H3D h3DScene, string combinedExportFolder)
