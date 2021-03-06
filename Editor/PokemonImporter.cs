@@ -9,6 +9,7 @@ using P3DS2U.Editor.SPICA.H3D;
 using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
+using P3DS2U.Editor.SPICA.H3D.Scene;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -128,6 +129,10 @@ namespace P3DS2U.Editor
                     if (importSettings.whatToImport.SkeletalAnimations) {
                         GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
                     }
+                    
+                    if (importSettings.whatToImport.VisibilityAnimations) {
+                        GenerateVisibilityAnimations (h3DScene, combinedExportFolder);
+                    }
 
                     if (importSettings.whatToImport.MaterialAnimationsWip) {
                         GenerateMaterialAnimations (h3DScene, combinedExportFolder);   
@@ -154,6 +159,65 @@ namespace P3DS2U.Editor
             }
 
             EditorUtility.ClearProgressBar();
+        }
+
+        private static void GenerateVisibilityAnimations (H3D h3DScene, string combinedExportFolder)
+        {
+            var modelTransform = GameObject.Find ("pidg").transform;
+
+            foreach (var currentVisAnim in h3DScene.VisibilityAnimations) {
+                var fileCreated = false;
+                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (combinedExportFolder + "/Animations/" + currentVisAnim.Name + ".anim");
+                if (animationClip == null) {
+                    animationClip = new AnimationClip {name = currentVisAnim.Name};
+                    var clipSettings = AnimationUtility.GetAnimationClipSettings (animationClip);
+                    clipSettings.loopTime = currentVisAnim.AnimationFlags == H3DAnimationFlags.IsLooping;
+                    AnimationUtility.SetAnimationClipSettings (animationClip, clipSettings);
+                    fileCreated = true;
+                }
+                
+                var newCurves = new Dictionary<string, AnimationCurve> ();
+                foreach (var animationElement in currentVisAnim.Elements) {
+                    switch (animationElement.PrimitiveType) {
+                        case H3DPrimitiveType.Boolean:
+                            if (animationElement.TargetType == H3DTargetType.MeshNodeVisibility) {
+                                var visCurve = new AnimationCurve();
+                                if (animationElement.Content is H3DAnimBoolean h3DAnimBoolean) {
+                                    var added = false;
+                                    for (var i = 0; i < h3DAnimBoolean.Values.Count; i++) {
+                                        visCurve.AddKey (KeyframeUtil.GetNew (
+                                            AnimationUtils.GetTimeAtFrame (animationClip,
+                                                (int) i, currentVisAnim),
+                                            h3DAnimBoolean.Values[i] ? 1f : 0f,
+                                            TangentMode.Stepped));
+                                        if (h3DAnimBoolean.Values[i] == false) {
+                                            added = true;
+                                        }
+                                    }
+
+                                    if (added) {
+                                        var skms = modelTransform.GetComponentsInChildren<Transform> ();
+                                        foreach (var skm in skms) {
+                                            if (skm.name.Replace (" (Instance)", "").Contains(animationElement.Name)) {
+                                                var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
+                                                    modelTransform);
+                                                animationClip.SetCurve (cbp, typeof(GameObject), "m_IsActive", visCurve);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                    
+                }
+                
+                if (fileCreated) {
+                    AssetDatabase.CreateAsset (animationClip, combinedExportFolder + "/Animations/" + currentVisAnim.Name + ".anim");
+                }
+                AssetDatabase.SaveAssets ();
+                AssetDatabase.Refresh ();
+            }
         }
 
         private static void GenerateMaterialAnimations (H3D h3DScene, string combinedExportFolder)
@@ -276,7 +340,12 @@ namespace P3DS2U.Editor
                             break;
                     }
                 }
-                
+
+                if (fileCreated) {
+                    AssetDatabase.CreateAsset (animationClip, combinedExportFolder + "/Animations/" + currentMatAnim.Name + ".anim");
+                }
+                AssetDatabase.SaveAssets ();
+                AssetDatabase.Refresh ();
             }
         }
 
