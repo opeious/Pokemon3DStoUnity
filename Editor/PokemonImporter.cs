@@ -438,9 +438,16 @@ namespace P3DS2U.Editor
             var matDict = new Dictionary<string, Material> ();
             foreach (var h3dMaterial in h3DScene.Models[0].Materials) {
                 var filePath = currentMaterialExportFolder + h3dMaterial.Name + ".mat";
-                var newMaterial = File.Exists (filePath)
-                    ? AssetDatabase.LoadAssetAtPath<Material> (filePath)
-                    : new Material (shaderImportSettings.bodyShader);
+                var shaderToApply = (int) h3dMaterial.MaterialParams.MetaData[0].Values[0] == 2
+                    ? shaderImportSettings.irisShader
+                    : shaderImportSettings.bodyShader;
+                Material newMaterial;
+                if (File.Exists (filePath)) {
+                    newMaterial = AssetDatabase.LoadAssetAtPath<Material> (filePath);
+                    newMaterial.shader = shaderToApply;
+                } else {
+                    newMaterial = new Material (shaderToApply);
+                }
 
                 
                 
