@@ -64,6 +64,9 @@ namespace P3DS2U.Editor
    }
 
    [Serializable]
+   public class AnimationImportOptions: SerializableDictionary<string, bool>{}
+
+   [Serializable]
    public class WhatToImport
    {
       public bool ImportModel;
@@ -71,6 +74,9 @@ namespace P3DS2U.Editor
       public bool ImportMaterials;
       public bool ApplyMaterials;
       public bool SkeletalAnimations;
+      public AnimationImportOptions FightAnimationsToImport;
+      public AnimationImportOptions PetAnimationsToImport;
+      public AnimationImportOptions MovementAnimationsToImport;
       [Tooltip("Feature in Progress")]
       public bool MaterialAnimationsWip;
       public bool RenameGeneratedAnimationFiles;
@@ -100,9 +106,24 @@ namespace P3DS2U.Editor
             ImportMaterials = true,
             ApplyMaterials = true,
             SkeletalAnimations = true,
+            FightAnimationsToImport = new AnimationImportOptions(),
+            PetAnimationsToImport = new AnimationImportOptions(),
+            MovementAnimationsToImport = new AnimationImportOptions(),
             MaterialAnimationsWip = false,
             RenameGeneratedAnimationFiles = true
          };
+         foreach (string animationName in AnimationNaming.animationNames["Fight"])
+         {
+            whatToImport.FightAnimationsToImport.Add(animationName, true);
+         }
+         foreach (string animationName in AnimationNaming.animationNames["Pet"])
+         {
+            whatToImport.PetAnimationsToImport.Add(animationName, true);
+         }
+         foreach (string animationName in AnimationNaming.animationNames["Movement"])
+         {
+            whatToImport.MovementAnimationsToImport.Add(animationName, true);
+         }
          Instance = this;
          RegeneratePreview ();
          chosenFormat = 0;

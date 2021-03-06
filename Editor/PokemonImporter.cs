@@ -40,6 +40,7 @@ namespace P3DS2U.Editor
         private static H3D h3DScene = null;
         private static int CurrentAnimationIndex = 0;
         private static string CurrentAnimationExportFolder = "";
+        public static List<AnimationImportOptions> AnimationImportOptions = new List<AnimationImportOptions>();
 
         [MenuItem ("3DStoUnity/Open Pokemon Binary Importer")]
         private static void ImportPokemonAction ()
@@ -57,6 +58,9 @@ namespace P3DS2U.Editor
         public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
         {
             try {
+                AnimationImportOptions.Add(importSettings.whatToImport.FightAnimationsToImport);
+                AnimationImportOptions.Add(importSettings.whatToImport.PetAnimationsToImport);
+                AnimationImportOptions.Add(importSettings.whatToImport.MovementAnimationsToImport);
                 _processedCount = 0;
                 foreach (var kvp in scenesDict) {
                     EditorUtility.ClearProgressBar ();

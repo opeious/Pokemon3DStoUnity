@@ -108,33 +108,39 @@ namespace P3DS2U.Editor.SPICA
 
                         string animationName =
                             $"{motionUsage}_{AnimationNaming.animationNames[motionUsage][Index].ToLower()}";
-                        if (SklAnim != null)
+                        
+                        bool needToImport = 
+                            PokemonImporter.AnimationImportOptions[animFilesCount][AnimationNaming.animationNames[motionUsage][Index]];
+                        if (needToImport)
                         {
-                            SklAnim.Name = animationName;
-                            
-                            if (Header.Entries[Index].Length != 0)
+                            if (SklAnim != null)
                             {
-                                Output.SkeletalAnimations.Add(SklAnim);
+                                SklAnim.Name = animationName;
+                                
+                                if (Header.Entries[Index].Length != 0)
+                                {
+                                    Output.SkeletalAnimations.Add(SklAnim);
+                                }
                             }
-                        }
 
-                        if (MatAnim != null)
-                        {
-                            MatAnim.Name = animationName;
-
-                            if (Header.Entries[Index].Length != 0)
+                            if (MatAnim != null)
                             {
-                                Output.MaterialAnimations.Add(MatAnim);
+                                MatAnim.Name = animationName;
+
+                                if (Header.Entries[Index].Length != 0)
+                                {
+                                    Output.MaterialAnimations.Add(MatAnim);
+                                }
                             }
-                        }
 
-                        if (VisAnim != null)
-                        {
-                            VisAnim.Name = animationName;
-
-                            if (Header.Entries[Index].Length != 0)
+                            if (VisAnim != null)
                             {
-                                Output.VisibilityAnimations.Add(VisAnim);
+                                VisAnim.Name = animationName;
+
+                                if (Header.Entries[Index].Length != 0)
+                                {
+                                    Output.VisibilityAnimations.Add(VisAnim);
+                                }
                             }
                         }
                     }
