@@ -478,8 +478,9 @@ namespace P3DS2U.Editor
                     newMaterial = new Material (shaderToApply);
                 }
 
-                
-                
+                newMaterial.shaderKeywords = new[]
+                    {"_MAIN_LIGHT_CALCULATE_SHADOWS", "_MAIN_LIGHT_SHADOW_CASCADE", " _SHADOWS_SOFT"};
+
                 var mainTexturePath = exportPath + "/Textures/" + h3dMaterial.Texture0Name + ".png";
                 var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
                 if (mainTexture != null) {
