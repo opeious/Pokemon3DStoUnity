@@ -130,7 +130,7 @@ namespace P3DS2U.Editor
                     }
 
                     if (importSettings.whatToImport.MaterialAnimationsWip) {
-                        GenerateMaterialAnimations (h3DScene, combinedExportFolder, matDict);   
+                        GenerateMaterialAnimations (h3DScene, combinedExportFolder);   
                     }
 
                     var go = GameObject.Find ("GeneratedUnityObject");
@@ -155,170 +155,130 @@ namespace P3DS2U.Editor
 
             EditorUtility.ClearProgressBar();
         }
-        
-        private static void GenerateMaterialAnimations (H3D h3DScene, string combinedExportFolder,
-            Dictionary<string, Material> materialMappingDictionary)
+
+        private static void GenerateMaterialAnimations (H3D h3DScene, string combinedExportFolder)
         {
-            
-            //TODO: rewrite this whole thing
-            
-            Transform testTransform = GameObject.Find ("GeneratedUnityObject").transform;
+            var modelTransform = GameObject.Find ("GeneratedUnityObject").transform;
 
-            for (int i = 0; i < h3DScene.MaterialAnimations.Count; i++) {
-                var currentAnim = h3DScene.MaterialAnimations[i];
-                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (combinedExportFolder + "/Animations/" + "anim" + i + ".anim");
+            foreach (var currentMatAnim in h3DScene.MaterialAnimations) {
+                var fileCreated = false;
+                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (combinedExportFolder + "/Animations/" + currentMatAnim.Name + ".anim");
                 if (animationClip == null) {
-                    animationClip = new AnimationClip ();
+                    animationClip = new AnimationClip {name = currentMatAnim.Name};
                     var clipSettings = AnimationUtility.GetAnimationClipSettings (animationClip);
-                    clipSettings.loopTime = currentAnim.AnimationFlags == H3DAnimationFlags.IsLooping;
+                    clipSettings.loopTime = currentMatAnim.AnimationFlags == H3DAnimationFlags.IsLooping;
                     AnimationUtility.SetAnimationClipSettings (animationClip, clipSettings);
+                    fileCreated = true;
                 }
-
-                var newCurvesDict = new Dictionary<string, AnimationCurve> ();
                 
-                foreach (var element in currentAnim.Elements) {
-                    var didntHandle = false;
-                    //TODO: get all the keyframes first then make curves, to support custom shaders in the future
-                    switch (element.PrimitiveType) {
-                        case H3DPrimitiveType.Boolean:
-                            didntHandle = true;
-                            break;
-                        case H3DPrimitiveType.Float:
-                            didntHandle = true;
-                            break;
-                        case H3DPrimitiveType.Integer:
-                            didntHandle = true;
-                            break;
+                var newCurves = new Dictionary<AnimationUtils.MatAnimationModifier, AnimationCurve> ();
+                foreach (var animationElement in currentMatAnim.Elements) {
+                    switch (animationElement.PrimitiveType) {
                         case H3DPrimitiveType.Vector2D:
-
-                            switch (element.TargetType) {
-                                case H3DTargetType.MaterialTexCoord0Scale:
-                                    var curveBs = AnimationUtils.GetOrAddCurve (newCurvesDict, "bs");
-                                    // SetVector2(Vector, ref TC[0].Scale);       
-                                    break;
-                                case H3DTargetType.MaterialTexCoord1Scale:
-                                    // SetVector2(Vector, ref TC[1].Scale);       
-                                    break;
-                                case H3DTargetType.MaterialTexCoord2Scale:
-                                    // SetVector2(Vector, ref TC[2].Scale);       
-                                    break;
+                            var targetType = animationElement.TargetType;
+                            if (targetType != H3DTargetType.MaterialTexCoord0Trans &&
+                                animationElement.TargetType != H3DTargetType.MaterialTexCoord1Trans &&
+                                animationElement.TargetType != H3DTargetType.MaterialTexCoord2Trans) {
+                                continue;
+                            }
+                            
+                            
+                            AnimationCurve curveY = null;
+                            switch (targetType) {
                                 case H3DTargetType.MaterialTexCoord0Trans:
-                                    var curveBt = AnimationUtils.GetOrAddCurve (newCurvesDict, "bty");
-                                    if (element.Content is H3DAnimVector2D h3DAnimVector2DBt) {
-                                        foreach (var singleYFrame in h3DAnimVector2DBt.Y.KeyFrames) {
-                                            var lhs = singleYFrame.InSlope;
-                                            var rhs = singleYFrame.OutSlope;
-                                            TangentMode tangentMode;
-                                            if (lhs == 0 && rhs == 0) {
-                                                tangentMode = TangentMode.Stepped;
-                                            } else {
-                                                tangentMode = TangentMode.Linear;
-                                            }
-
-                                            curveBt.AddKey (KeyframeUtil.GetNew (
-                                                AnimationUtils.GetTimeAtFrame (animationClip,
-                                                    (int) singleYFrame.Frame, currentAnim),
-                                                singleYFrame.Value,
-                                                tangentMode));
-                                            if (tangentMode == TangentMode.Linear) {
-                                                curveBt.UpdateAllLinearTangents ();
-                                            }
-                                        }
-                                    }
-                                    var skms = testTransform.GetComponentsInChildren<SkinnedMeshRenderer> ();
-                                    foreach (var skm in skms) {
-                                        if (skm.material.name.Replace (" (Instance)", "") == element.Name) {
-                                            var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
-                                                testTransform);
-                                            animationClip.SetCurve (cbp, typeof(SkinnedMeshRenderer),
-                                                "material._BaseMapOffset.y", newCurvesDict["bty"]);
-                                        }
-                                    }
+                                    curveY = AnimationUtils.GetOrAddCurve (newCurves,
+                                        AnimationUtils.MatAnimationModifier.Tex0TranslateY);
                                     break;
                                 case H3DTargetType.MaterialTexCoord1Trans:
-                                    // SetVector2(Vector, ref TC[1].Translation);
+                                    curveY = AnimationUtils.GetOrAddCurve (newCurves,
+                                        AnimationUtils.MatAnimationModifier.Tex1TranslateY);
                                     break;
                                 case H3DTargetType.MaterialTexCoord2Trans:
-                                    // var curveNt = AnimationUtils.GetOrAddCurve (newCurvesDict, "ntx");
-                                    // if (element.Content is H3DAnimVector2D h3DAnimVector2DNt) {
-                                    //     foreach (var singleXFrame in h3DAnimVector2DNt.X.KeyFrames) {
-                                    //         var lhs = singleXFrame.InSlope;
-                                    //         var rhs = singleXFrame.OutSlope;
-                                    //         TangentMode tangentMode;
-                                    //         if (lhs == 0 && rhs == 0) {
-                                    //             tangentMode = TangentMode.Stepped;
-                                    //         } else {
-                                    //             tangentMode = TangentMode.Linear;
-                                    //         }
-                                    //
-                                    //         curveNt.AddKey (KeyframeUtil.GetNew (
-                                    //             AnimationUtils.GetTimeAtFrame (animationClip,
-                                    //                 (int) singleXFrame.Frame, currentAnim),
-                                    //             singleXFrame.Value,
-                                    //             tangentMode));
-                                    //         if (tangentMode == TangentMode.Linear) {
-                                    //             curveNt.UpdateAllLinearTangents ();
-                                    //         }
-                                    //     }
-                                    // }
-
+                                    curveY = AnimationUtils.GetOrAddCurve (newCurves,
+                                        AnimationUtils.MatAnimationModifier.Tex2TranslateY);
                                     break;
                             }
 
-                            // if (newCurvesDict.ContainsKey ("ntx")) {
-                            //     var skms = testTransform.GetComponentsInChildren<SkinnedMeshRenderer> ();
-                            //     foreach (var skm in skms) {
-                            //         if (skm.material.name.Replace (" (Instance)", "") == element.Name) {
-                            //             var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
-                            //                 testTransform);
-                            //             animationClip.SetCurve (cbp, typeof(SkinnedMeshRenderer),
-                            //                 "material._NormalMapOffset.x", newCurvesDict["ntx"]);
-                            //         }
-                            //     }
-                            // }
-                            
-                            if (newCurvesDict.ContainsKey ("bty")) {
+                            AnimationCurve curveX = null;
+                            switch (targetType) {
+                                case H3DTargetType.MaterialTexCoord0Trans:                                    
+                                    curveX = AnimationUtils.GetOrAddCurve (newCurves,
+                                        AnimationUtils.MatAnimationModifier.Tex0TranslateX);
+                                    break;
+                                case H3DTargetType.MaterialTexCoord1Trans:                                    
+                                    curveX = AnimationUtils.GetOrAddCurve (newCurves,
+                                        AnimationUtils.MatAnimationModifier.Tex1TranslateX);
+                                    break;
+                                case H3DTargetType.MaterialTexCoord2Trans:                                    
+                                    curveX = AnimationUtils.GetOrAddCurve (newCurves,
+                                        AnimationUtils.MatAnimationModifier.Tex2TranslateX);
+                                    break;
+                            }
+
+                            if (animationElement.Content is H3DAnimVector2D h3DAnimVector2D) {
+                                foreach (var singleYFrame in h3DAnimVector2D.Y.KeyFrames) {
+                                    var lhs = singleYFrame.InSlope;
+                                    var rhs = singleYFrame.OutSlope;
+                                    TangentMode tangentMode;
+                                    if (lhs == 0 && rhs == 0) {
+                                        tangentMode = TangentMode.Stepped;
+                                    } else {
+                                        tangentMode = TangentMode.Linear;
+                                    }
+                                    curveY.AddKey (KeyframeUtil.GetNew (
+                                        AnimationUtils.GetTimeAtFrame (animationClip,
+                                            (int) singleYFrame.Frame, currentMatAnim),
+                                        singleYFrame.Value,
+                                        tangentMode));
+                                    //TODO: expose this option
+                                    // if (tangentMode == TangentMode.Linear) {
+                                    //     curveBt.UpdateAllLinearTangents ();
+                                    // }
+                                }
 
                             }
-                            // var x = element.TargetType;
-                            // Debug.LogError (x);
-                            // var newCurve = new AnimationCurve();
-                            // var y = element.Content.GetType ();
-                            //
+                            if (animationElement.Content is H3DAnimVector2D h3DAnimVector2d) {
+                                foreach (var singleXFrame in h3DAnimVector2d.X.KeyFrames) {
+                                    var lhs = singleXFrame.InSlope;
+                                    var rhs = singleXFrame.OutSlope;
+                                    TangentMode tangentMode;
+                                    if (lhs == 0 && rhs == 0) {
+                                        tangentMode = TangentMode.Stepped;
+                                    } else {
+                                        tangentMode = TangentMode.Linear;
+                                    }
+                                    curveX.AddKey (KeyframeUtil.GetNew (
+                                        AnimationUtils.GetTimeAtFrame (animationClip,
+                                            (int) singleXFrame.Frame, currentMatAnim),
+                                        singleXFrame.Value,
+                                        tangentMode));
+                                    //TODO: expose this option
+                                    // if (tangentMode == TangentMode.Linear) {
+                                    //     curveBt.UpdateAllLinearTangents ();
+                                    // }
+                                }
+                                
+                            }
+
+                            foreach (var kvp in newCurves) {
+                                var skms = modelTransform.GetComponentsInChildren<SkinnedMeshRenderer> ();
+                                foreach (var skm in skms) {
+                                    if (skm.sharedMaterial.name.Replace (" (Instance)", "") == animationElement.Name) {
+                                        var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
+                                            modelTransform);
+                                        var shaderPropName = AnimationUtils.MatModifierToShaderProp (kvp.Key);
+                                        animationClip.SetCurve (cbp, typeof(SkinnedMeshRenderer),
+                                            shaderPropName, kvp.Value);
+                                    }
+                                }   
+                            }
                             
                             break;
-                        case H3DPrimitiveType.Vector3D:
-                            didntHandle = true;
-                            break;
-                        case H3DPrimitiveType.Transform:
-                            didntHandle = true;
-                            break;
-                        case H3DPrimitiveType.RGBA:
-                            didntHandle = true;
-                            break;
-                        case H3DPrimitiveType.Texture:
-                            didntHandle = true;
-                            break;
-                        case H3DPrimitiveType.QuatTransform:
-                            didntHandle = true;
-                            break;
-                        case H3DPrimitiveType.MtxTransform:
-                            didntHandle = true;
-                            break;
-                        default:
-                            didntHandle = true;
-                            break;
-                    }
-
-                    if (didntHandle) {
-                        //TODO: Handle all the didnt handles
-                        Debug.LogError ("Didn't handle for this type: " + element.PrimitiveType);
                     }
                 }
                 
             }
         }
-        
 
         private static void OnAnimationPostprocessed (AnimationClip daeClip)
         {

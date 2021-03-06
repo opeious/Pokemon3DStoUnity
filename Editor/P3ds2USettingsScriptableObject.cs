@@ -259,9 +259,9 @@ namespace P3DS2U.Editor
                   wti.RenameGeneratedAnimationFiles = false;
                }
 
-               if (wti.MaterialAnimationsWip) {
-                  wti.MaterialAnimationsWip = false;
-               }
+               // if (wti.MaterialAnimationsWip) {
+               //    wti.MaterialAnimationsWip = false;
+               // }
             }
             EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (100));
             EditorGUILayout.EndScrollView ();
