@@ -1,9 +1,9 @@
 {
     "name": "com.opeious.pokemon3dstounity",
     "displayName": "Pokemon 3DS to Unity",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "unity": "2019.4",
-    "description": "Test",
+    "description": "Directly import Pokemon Binary files into Unity",
     "keywords": [
         "pokemon",
         "3ds",

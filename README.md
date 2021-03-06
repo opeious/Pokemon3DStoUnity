@@ -1,33 +1,11 @@
-What does the package do at the moment:
+![ui](https://user-images.githubusercontent.com/3764951/110187525-abc7c400-7e3e-11eb-857a-3e0a1e39837e.gif)
+
+Installation:
 -
-- Open the Binary in SPICA
-- Translate the 3D model to Unity Mesh system and skinned mesh renderers
-- Generate material files from the textures 
-- Automatically copy over some of the shader settings to the newly created materials
-- Skins and generates the skeleton for the mesh
-- Generates skeletal animations from the binaries
-- Saves the translated mon as prefab
-- Supports bulk processing
+- If you have a git account, add this project as a dependency in `Packages/manifest.json`  
+`"com.opeious.pokemon3dstounity": "https://github.com/opeious/Pokemon3DStoUnity.git",`
 
-To do:
--
-- AES support
-- Make the animations editable in Unity
-- Import folder structure options via popup at start, for alternate input folder structures
-- Normal/Occlusion shaded materials
-- Auto creating texture atlas for each mon
-- Material animations
-
-ChangeLog:
--
-- v1.3: Skeletal animation generation
-- v1.2: Skinning and rigging fixes
-- v1.1: sample toon shader, asset creation
-- v1: basic skeleton, model, texture generation
-
-![2021-02-27 22_43_19-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/109395153-e4543300-7950-11eb-8351-e42af713c374.png)
-![2021-02-27 23_07_57-PokeUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 8f1 Personal](https://user-images.githubusercontent.com/3764951/109395156-e918e700-7950-11eb-83c9-4923417450f1.png)
-
+- If you don't have git setup, download and put the entire project into your Assets Folder
 
 Usage:
 -
@@ -38,13 +16,39 @@ Usage:
 - Hit import again
 - Exported files and prefabs get added to  `Assets/Exported`
 
-Installation:
+What does the package do at the moment:
 -
-- If you have a git account, add this project as a dependency in `Packages/manifest.json`  
-`"com.opeious.pokemon3dstounity": "https://github.com/opeious/Pokemon3DStoUnity.git",`
+- Open the Binary using SPICA's parser
+- Translate the 3D model to Unity Mesh system and skinned mesh renderers
+- Generate material files from the textures 
+- Automatically copy over some of the shader settings to the newly created materials
+- Skins and generates the skeleton for the mesh
+- Generates skeletal animations from the binaries
+- Saves the translated mon as prefab
+- Supports bulk processing
 
-- If you don't have git setup, download and put the entire project into your Assets Folder
+To do:
+-
+- Fix iris shaders and materials generation
+- Material Animations
+- Visibility Animations
+- Better, more optimized Toonshader
+- Flame shader
+- AssetBundles/Addressable build sizeoptimizations
 
 Updating:
 -
 - Unity package manager doesn't currently support version of git packages, for now just remove the project as a dependency and add it again
+
+ChangeLog:
+-
+- v1.4: Added UI, made the plugin customizable, animation renaming, etc
+- v1.3: Skeletal animation generation
+- v1.2: Skinning and rigging fixes
+- v1.1: sample toon shader, asset creation
+- v1: basic skeleton, model, texture generation
+
+![2021-02-27 22_43_19-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/109395153-e4543300-7950-11eb-8351-e42af713c374.png)
+![2021-02-27 23_07_57-PokeUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 8f1 Personal](https://user-images.githubusercontent.com/3764951/109395156-e918e700-7950-11eb-83c9-4923417450f1.png)![sylMatAni](https://user-images.githubusercontent.com/3764951/110187402-3d830180-7e3e-11eb-8291-8314950faaab.gif)
+
+
