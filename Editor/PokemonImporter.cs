@@ -163,7 +163,7 @@ namespace P3DS2U.Editor
 
         private static void GenerateVisibilityAnimations (H3D h3DScene, string combinedExportFolder)
         {
-            var modelTransform = GameObject.Find ("pidg").transform;
+            var modelTransform = GameObject.Find ("GeneratedUnityObject").transform;
 
             foreach (var currentVisAnim in h3DScene.VisibilityAnimations) {
                 var fileCreated = false;
