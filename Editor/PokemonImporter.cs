@@ -58,7 +58,9 @@ namespace P3DS2U.Editor
         {
             try {
                 _processedCount = 0;
-                foreach (var kvp in scenesDict) {
+                for (int i = importSettings.whatToImport.StartIndex; i <= importSettings.whatToImport.EndIndex; i++)
+                {
+                    var kvp = scenesDict.ElementAt(i);
                     EditorUtility.ClearProgressBar ();
                     EditorUtility.DisplayProgressBar ("Importing", kvp.Key.Replace (".bin", ""),
                         (float) _processedCount / scenesDict.Count);

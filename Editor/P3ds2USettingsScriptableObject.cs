@@ -66,6 +66,12 @@ namespace P3DS2U.Editor
    [Serializable]
    public class WhatToImport
    {
+      [Header("Models import range")]
+      [Min(0)] 
+      public int StartIndex;
+      [Min(0)]
+      public int EndIndex;
+      [Space(10)]
       public bool ImportModel;
       public bool ImportTextures;
       public bool ImportMaterials;
@@ -95,6 +101,8 @@ namespace P3DS2U.Editor
       {
          customShaderSettings = new P3ds2UShaderProperties ();
          whatToImport = new WhatToImport {
+            StartIndex = 0,
+            EndIndex = 0,
             ImportModel = true,
             ImportTextures = true,
             ImportMaterials = true,
@@ -168,6 +176,8 @@ namespace P3DS2U.Editor
                PokemonMergedBinary = scene.Value
             });
          }
+
+         whatToImport.EndIndex = mergedBinariesPreview.Count - 1;
       }
    }
 
