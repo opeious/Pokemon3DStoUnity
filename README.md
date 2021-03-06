@@ -1,5 +1,4 @@
-
-![ui1](https://user-images.githubusercontent.com/3764951/110187050-0b24d480-7e3d-11eb-99ec-f421c1321876.gif)
+![ui](https://user-images.githubusercontent.com/3764951/110187525-abc7c400-7e3e-11eb-857a-3e0a1e39837e.gif)
 
 Installation:
 -
@@ -50,4 +49,6 @@ ChangeLog:
 - v1: basic skeleton, model, texture generation
 
 ![2021-02-27 22_43_19-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/109395153-e4543300-7950-11eb-8351-e42af713c374.png)
-![2021-02-27 23_07_57-PokeUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 8f1 Personal](https://user-images.githubusercontent.com/3764951/109395156-e918e700-7950-11eb-83c9-4923417450f1.png)
+![2021-02-27 23_07_57-PokeUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 8f1 Personal](https://user-images.githubusercontent.com/3764951/109395156-e918e700-7950-11eb-83c9-4923417450f1.png)![sylMatAni](https://user-images.githubusercontent.com/3764951/110187402-3d830180-7e3e-11eb-8291-8314950faaab.gif)
+
+
