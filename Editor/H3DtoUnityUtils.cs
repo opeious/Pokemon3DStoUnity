@@ -59,13 +59,55 @@ namespace P3DS2U.Editor
 
     public static class AnimationUtils
     {
-        public static AnimationCurve GetOrAddCurve(Dictionary<string, AnimationCurve> curvesDict, string curveName)
+        public enum MatAnimationModifier
         {
-            if (curvesDict.ContainsKey (curveName)) {
-                return curvesDict[curveName];
+            Skipped,
+            Tex0TranslateX,
+            Tex1TranslateX,
+            Tex2TranslateX,
+            Tex0TranslateY,
+            Tex1TranslateY,
+            Tex2TranslateY,
+            Tex0Scale,
+            Tex1Scale,
+            Tex2Scale,
+            Tex0Rot,
+            Tex1Rot,
+            Tex2Rot,
+        }
+
+        public static string MatModifierToShaderProp (MatAnimationModifier matAnimationModifier)
+        {
+            switch (matAnimationModifier) {
+                case MatAnimationModifier.Tex0TranslateX:
+                    return "material._BaseMapOffset.x";
+                case MatAnimationModifier.Tex1TranslateX:
+                    return "material._OcclusionMapOffset.x";
+                case MatAnimationModifier.Tex2TranslateX:
+                    return "material._NormalMapOffset.x";
+                case MatAnimationModifier.Tex0TranslateY:
+                    return "material._BaseMapOffset.y";
+                case MatAnimationModifier.Tex1TranslateY:
+                    return "material._OcclusionMapOffset.y";
+                case MatAnimationModifier.Tex2TranslateY:
+                    return "material._NormalMapOffset.y";
+                default:
+                    throw new ArgumentOutOfRangeException (nameof(matAnimationModifier), matAnimationModifier, null);
+            }
+        }
+        
+        public static AnimationCurve GetOrAddCurve(Dictionary<MatAnimationModifier, AnimationCurve> curvesDict, MatAnimationModifier modifier)
+        {
+            if (modifier == MatAnimationModifier.Skipped) {
+                Debug.LogError ("Type of anim not supported!");
+                return null;
+            }
+            
+            if (curvesDict.ContainsKey (modifier)) {
+                return curvesDict[modifier];
             }
             var newCurve = new AnimationCurve();
-            curvesDict.Add (curveName, newCurve);
+            curvesDict.Add (modifier, newCurve);
             return newCurve;
         }
 
