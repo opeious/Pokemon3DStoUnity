@@ -32,10 +32,13 @@ namespace P3DS2U.Editor
       // public string BaseMap = Shader.PropertyToID ("_BaseMap");
       public string BaseMap =  ("_BaseMap");
       public string BaseMapTiling =  ("_BaseMapTiling");
+      public string BaseMapOffset = ("_BaseMapOffset");
       public string NormalMap =  ("_NormalMap");
       public string NormalMapTiling =  ("_NormalMapTiling");
+      public string NormalMapOffset = ("_NormalOffset");
       public string OcclusionMap =  ("_OcclusionMap");
       public string OcclusionMapTiling =  ("_OcclusionMapTiling");
+      public string OcclusionMapOffset =  ("_OcclusionMapOffset");
    }
    
    [Serializable]

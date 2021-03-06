@@ -10,7 +10,6 @@ using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
 using UnityEditor;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -431,24 +430,6 @@ namespace P3DS2U.Editor
         private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath,
             P3ds2UShaderProperties shaderImportSettings)
         {
-            var textureDict = new Dictionary<string, TextureUtils.H3DTextureRepresentation> ();
-            foreach (var h3DMaterial in h3DScene.Models[0].Materials) {
-                foreach (var textureName in h3DMaterial.TextureNames ())
-                    if (!textureDict.ContainsKey (textureName))
-                        textureDict.Add (textureName, new TextureUtils.H3DTextureRepresentation ());
-
-                if (textureDict.Count == 0) break;
-
-                var textureNames = h3DMaterial.TextureNames ();
-
-                foreach (var h3DTextureName in textureNames) {
-                    var textureIndex = h3DMaterial.GetTextureIndex (h3DTextureName);
-
-                    textureDict[h3DTextureName].TextureCoord = h3DMaterial.MaterialParams.TextureCoords[textureIndex];
-                    textureDict[h3DTextureName].TextureMapper = h3DMaterial.TextureMappers[textureIndex];
-                }
-            }
-            
             var currentMaterialExportFolder = exportPath + "/Materials/";
             if (!Directory.Exists (currentMaterialExportFolder)) {
                 Directory.CreateDirectory (currentMaterialExportFolder);
@@ -461,10 +442,15 @@ namespace P3DS2U.Editor
                     ? AssetDatabase.LoadAssetAtPath<Material> (filePath)
                     : new Material (shaderImportSettings.bodyShader);
 
+                
+                
                 var mainTexturePath = exportPath + "/Textures/" + h3dMaterial.Texture0Name + ".png";
                 var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
                 if (mainTexture != null) {
-                    var mainTextureRepresentation = textureDict[h3dMaterial.Texture0Name];
+                    var mainTextureRepresentation = new TextureUtils.H3DTextureRepresentation {
+                        TextureCoord = h3dMaterial.MaterialParams.TextureCoords[0],
+                        TextureMapper = h3dMaterial.TextureMappers[0]
+                    };
 
                     var importer = (TextureImporter) AssetImporter.GetAtPath (mainTexturePath);
                     importer.wrapModeU =
@@ -477,6 +463,9 @@ namespace P3DS2U.Editor
                     newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.BaseMapTiling),
                         new Vector4 (mainTextureRepresentation.TextureCoord.Scale.X,
                             mainTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
+                    newMaterial.SetVector (Shader.PropertyToID (shaderImportSettings.BaseMapOffset),
+                        new Vector4 (mainTextureRepresentation.TextureCoord.Translation.X,
+                            mainTextureRepresentation.TextureCoord.Translation.Y));
                     newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.BaseMap),
                         mainTexture);
                     newMaterial.mainTexture = mainTexture;
@@ -485,10 +474,13 @@ namespace P3DS2U.Editor
                 var normalMapPath = exportPath +  "/Textures/" + h3dMaterial.Texture2Name + ".png";
                 var normalTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (normalMapPath, typeof(Texture2D));
                 if (normalTexture != null) {
-                    var normalTextureRepresentation = textureDict[h3dMaterial.Texture2Name];
+                    var normalTextureRepresentation = new TextureUtils.H3DTextureRepresentation {
+                        TextureCoord = h3dMaterial.MaterialParams.TextureCoords[2],
+                        TextureMapper = h3dMaterial.TextureMappers[2]
+                    };
 
                     var importer = (TextureImporter) AssetImporter.GetAtPath (normalMapPath);
-                    importer.textureType = TextureImporterType.NormalMap;
+                    // importer.textureType = TextureImporterType.NormalMap;
                     importer.wrapModeU =
                         TextureUtils.PicaToUnityTextureWrapMode (normalTextureRepresentation.TextureMapper.WrapU);
                     importer.wrapModeV =
@@ -499,6 +491,9 @@ namespace P3DS2U.Editor
                     newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.NormalMapTiling),
                         new Vector4 (normalTextureRepresentation.TextureCoord.Scale.X,
                             normalTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
+                    newMaterial.SetVector (Shader.PropertyToID (shaderImportSettings.NormalMapOffset),
+                        new Vector4 (normalTextureRepresentation.TextureCoord.Translation.X,
+                            normalTextureRepresentation.TextureCoord.Translation.Y));
                     newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.NormalMap),
                         normalTexture);
                 }
@@ -506,7 +501,10 @@ namespace P3DS2U.Editor
                 var occlusionMapPath = exportPath +  "/Textures/"  + h3dMaterial.Texture1Name + ".png";
                 var occlusionTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (occlusionMapPath, typeof(Texture2D));
                 if (occlusionTexture != null) {
-                    var occlusionMapRepresentation = textureDict[h3dMaterial.Texture2Name];
+                    var occlusionMapRepresentation = new TextureUtils.H3DTextureRepresentation {
+                        TextureCoord = h3dMaterial.MaterialParams.TextureCoords[1],
+                        TextureMapper = h3dMaterial.TextureMappers[1]
+                    };
 
                     var importer = (TextureImporter) AssetImporter.GetAtPath (occlusionMapPath);
                     importer.wrapModeU =
@@ -519,6 +517,9 @@ namespace P3DS2U.Editor
                     newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.OcclusionMapTiling),
                         new Vector4 (occlusionMapRepresentation.TextureCoord.Scale.X,
                             occlusionMapRepresentation.TextureCoord.Scale.Y, 0, 0));
+                    newMaterial.SetVector (Shader.PropertyToID (shaderImportSettings.OcclusionMapOffset),
+                        new Vector4 (occlusionMapRepresentation.TextureCoord.Translation.X,
+                            occlusionMapRepresentation.TextureCoord.Translation.Y));
                     newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.OcclusionMap),
                         occlusionTexture);
                 }
