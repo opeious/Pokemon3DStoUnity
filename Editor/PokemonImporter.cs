@@ -135,15 +135,16 @@ namespace P3DS2U.Editor
 
                     var modelGo = GameObject.Find ("GeneratedUnityObject");
                     if (modelGo != null) {
+                        var modelName = kvp.Key.Replace (".bin", "");
                         if (importSettings.ImporterSettings.SkeletalAnimations) {
-                            GenerateAnimationController (modelGo, combinedExportFolder);
+                            GenerateAnimationController (modelGo, combinedExportFolder, modelName);
                         }
                         
                         var go = new GameObject ("GeneratedUnityObject");
                         modelGo.transform.SetParent (go.transform);
                         modelGo.name = "Model";
                         
-                        go.name = kvp.Key.Replace (".bin", "") + "Container";
+                        go.name = modelName + "Container";
                         var prefabPath =
                             AssetDatabase.GenerateUniqueAssetPath (ExportPath + kvp.Key.Replace (".bin", "") + "/" + kvp.Key.Replace (".bin", "") + ".prefab");
                         PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
@@ -164,7 +165,8 @@ namespace P3DS2U.Editor
             EditorUtility.ClearProgressBar();
         }
 
-        private static void GenerateAnimationController (GameObject modelGo, string combinedExportFolder)
+        private static void GenerateAnimationController(GameObject modelGo, string combinedExportFolder,
+            string modelName)
         {
             var animationsFolderPath = combinedExportFolder + "/Animations/";
             var animator = modelGo.AddComponent<Animator> ();
@@ -183,7 +185,7 @@ namespace P3DS2U.Editor
             }
 
             animator.runtimeAnimatorController = animatorController;
-            AssetDatabase.CreateAsset (animatorController,  animationsFolderPath + "animController.controller");
+            AssetDatabase.CreateAsset (animatorController,  animationsFolderPath + $"animController-{modelName}.controller");
             AssetDatabase.Refresh();
         }
 
