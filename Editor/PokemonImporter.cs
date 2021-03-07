@@ -14,10 +14,6 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 /*
- *TODO: Fix iris shaders and materials
- *TODO: Material Animations
- *TODO: Visibility Animations
- *TODO: Better more optimized Toon shader
  *TODO: Flame shader
  *TODO: Shaders in ase format (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null && UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().ToString().Contains("UniversalRenderPipelineAsset"))
  *TODO: AssetBundles/Addressable build size optimizations
@@ -57,11 +53,11 @@ namespace P3DS2U.Editor
         public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
         {
             try {
-                AnimationImportOptions.Add(importSettings.whatToImport.FightAnimationsToImport);
-                AnimationImportOptions.Add(importSettings.whatToImport.PetAnimationsToImport);
-                AnimationImportOptions.Add(importSettings.whatToImport.MovementAnimationsToImport);
+                AnimationImportOptions.Add(importSettings.ImporterSettings.FightAnimationsToImport);
+                AnimationImportOptions.Add(importSettings.ImporterSettings.PetAnimationsToImport);
+                AnimationImportOptions.Add(importSettings.ImporterSettings.MovementAnimationsToImport);
                 _processedCount = 0;
-                for (int i = importSettings.whatToImport.StartIndex; i <= importSettings.whatToImport.EndIndex; i++)
+                for (int i = importSettings.ImporterSettings.StartIndex; i <= importSettings.ImporterSettings.EndIndex; i++)
                 {
                     var kvp = scenesDict.ElementAt(i);
                     EditorUtility.ClearProgressBar ();
@@ -100,12 +96,12 @@ namespace P3DS2U.Editor
                         Directory.CreateDirectory (combinedExportFolder);
                     }
 
-                    if (importSettings.whatToImport.ImportTextures) {
+                    if (importSettings.ImporterSettings.ImportTextures) {
                         GenerateTextureFiles (h3DScene, combinedExportFolder);   
                     }
 
                     var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
-                    if (importSettings.whatToImport.ImportModel) {
+                    if (importSettings.ImporterSettings.ImportModel) {
                         try {
                             meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
                         }
@@ -117,29 +113,29 @@ namespace P3DS2U.Editor
                     }
 
                     var matDict = new Dictionary<string, Material> ();
-                    if (importSettings.whatToImport.ImportMaterials) {
+                    if (importSettings.ImporterSettings.ImportMaterials) {
                         matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder, importSettings.customShaderSettings);   
                     }
 
-                    if (importSettings.whatToImport.ApplyMaterials) {
+                    if (importSettings.ImporterSettings.ApplyMaterials) {
                         AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);   
                     }
 
-                    if (importSettings.whatToImport.SkeletalAnimations) {
+                    if (importSettings.ImporterSettings.SkeletalAnimations) {
                         GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
                     }
                     
-                    if (importSettings.whatToImport.VisibilityAnimations) {
+                    if (importSettings.ImporterSettings.VisibilityAnimations) {
                         GenerateVisibilityAnimations (h3DScene, combinedExportFolder);
                     }
 
-                    if (importSettings.whatToImport.MaterialAnimationsWip) {
-                        GenerateMaterialAnimations (h3DScene, combinedExportFolder);   
+                    if (importSettings.ImporterSettings.MaterialAnimations) {
+                        GenerateMaterialAnimations (h3DScene, combinedExportFolder, importSettings);   
                     }
 
                     var modelGo = GameObject.Find ("GeneratedUnityObject");
                     if (modelGo != null) {
-                        if (importSettings.whatToImport.SkeletalAnimations) {
+                        if (importSettings.ImporterSettings.SkeletalAnimations) {
                             GenerateAnimationController (modelGo, combinedExportFolder);
                         }
                         
@@ -205,19 +201,17 @@ namespace P3DS2U.Editor
                     AnimationUtility.SetAnimationClipSettings (animationClip, clipSettings);
                     fileCreated = true;
                 }
-                
-                var newCurves = new Dictionary<string, AnimationCurve> ();
+
                 foreach (var animationElement in currentVisAnim.Elements) {
                     switch (animationElement.PrimitiveType) {
                         case H3DPrimitiveType.Boolean:
                             if (animationElement.TargetType == H3DTargetType.MeshNodeVisibility) {
-                                var visCurve = new AnimationCurve();
+                                var visCurve = new AnimationCurve ();
                                 if (animationElement.Content is H3DAnimBoolean h3DAnimBoolean) {
                                     var added = false;
                                     for (var i = 0; i < h3DAnimBoolean.Values.Count; i++) {
                                         visCurve.AddKey (KeyframeUtil.GetNew (
-                                            AnimationUtils.GetTimeAtFrame (animationClip,
-                                                (int) i, currentVisAnim),
+                                            AnimationUtils.GetTimeAtFrame (animationClip, i),
                                             h3DAnimBoolean.Values[i] ? 1f : 0f,
                                             TangentMode.Stepped));
                                         if (h3DAnimBoolean.Values[i] == false) {
@@ -237,11 +231,11 @@ namespace P3DS2U.Editor
                                     }
                                 }
                             }
+
                             break;
                     }
-                    
                 }
-                
+
                 if (fileCreated) {
                     AssetDatabase.CreateAsset (animationClip, combinedExportFolder + "/Animations/" + currentVisAnim.Name + ".anim");
                 }
@@ -250,13 +244,16 @@ namespace P3DS2U.Editor
             }
         }
 
-        private static void GenerateMaterialAnimations (H3D h3DScene, string combinedExportFolder)
+        private static void GenerateMaterialAnimations (H3D h3DScene, string combinedExportFolder, P3ds2USettingsScriptableObject importerSettings)
         {
             var modelTransform = GameObject.Find ("GeneratedUnityObject").transform;
 
-            foreach (var currentMatAnim in h3DScene.MaterialAnimations) {
+            for (var index = 0; index < h3DScene.MaterialAnimations.Count; index++) {
+                var currentMatAnim = h3DScene.MaterialAnimations[index];
                 var fileCreated = false;
-                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (combinedExportFolder + "/Animations/" + currentMatAnim.Name + ".anim");
+                var animationClip =
+                    AssetDatabase.LoadAssetAtPath<AnimationClip> (combinedExportFolder + "/Animations/" +
+                                                                  currentMatAnim.Name + ".anim");
                 if (animationClip == null) {
                     animationClip = new AnimationClip {name = currentMatAnim.Name};
                     var clipSettings = AnimationUtility.GetAnimationClipSettings (animationClip);
@@ -295,21 +292,22 @@ namespace P3DS2U.Editor
 
                             AnimationCurve curveX = null;
                             switch (targetType) {
-                                case H3DTargetType.MaterialTexCoord0Trans:                                    
+                                case H3DTargetType.MaterialTexCoord0Trans:
                                     curveX = AnimationUtils.GetOrAddCurve (newCurves,
                                         AnimationUtils.MatAnimationModifier.Tex0TranslateX);
                                     break;
-                                case H3DTargetType.MaterialTexCoord1Trans:                                    
+                                case H3DTargetType.MaterialTexCoord1Trans:
                                     curveX = AnimationUtils.GetOrAddCurve (newCurves,
                                         AnimationUtils.MatAnimationModifier.Tex1TranslateX);
                                     break;
-                                case H3DTargetType.MaterialTexCoord2Trans:                                    
+                                case H3DTargetType.MaterialTexCoord2Trans:
                                     curveX = AnimationUtils.GetOrAddCurve (newCurves,
                                         AnimationUtils.MatAnimationModifier.Tex2TranslateX);
                                     break;
                             }
 
                             if (animationElement.Content is H3DAnimVector2D h3DAnimVector2D) {
+                                var interpolateY = false;
                                 foreach (var singleYFrame in h3DAnimVector2D.Y.KeyFrames) {
                                     var lhs = singleYFrame.InSlope;
                                     var rhs = singleYFrame.OutSlope;
@@ -319,19 +317,27 @@ namespace P3DS2U.Editor
                                     } else {
                                         tangentMode = TangentMode.Linear;
                                     }
-                                    curveY.AddKey (KeyframeUtil.GetNew (
-                                        AnimationUtils.GetTimeAtFrame (animationClip,
-                                            (int) singleYFrame.Frame, currentMatAnim),
-                                        1 - singleYFrame.Value,
-                                        tangentMode));
-                                    //TODO: expose this option
-                                    // if (tangentMode == TangentMode.Linear) {
-                                    //     curveBt.UpdateAllLinearTangents ();
-                                    // }
-                                }
 
+                                    if (!importerSettings.ImporterSettings.InterpolateAnimations) {
+                                        tangentMode = TangentMode.Stepped;
+                                    }
+                                    var time = AnimationUtils.GetTimeAtFrame (
+                                        animationClip,
+                                        (int) singleYFrame.Frame);
+                                    var keyFrame = KeyframeUtil.GetNew (time, 1 - singleYFrame.Value,tangentMode);
+                                    curveY.AddKey (keyFrame);
+
+                                    if (tangentMode == TangentMode.Linear) {
+                                        interpolateY = true;
+                                    }
+                                }
+                                if (interpolateY) {
+                                    curveY.UpdateAllLinearTangents ();
+                                }
                             }
+
                             if (animationElement.Content is H3DAnimVector2D h3DAnimVector2d) {
+                                var interpolateX = false;
                                 foreach (var singleXFrame in h3DAnimVector2d.X.KeyFrames) {
                                     var lhs = singleXFrame.InSlope;
                                     var rhs = singleXFrame.OutSlope;
@@ -341,26 +347,29 @@ namespace P3DS2U.Editor
                                     } else {
                                         tangentMode = TangentMode.Linear;
                                     }
-                                    float value;
-                                    if (targetType != H3DTargetType.MaterialTexCoord2Trans)
-                                    {
-                                        value = (float)Math.Abs(Math.Round(1 - singleXFrame.Value, MidpointRounding.AwayFromZero)); 
+
+                                    if (!importerSettings.ImporterSettings.InterpolateAnimations) {
+                                        tangentMode = TangentMode.Stepped;
                                     }
-                                    else
-                                    {
+
+                                    float value;
+                                    if (targetType != H3DTargetType.MaterialTexCoord2Trans) {
+                                        value = (float) Math.Abs (Math.Round (1 - singleXFrame.Value,
+                                            MidpointRounding.AwayFromZero));
+                                    } else {
                                         value = 2 - singleXFrame.Value;
                                     }
-                                    curveX.AddKey (KeyframeUtil.GetNew (
-                                        AnimationUtils.GetTimeAtFrame (animationClip,
-                                            (int) singleXFrame.Frame, currentMatAnim),
-                                        value,
-                                        tangentMode));
-                                    //TODO: expose this option
-                                    // if (tangentMode == TangentMode.Linear) {
-                                    //     curveBt.UpdateAllLinearTangents ();
-                                    // }
+                                    var time = AnimationUtils.GetTimeAtFrame (animationClip, (int) singleXFrame.Frame);
+                                    var keyFrame = KeyframeUtil.GetNew (time, value,tangentMode);
+                                    curveX.AddKey (keyFrame);
+                                    
+                                    if (tangentMode == TangentMode.Linear) {
+                                        interpolateX = true;
+                                    }
                                 }
-                                
+                                if (interpolateX) {
+                                    curveX.UpdateAllLinearTangents ();   
+                                }
                             }
 
                             foreach (var kvp in newCurves) {
@@ -373,16 +382,18 @@ namespace P3DS2U.Editor
                                         animationClip.SetCurve (cbp, typeof(SkinnedMeshRenderer),
                                             shaderPropName, kvp.Value);
                                     }
-                                }   
+                                }
                             }
-                            
+
                             break;
                     }
                 }
 
                 if (fileCreated) {
-                    AssetDatabase.CreateAsset (animationClip, combinedExportFolder + "/Animations/" + currentMatAnim.Name + ".anim");
+                    AssetDatabase.CreateAsset (animationClip,
+                        combinedExportFolder + "/Animations/" + currentMatAnim.Name + ".anim");
                 }
+
                 AssetDatabase.SaveAssets ();
                 AssetDatabase.Refresh ();
             }

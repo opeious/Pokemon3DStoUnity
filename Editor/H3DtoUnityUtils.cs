@@ -111,16 +111,8 @@ namespace P3DS2U.Editor
             return newCurve;
         }
 
-        public static float GetTimeAtFrame (AnimationClip clip, int frame, H3DAnimation h3DAnimation)
-        {
-            if (clip.averageDuration > 0f) {
-                if (frame == 0) {
-                    return 0;
-                }
-                return frame / (clip.averageDuration * clip.frameRate);
-            }
-            return frame == 0 ? 0 : frame / h3DAnimation.FramesCount;
-        }
+        private const float UnityConversionFactor = 2f;
+        public static float GetTimeAtFrame (AnimationClip clip, int frame) => UnityConversionFactor * frame / clip.frameRate;
     }
     
     public static class DirectoryUtils
