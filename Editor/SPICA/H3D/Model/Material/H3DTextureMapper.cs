@@ -11,20 +11,22 @@ namespace P3DS2U.Editor.SPICA.H3D.Model.Material
         private byte _WrapU;
         private byte _WrapV;
 
-        public PICATextureWrap WrapU {
-            get => (PICATextureWrap) _WrapU;
-            set => _WrapU = (byte) value;
+        public PICATextureWrap WrapU
+        {
+            get => (PICATextureWrap)_WrapU;
+            set => _WrapU = (byte)value;
         }
 
-        public PICATextureWrap WrapV {
-            get => (PICATextureWrap) _WrapV;
-            set => _WrapV = (byte) value;
+        public PICATextureWrap WrapV
+        {
+            get => (PICATextureWrap)_WrapV;
+            set => _WrapV = (byte)value;
         }
 
         public H3DTextureMagFilter MagFilter;
         public H3DTextureMinFilter MinFilter;
 
-        [Padding (4)] public byte MinLOD;
+        [Padding(4)] public byte MinLOD;
 
         public float LODBias;
 

@@ -8,8 +8,8 @@ namespace P3DS2U.Editor.SPICA.H3D
     [Inline]
     public class H3DDict<T> : IPatriciaDict<T> where T : INamed
     {
-        private readonly H3DPatriciaTree NameTree;
         private readonly List<T> Values;
+        private readonly H3DPatriciaTree NameTree;
 
         public H3DDict ()
         {

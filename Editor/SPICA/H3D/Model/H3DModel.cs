@@ -8,8 +8,15 @@ using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
 namespace P3DS2U.Editor.SPICA.H3D.Model
 {
-    public class H3DModel : INamed
+        public class H3DModel : INamed
     {
+        public H3DModelFlags  Flags;
+        public H3DBoneScaling BoneScaling;
+
+        public ushort SilhouetteMaterialsCount;
+
+        public Matrix3x4 WorldTransform;
+
         public readonly H3DDict<H3DMaterial> Materials;
 
         public readonly List<H3DMesh> Meshes;
@@ -19,100 +26,96 @@ namespace P3DS2U.Editor.SPICA.H3D.Model
         [Range] public readonly List<H3DMesh> MeshesLayer2;
         [Range] public readonly List<H3DMesh> MeshesLayer3;
 
-        public readonly List<bool> MeshNodesVisibility;
+        [IfVersion(CmpOp.Gequal, 7)] public readonly List<H3DSubMeshCulling> SubMeshCullings;
 
         public readonly H3DDict<H3DBone> Skeleton;
 
-        [IfVersion (CmpOp.Gequal, 7)] public readonly List<H3DSubMeshCulling> SubMeshCullings;
+        public readonly List<bool> MeshNodesVisibility;
 
-        public H3DBoneScaling BoneScaling;
-        public H3DModelFlags Flags;
+        private string _Name;
+
+        public string Name
+        {
+            get => _Name;
+            set => _Name = value ?? throw new Exception ("Null in name");
+        }
 
         public int MeshNodesCount;
 
         public H3DPatriciaTree MeshNodesTree;
 
+        private uint UserDefinedAddress;
+
         public H3DMetaData MetaData;
 
-        public ushort SilhouetteMaterialsCount;
-        
-        public Matrix3x4 WorldTransform;
-
-        public H3DModel ()
+        public H3DModel()
         {
-            WorldTransform = new Matrix3x4 ();
+            WorldTransform = new Matrix3x4();
 
-            Materials = new H3DDict<H3DMaterial> ();
+            Materials = new H3DDict<H3DMaterial>();
 
-            Meshes = new List<H3DMesh> ();
+            Meshes = new List<H3DMesh>();
 
-            MeshesLayer0 = new List<H3DMesh> ();
-            MeshesLayer1 = new List<H3DMesh> ();
-            MeshesLayer2 = new List<H3DMesh> ();
-            MeshesLayer3 = new List<H3DMesh> ();
+            MeshesLayer0 = new List<H3DMesh>();
+            MeshesLayer1 = new List<H3DMesh>();
+            MeshesLayer2 = new List<H3DMesh>();
+            MeshesLayer3 = new List<H3DMesh>();
 
-            SubMeshCullings = new List<H3DSubMeshCulling> ();
+            SubMeshCullings = new List<H3DSubMeshCulling>();
 
-            Skeleton = new H3DDict<H3DBone> ();
+            Skeleton = new H3DDict<H3DBone>();
 
-            MeshNodesVisibility = new List<bool> ();
+            MeshNodesVisibility = new List<bool>();
 
+            UserDefinedAddress = 0; //SBZ, set by program on 3DS
         }
 
-        public string Name { get; set; }
-
-        public void AddMesh (H3DMesh Mesh)
+        public void AddMesh(H3DMesh Mesh)
         {
-            Mesh.Parent = this;
+            Mesh.Parent= this;
 
-            Meshes.Add (Mesh);
+            Meshes.Add(Mesh);
 
-            switch (Mesh.Layer) {
-                case 0:
-                    MeshesLayer0.Add (Mesh);
-                    break;
-                case 1:
-                    MeshesLayer1.Add (Mesh);
-                    break;
-                case 2:
-                    MeshesLayer2.Add (Mesh);
-                    break;
-                case 3:
-                    MeshesLayer3.Add (Mesh);
-                    break;
+            switch (Mesh.Layer)
+            {
+                case 0: MeshesLayer0.Add(Mesh); break;
+                case 1: MeshesLayer1.Add(Mesh); break;
+                case 2: MeshesLayer2.Add(Mesh); break;
+                case 3: MeshesLayer3.Add(Mesh); break;
 
-                default: throw new ArgumentOutOfRangeException ("Invalid Layer! Expected 0, 1, 2 or 3!");
+                default: throw new ArgumentOutOfRangeException("Invalid Layer! Expected 0, 1, 2 or 3!");
             }
         }
 
-        public void AddMeshes (IEnumerable<H3DMesh> Meshes)
+        public void AddMeshes(IEnumerable<H3DMesh> Meshes)
         {
-            foreach (var Mesh in Meshes) AddMesh (Mesh);
+            foreach (H3DMesh Mesh in Meshes) AddMesh(Mesh);
         }
 
-        public void AddMeshes (params H3DMesh[] Meshes)
+        public void AddMeshes(params H3DMesh[] Meshes)
         {
-            foreach (var Mesh in Meshes) AddMesh (Mesh);
+            foreach (H3DMesh Mesh in Meshes) AddMesh(Mesh);
         }
 
-        public void RemoveMesh (H3DMesh Mesh)
+        public void RemoveMesh(H3DMesh Mesh)
         {
-            if (Meshes.Remove (Mesh)) {
-                MeshesLayer0.Remove (Mesh);
-                MeshesLayer1.Remove (Mesh);
-                MeshesLayer2.Remove (Mesh);
-                MeshesLayer3.Remove (Mesh);
+            if (Meshes.Remove(Mesh))
+            {
+                MeshesLayer0.Remove(Mesh);
+                MeshesLayer1.Remove(Mesh);
+                MeshesLayer2.Remove(Mesh);
+                MeshesLayer3.Remove(Mesh);
             }
         }
 
-        public void ClearMeshes ()
+        public void ClearMeshes()
         {
-            Meshes.Clear ();
+            Meshes.Clear();
 
-            MeshesLayer0.Clear ();
-            MeshesLayer1.Clear ();
-            MeshesLayer2.Clear ();
-            MeshesLayer3.Clear ();
+            MeshesLayer0.Clear();
+            MeshesLayer1.Clear();
+            MeshesLayer2.Clear();
+            MeshesLayer3.Clear();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using P3DS2U.Editor.SPICA.PICA;
+﻿using System;
+using P3DS2U.Editor.SPICA.PICA;
 using P3DS2U.Editor.SPICA.Serialization;
 using P3DS2U.Editor.SPICA.Serialization.Attributes;
 
@@ -7,72 +8,102 @@ namespace P3DS2U.Editor.SPICA.H3D.LUT
     [Inline]
     public class H3DLUTSampler : ICustomSerialization, INamed
     {
-        [Ignore] private float[] _Table;
+        [Padding(4)] public H3DLUTFlags Flags;
 
         private uint[] Commands;
-        [Padding (4)] public H3DLUTFlags Flags;
 
-        public H3DLUTSampler ()
+        private string _Name;
+
+        public string Name
         {
-            _Table = new float[256];
+            get => _Name;
+            set => _Name = value ?? throw new Exception("null");
         }
 
-        public float[] Table {
-            get => _Table;
-            set {
-                if (value == null) return;
+        [Ignore] private float[] _Table;
 
-                if (value.Length != 256) return;
+        public float[] Table
+        {
+            get => _Table;
+            set
+            {
+                if (value == null)
+                {
+                    throw new Exception("null");
+                }
+
+                if (value.Length != 256)
+                {
+                    throw new Exception("null");
+                }
 
                 _Table = value;
             }
         }
 
-        void ICustomSerialization.Deserialize (BinaryDeserializer Deserializer)
+        public H3DLUTSampler()
+        {
+            _Table = new float[256];
+        }
+
+        void ICustomSerialization.Deserialize(BinaryDeserializer Deserializer)
         {
             uint Index = 0;
 
-            var Reader = new PICACommandReader (Commands);
+            PICACommandReader Reader = new PICACommandReader(Commands);
 
-            while (Reader.HasCommand) {
-                var Cmd = Reader.GetCommand ();
+            while (Reader.HasCommand)
+            {
+                PICACommand Cmd = Reader.GetCommand();
 
                 if (Cmd.Register == PICARegister.GPUREG_LIGHTING_LUT_INDEX)
+                {
                     Index = Cmd.Parameters[0] & 0xff;
+                }
                 else if (
                     Cmd.Register >= PICARegister.GPUREG_LIGHTING_LUT_DATA0 &&
                     Cmd.Register <= PICARegister.GPUREG_LIGHTING_LUT_DATA7)
-                    foreach (var Param in Cmd.Parameters)
-                        _Table[Index++] = (Param & 0xfff) / (float) 0xfff;
+                {
+                    foreach (uint Param in Cmd.Parameters)
+                    {
+                        _Table[Index++] = (Param & 0xfff) / (float)0xfff;
+                    }
+                }
             }
         }
 
-        bool ICustomSerialization.Serialize (BinarySerializer Serializer)
+        bool ICustomSerialization.Serialize(BinarySerializer Serializer)
         {
-            var QuantizedValues = new uint[256];
+            uint[] QuantizedValues = new uint[256];
 
-            for (var Index = 0; Index < _Table.Length; Index++) {
+            for (int Index = 0; Index < _Table.Length; Index++)
+            {
                 float Difference = 0;
 
-                if (Index < _Table.Length - 1) Difference = _Table[Index + 1] - _Table[Index];
+                if (Index < _Table.Length - 1)
+                {
+                    Difference = _Table[Index + 1] - _Table[Index];
+                }
 
-                var Value = (int) (_Table[Index] * 0xfff);
-                var Diff = (int) (Difference * 0x7ff);
+                int Value = (int)(_Table[Index] * 0xfff);
+                int Diff  = (int)(Difference    * 0x7ff);
 
-                QuantizedValues[Index] = (uint) (Value | (Diff << 12)) & 0xffffff;
+                QuantizedValues[Index] = (uint)(Value | (Diff << 12)) & 0xffffff;
             }
 
-            var Writer = new PICACommandWriter ();
+            PICACommandWriter Writer = new PICACommandWriter();
 
-            Writer.SetCommands (PICARegister.GPUREG_LIGHTING_LUT_DATA0, false, 0xf, QuantizedValues);
+            Writer.SetCommands(PICARegister.GPUREG_LIGHTING_LUT_DATA0, false, 0xf, QuantizedValues);
 
-            Writer.WriteEnd ();
+            Writer.WriteEnd();
 
-            Commands = Writer.GetBuffer ();
+            Commands = Writer.GetBuffer();
 
             return false;
         }
+    }
 
-        public string Name { get; set; }
+    public class Exceptions
+    {
     }
 }

@@ -2,9 +2,9 @@
 {
     public class H3DCameraProjectionPerspective
     {
+        public float ZNear;
+        public float ZFar;
         public float AspectRatio;
         public float FOVY;
-        public float ZFar;
-        public float ZNear;
     }
 }
