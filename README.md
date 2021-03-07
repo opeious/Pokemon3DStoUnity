@@ -29,10 +29,8 @@ What does the package do at the moment:
 
 To do:
 -
-- Fix iris shaders and materials generation
-- Material Animations
-- Visibility Animations
 - Better, more optimized Toonshader
+- Material animations
 - Flame shader
 - AssetBundles/Addressable build sizeoptimizations
 
@@ -42,6 +40,7 @@ Updating:
 
 ChangeLog:
 -
+- v1.5: Added Visiblity animations, fixed iris/body shaders, Material aniamtions (preview)
 - v1.4: Added UI, made the plugin customizable, animation renaming, etc
 - v1.3: Skeletal animation generation
 - v1.2: Skinning and rigging fixes
@@ -49,6 +48,7 @@ ChangeLog:
 - v1: basic skeleton, model, texture generation
 
 ![2021-02-27 22_43_19-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/109395153-e4543300-7950-11eb-8351-e42af713c374.png)
-![2021-02-27 23_07_57-PokeUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 8f1 Personal](https://user-images.githubusercontent.com/3764951/109395156-e918e700-7950-11eb-83c9-4923417450f1.png)![sylMatAni](https://user-images.githubusercontent.com/3764951/110187402-3d830180-7e3e-11eb-8291-8314950faaab.gif)
+![2021-02-27 23_07_57-PokeUnity - SampleScene - PC, Mac   Linux Standalone - Unity 2019 4 8f1 Personal](https://user-images.githubusercontent.com/3764951/109395156-e918e700-7950-11eb-83c9-4923417450f1.png)![syl2](https://user-images.githubusercontent.com/3764951/110213468-330c4a80-7ec6-11eb-8f94-02aa35e54abc.gif)
+
 
 

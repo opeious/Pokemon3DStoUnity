@@ -88,6 +88,7 @@ namespace P3DS2U.Editor
       public AnimationImportOptions MovementAnimationsToImport;
       [Tooltip("Feature in Progress")]
       public bool MaterialAnimationsWip;
+      public bool VisibilityAnimations;
       public bool RenameGeneratedAnimationFiles;
    }
    
@@ -117,11 +118,12 @@ namespace P3DS2U.Editor
             ImportMaterials = true,
             ApplyMaterials = true,
             SkeletalAnimations = true,
+            MaterialAnimationsWip = false,
+            VisibilityAnimations = true,
+            RenameGeneratedAnimationFiles = true,
             FightAnimationsToImport = new AnimationImportOptions(),
             PetAnimationsToImport = new AnimationImportOptions(),
             MovementAnimationsToImport = new AnimationImportOptions(),
-            MaterialAnimationsWip = false,
-            RenameGeneratedAnimationFiles = true
          };
          foreach (string animationName in AnimationNaming.animationNames["Fight"])
          {
@@ -239,6 +241,7 @@ namespace P3DS2U.Editor
                   wti.SkeletalAnimations = false;
                   wti.MaterialAnimationsWip = false;
                   wti.RenameGeneratedAnimationFiles = false;
+                  wti.VisibilityAnimations = false;
                }
 
                if (!wti.ImportTextures) {
@@ -257,11 +260,8 @@ namespace P3DS2U.Editor
                if (!wti.SkeletalAnimations) {
                   wti.MaterialAnimationsWip = false;
                   wti.RenameGeneratedAnimationFiles = false;
+                  wti.VisibilityAnimations = false;
                }
-
-               // if (wti.MaterialAnimationsWip) {
-               //    wti.MaterialAnimationsWip = false;
-               // }
             }
             EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (100));
             EditorGUILayout.EndScrollView ();

@@ -128,16 +128,28 @@ namespace P3DS2U.Editor
                     if (importSettings.whatToImport.SkeletalAnimations) {
                         GenerateSkeletalAnimations (h3DScene, combinedExportFolder);
                     }
+                    
+                    if (importSettings.whatToImport.VisibilityAnimations) {
+                        GenerateVisibilityAnimations (h3DScene, combinedExportFolder);
+                    }
 
                     if (importSettings.whatToImport.MaterialAnimationsWip) {
                         GenerateMaterialAnimations (h3DScene, combinedExportFolder);   
                     }
 
-                    var go = GameObject.Find ("GeneratedUnityObject");
-                    if (go != null) {
-                        go.name = kvp.Key.Replace (".bin", "");
+                    var modelGo = GameObject.Find ("GeneratedUnityObject");
+                    if (modelGo != null) {
+                        if (importSettings.whatToImport.SkeletalAnimations) {
+                            GenerateAnimationController (modelGo, combinedExportFolder);
+                        }
+                        
+                        var go = new GameObject ("GeneratedUnityObject");
+                        modelGo.transform.SetParent (go.transform);
+                        modelGo.name = "Model";
+                        
+                        go.name = kvp.Key.Replace (".bin", "") + "Container";
                         var prefabPath =
-                            AssetDatabase.GenerateUniqueAssetPath (ExportPath + go.name + "/" + go.name + ".prefab");
+                            AssetDatabase.GenerateUniqueAssetPath (ExportPath + kvp.Key.Replace (".bin", "") + "/" + kvp.Key.Replace (".bin", "") + ".prefab");
                         PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
 
                         go.transform.localPosition = new Vector3 {
@@ -154,6 +166,88 @@ namespace P3DS2U.Editor
             }
 
             EditorUtility.ClearProgressBar();
+        }
+
+        private static void GenerateAnimationController (GameObject modelGo, string combinedExportFolder)
+        {
+            var animationsFolderPath = combinedExportFolder + "/Animations/";
+            var animator = modelGo.AddComponent<Animator> ();
+
+            var animatorController = new UnityEditor.Animations.AnimatorController ();
+
+            var files = Directory.GetFiles (animationsFolderPath);
+            
+            animatorController.AddLayer ("AllAnims");
+            // animatorController.layers[0].stateMachine.AddState ("1");
+            foreach (var animationFilePath in files) {
+                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (animationFilePath);
+                if (animationClip != null) {
+                    animatorController.AddMotion (animationClip);
+                }
+            }
+
+            animator.runtimeAnimatorController = animatorController;
+            AssetDatabase.CreateAsset (animatorController,  animationsFolderPath + "animController.controller");
+            AssetDatabase.Refresh();
+        }
+
+        private static void GenerateVisibilityAnimations (H3D h3DScene, string combinedExportFolder)
+        {
+            var modelTransform = GameObject.Find ("GeneratedUnityObject").transform;
+
+            foreach (var currentVisAnim in h3DScene.VisibilityAnimations) {
+                var fileCreated = false;
+                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (combinedExportFolder + "/Animations/" + currentVisAnim.Name + ".anim");
+                if (animationClip == null) {
+                    animationClip = new AnimationClip {name = currentVisAnim.Name};
+                    var clipSettings = AnimationUtility.GetAnimationClipSettings (animationClip);
+                    clipSettings.loopTime = currentVisAnim.AnimationFlags == H3DAnimationFlags.IsLooping;
+                    AnimationUtility.SetAnimationClipSettings (animationClip, clipSettings);
+                    fileCreated = true;
+                }
+                
+                var newCurves = new Dictionary<string, AnimationCurve> ();
+                foreach (var animationElement in currentVisAnim.Elements) {
+                    switch (animationElement.PrimitiveType) {
+                        case H3DPrimitiveType.Boolean:
+                            if (animationElement.TargetType == H3DTargetType.MeshNodeVisibility) {
+                                var visCurve = new AnimationCurve();
+                                if (animationElement.Content is H3DAnimBoolean h3DAnimBoolean) {
+                                    var added = false;
+                                    for (var i = 0; i < h3DAnimBoolean.Values.Count; i++) {
+                                        visCurve.AddKey (KeyframeUtil.GetNew (
+                                            AnimationUtils.GetTimeAtFrame (animationClip,
+                                                (int) i, currentVisAnim),
+                                            h3DAnimBoolean.Values[i] ? 1f : 0f,
+                                            TangentMode.Stepped));
+                                        if (h3DAnimBoolean.Values[i] == false) {
+                                            added = true;
+                                        }
+                                    }
+
+                                    if (added) {
+                                        var skms = modelTransform.GetComponentsInChildren<Transform> ();
+                                        foreach (var skm in skms) {
+                                            if (skm.name.Replace (" (Instance)", "").Contains(animationElement.Name)) {
+                                                var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
+                                                    modelTransform);
+                                                animationClip.SetCurve (cbp, typeof(GameObject), "m_IsActive", visCurve);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                    
+                }
+                
+                if (fileCreated) {
+                    AssetDatabase.CreateAsset (animationClip, combinedExportFolder + "/Animations/" + currentVisAnim.Name + ".anim");
+                }
+                AssetDatabase.SaveAssets ();
+                AssetDatabase.Refresh ();
+            }
         }
 
         private static void GenerateMaterialAnimations (H3D h3DScene, string combinedExportFolder)
@@ -276,7 +370,12 @@ namespace P3DS2U.Editor
                             break;
                     }
                 }
-                
+
+                if (fileCreated) {
+                    AssetDatabase.CreateAsset (animationClip, combinedExportFolder + "/Animations/" + currentMatAnim.Name + ".anim");
+                }
+                AssetDatabase.SaveAssets ();
+                AssetDatabase.Refresh ();
             }
         }
 
@@ -409,8 +508,9 @@ namespace P3DS2U.Editor
                     newMaterial = new Material (shaderToApply);
                 }
 
-                
-                
+                newMaterial.shaderKeywords = new[]
+                    {"_MAIN_LIGHT_CALCULATE_SHADOWS", "_MAIN_LIGHT_SHADOW_CASCADE", " _SHADOWS_SOFT"};
+
                 var mainTexturePath = exportPath + "/Textures/" + h3dMaterial.Texture0Name + ".png";
                 var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
                 if (mainTexture != null) {

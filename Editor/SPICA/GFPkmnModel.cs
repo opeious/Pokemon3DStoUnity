@@ -98,49 +98,69 @@ namespace P3DS2U.Editor.SPICA
                         var MatAnim = Mot.ToH3DMaterialAnimation ();
                         var VisAnim = Mot.ToH3DVisibilityAnimation ();
 
-                        string motionUsage = "";
-                        switch (animFilesCount)
-                        {
-                            case 0: motionUsage = "Fight"; break;
-                            case 1: motionUsage = "Pet"; break;
-                            case 2: motionUsage = "Movement"; break;
-                        }
+                        if (P3ds2USettingsScriptableObject.Instance.whatToImport.RenameGeneratedAnimationFiles) {
+                            string motionUsage = "";
+                            switch (animFilesCount)
+                            {
+                                case 0: motionUsage = "Fight"; break;
+                                case 1: motionUsage = "Pet"; break;
+                                case 2: motionUsage = "Movement"; break;
+                            }
 
-                        string animationName =
-                            $"{motionUsage}_{AnimationNaming.animationNames[motionUsage][Index].ToLower()}";
+                            string animationName =
+                                $"{motionUsage}_{AnimationNaming.animationNames[motionUsage][Index].ToLower()}";
                         
-                        bool needToImport = 
-                            PokemonImporter.AnimationImportOptions[animFilesCount][AnimationNaming.animationNames[motionUsage][Index]];
-                        if (needToImport)
-                        {
-                            if (SklAnim != null)
+                            bool needToImport = 
+                                PokemonImporter.AnimationImportOptions[animFilesCount][AnimationNaming.animationNames[motionUsage][Index]];
+                            if (needToImport)
                             {
-                                SklAnim.Name = animationName;
+                                if (SklAnim != null)
+                                {
+                                    SklAnim.Name = animationName;
                                 
-                                if (Header.Entries[Index].Length != 0)
-                                {
-                                    Output.SkeletalAnimations.Add(SklAnim);
+                                    if (Header.Entries[Index].Length != 0)
+                                    {
+                                        Output.SkeletalAnimations.Add(SklAnim);
+                                    }
                                 }
+
+                                if (MatAnim != null)
+                                {
+                                    MatAnim.Name = animationName;
+
+                                    if (Header.Entries[Index].Length != 0)
+                                    {
+                                        Output.MaterialAnimations.Add(MatAnim);
+                                    }
+                                }
+
+                                if (VisAnim != null)
+                                {
+                                    VisAnim.Name = animationName;
+
+                                    if (Header.Entries[Index].Length != 0)
+                                    {
+                                        Output.VisibilityAnimations.Add(VisAnim);
+                                    }
+                                }
+                            }   
+                        } else {
+                            if (SklAnim != null) {
+                                SklAnim.Name = $"Motion_{Mot.Index}";
+
+                                Output.SkeletalAnimations.Add (SklAnim);
                             }
 
-                            if (MatAnim != null)
-                            {
-                                MatAnim.Name = animationName;
+                            if (MatAnim != null) {
+                                MatAnim.Name = $"Motion_{Mot.Index}";
 
-                                if (Header.Entries[Index].Length != 0)
-                                {
-                                    Output.MaterialAnimations.Add(MatAnim);
-                                }
+                                Output.MaterialAnimations.Add (MatAnim);
                             }
 
-                            if (VisAnim != null)
-                            {
-                                VisAnim.Name = animationName;
+                            if (VisAnim != null) {
+                                VisAnim.Name = $"Motion_{Mot.Index}";
 
-                                if (Header.Entries[Index].Length != 0)
-                                {
-                                    Output.VisibilityAnimations.Add(VisAnim);
-                                }
+                                Output.VisibilityAnimations.Add (VisAnim);
                             }
                         }
                     }
