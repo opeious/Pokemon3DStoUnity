@@ -25,7 +25,7 @@ namespace P3DS2U.Editor
     public class PokemonImporter : EditorWindow
     {
         public const string ImportPath = "Assets/Bin3DS/";
-        private const string ExportPath = "Assets/Exported/";
+        public const string ExportPath = "Assets/Exported/";
 
         private static int _processedCount;
 
@@ -53,6 +53,7 @@ namespace P3DS2U.Editor
         public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
         {
             try {
+                string ExportPath = importSettings.ExportPath;
                 AnimationImportOptions.Add(importSettings.ImporterSettings.FightAnimationsToImport);
                 AnimationImportOptions.Add(importSettings.ImporterSettings.PetAnimationsToImport);
                 AnimationImportOptions.Add(importSettings.ImporterSettings.MovementAnimationsToImport);
@@ -144,7 +145,7 @@ namespace P3DS2U.Editor
                         modelGo.transform.SetParent (go.transform);
                         modelGo.name = "Model";
                         
-                        go.name = modelName + "Container";
+                        go.name = modelName + " (Container)";
                         var prefabPath =
                             AssetDatabase.GenerateUniqueAssetPath (ExportPath + kvp.Key.Replace (".bin", "") + "/" + kvp.Key.Replace (".bin", "") + ".prefab");
                         PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);

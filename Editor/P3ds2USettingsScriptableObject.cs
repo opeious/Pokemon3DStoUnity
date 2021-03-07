@@ -91,6 +91,8 @@ namespace P3DS2U.Editor
       public bool VisibilityAnimations;
       public bool InterpolateAnimations;
       public bool RenameGeneratedAnimationFiles;
+      [HideInInspector] public string ExportPath;
+      [HideInInspector] public string ImportPath;
    }
    
    public class P3ds2USettingsScriptableObject : ScriptableObject
@@ -108,25 +110,30 @@ namespace P3DS2U.Editor
       [HideInInspector] public int chosenFormat; // 0 or 1
       public static bool ImportInProgress;
       
+        public string ExportPath { get { return ImporterSettings.ExportPath; } }
+        public string ImportPath { get { return ImporterSettings.ImportPath; } }
+
       private P3ds2USettingsScriptableObject ()
       {
          customShaderSettings = new P3ds2UShaderProperties ();
-         ImporterSettings = new WhatToImport {
-            StartIndex = 0,
-            EndIndex = 0,
-            ImportModel = true,
-            ImportTextures = true,
-            ImportMaterials = true,
-            ApplyMaterials = true,
-            SkeletalAnimations = true,
-            MaterialAnimations = true,
-            InterpolateAnimations = false,
-            VisibilityAnimations = true,
-            RenameGeneratedAnimationFiles = true,
-            FightAnimationsToImport = new AnimationImportOptions(),
-            PetAnimationsToImport = new AnimationImportOptions(),
-            MovementAnimationsToImport = new AnimationImportOptions(),
-         };
+            ImporterSettings = new WhatToImport {
+                StartIndex = 0,
+                EndIndex = 0,
+                ImportModel = true,
+                ImportTextures = true,
+                ImportMaterials = true,
+                ApplyMaterials = true,
+                SkeletalAnimations = true,
+                MaterialAnimations = true,
+                InterpolateAnimations = false,
+                VisibilityAnimations = true,
+                RenameGeneratedAnimationFiles = true,
+                FightAnimationsToImport = new AnimationImportOptions(),
+                PetAnimationsToImport = new AnimationImportOptions(),
+                MovementAnimationsToImport = new AnimationImportOptions(),
+                ExportPath = PokemonImporter.ExportPath,
+                ImportPath = PokemonImporter.ImportPath,
+            };
          foreach (string animationName in AnimationNaming.animationNames["Fight"])
          {
             ImporterSettings.FightAnimationsToImport.Add(animationName, true);
@@ -162,13 +169,55 @@ namespace P3DS2U.Editor
          ImportInProgress = false;
       }
 
+        public void SetImportPath()
+        {
+            string path = EditorUtility.SaveFolderPanel("Choose Import folder", "Assets/", "Bin3DS");
+            if (!string.IsNullOrEmpty(path))
+            {
+                ImporterSettings.ImportPath = "Assets" + path.Replace(Application.dataPath+"/", "/")+"/";
+            }
+        }
+
+        public void ResetPaths(int _path = 0)
+        {
+            switch (_path)
+            {
+                case 0:
+                    ImporterSettings.ImportPath = PokemonImporter.ImportPath;
+                    break;
+                case 1:
+                    ImporterSettings.ExportPath = PokemonImporter.ExportPath;
+                    break;
+                default:
+                    ImporterSettings.ImportPath = PokemonImporter.ImportPath;
+                    ImporterSettings.ExportPath = PokemonImporter.ExportPath;
+                    break;
+            }
+        }
+
+        public void SetExportPath()
+        {
+            string path = EditorUtility.SaveFolderPanel("Choose Export folder", "Assets/", "Exported");
+            if (!string.IsNullOrEmpty(path))
+            {
+                ImporterSettings.ExportPath = "Assets" + path.Replace(Application.dataPath + "/", "/") + "/";
+            }
+        }
+
       public void RegeneratePreview ()
       {
-         if (ImportInProgress) return;
-         
+         if (ImportInProgress) 
+                return;
+
+         if (!System.IO.Directory.Exists(ImportPath))
+            Directory.CreateDirectory(ImportPath);
+
+         if (!System.IO.Directory.Exists(ExportPath))
+            Directory.CreateDirectory(ExportPath);
+ 
          ScenesDict = new Dictionary<string, List<string>> ();
          if (chosenFormat == 1) {
-            var allFiles = DirectoryUtils.GetAllFilesRecursive (PokemonImporter.ImportPath);
+            var allFiles = DirectoryUtils.GetAllFilesRecursive (ImporterSettings.ImportPath);
             foreach (var singleFile in allFiles) {
                var trimmedName = Path.GetFileName (singleFile);
                if (!ScenesDict.ContainsKey (trimmedName)) {
@@ -178,7 +227,7 @@ namespace P3DS2U.Editor
                }
             }  
          } else {
-            var allFolders = Directory.GetDirectories (PokemonImporter.ImportPath);
+            var allFolders = Directory.GetDirectories (ImporterSettings.ImportPath);
             foreach (var singleFolder in allFolders) {
                var allFiles = Directory.GetFiles (singleFolder).ToList ();
                for (var i = allFiles.Count - 1; i >= 0; i--) {
@@ -216,6 +265,49 @@ namespace P3DS2U.Editor
       {
          var settingsTarget = target as P3ds2USettingsScriptableObject;
          if (settingsTarget != null) {
+
+            var wti = settingsTarget.ImporterSettings;
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Paths");
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginVertical();
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("...", GUILayout.Width(50), GUILayout.Width(50)))
+            {
+                settingsTarget.SetImportPath();
+            }
+            GUILayout.Label("Import path: " + wti.ImportPath);
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginHorizontal();
+            if (GUILayout.Button("...", GUILayout.Width(50), GUILayout.Width(50)))
+            {
+                settingsTarget.SetExportPath();
+            }
+
+            GUILayout.Label("Export path: " + wti.ExportPath);
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.BeginVertical();
+            if (GUILayout.Button("Reset Path", GUILayout.Width(200), GUILayout.Width(150)))
+            {
+                settingsTarget.ResetPaths(0);
+            }
+            EditorGUILayout.Space();
+            if (GUILayout.Button("Reset Path", GUILayout.Width(200), GUILayout.Width(150)))
+            {
+                settingsTarget.ResetPaths(1);
+            }
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
+
             EditorGUILayout.BeginVertical ();
             EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (115));
             
@@ -237,7 +329,7 @@ namespace P3DS2U.Editor
             EditorGUI.BeginChangeCheck ();
             DrawDefaultInspector ();
             if (EditorGUI.EndChangeCheck ()) {
-               var wti = settingsTarget.ImporterSettings;
+       
                if (!wti.ImportModel) {
                   wti.ApplyMaterials = false;
                   wti.SkeletalAnimations = false;
