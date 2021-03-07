@@ -134,9 +134,8 @@ namespace P3DS2U.Editor
                     }
 
                     var modelGo = GameObject.Find ("GeneratedUnityObject");
-                    if (modelGo != null)
-                    {
-                        string modelName = kvp.Key.Replace(".bin", "");
+                    if (modelGo != null) {
+                        var modelName = kvp.Key.Replace (".bin", "");
                         if (importSettings.ImporterSettings.SkeletalAnimations) {
                             GenerateAnimationController (modelGo, combinedExportFolder, modelName);
                         }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Numerics;
 using P3DS2U.Editor.SPICA.Commands;
 using P3DS2U.Editor.SPICA.Serialization;
@@ -11,36 +12,46 @@ namespace P3DS2U.Editor.SPICA.H3D
     {
         private byte _Name;
 
-        public PICAAttributeName Name {
-            get => (PICAAttributeName) _Name;
-            set => _Name = (byte) value;
+        public PICAAttributeName Name
+        {
+            get => (PICAAttributeName)_Name;
+            set => _Name = (byte)value;
         }
 
         private byte Type;
 
-        public PICAAttributeFormat Format {
-            get => (PICAAttributeFormat) BitUtils.GetBits (Type, 0, 2);
-            set => Type = (byte) BitUtils.SetBits (Type, (int) value, 0, 2);
+        public PICAAttributeFormat Format
+        {
+            get => (PICAAttributeFormat)BitUtils.GetBits(Type, 0, 2);
+            set => Type = (byte)BitUtils.SetBits(Type, (int)value, 0, 2);
         }
 
-        public int Elements {
-            get => (int) BitUtils.GetBits (Type, 2, 2) + 1;
-            set {
-                if (value < 1) return;
+        public int Elements
+        {
+            get => (int)BitUtils.GetBits(Type, 2, 2) + 1;
+            set
+            {
+                if (value < 1) {
+                    throw new Exception ("null");
+                }
 
-                if (value > 4) return;
+                if (value > 4)
+                {
+                    throw new Exception ("null");
+                }
 
-                Type = (byte) BitUtils.SetBits (Type, value - 1, 2, 2);
+                Type = (byte)BitUtils.SetBits(Type, value - 1, 2, 2);
             }
         }
 
-        [Padding (2)] public byte Stride;
+        [Padding(2)] public byte Stride;
 
         public bool IsFixed => Stride == 0;
 
         private int _Offset;
 
-        public int Offset {
+        public int Offset
+        {
             get => IsFixed ? 0 : _Offset;
             set => _Offset = value;
         }
@@ -49,90 +60,88 @@ namespace P3DS2U.Editor.SPICA.H3D
 
         [Ignore] internal byte[] RawBuffer;
 
-        void ICustomSerialization.Deserialize (BinaryDeserializer Deserializer)
+        void ICustomSerialization.Deserialize(BinaryDeserializer Deserializer)
         {
-            if (IsFixed) {
-                var Position = Deserializer.BaseStream.Position;
+            if (IsFixed)
+            {
+                long Position = Deserializer.BaseStream.Position;
 
-                Deserializer.BaseStream.Seek (_Offset, SeekOrigin.Begin);
+                Deserializer.BaseStream.Seek(_Offset, SeekOrigin.Begin);
 
-                ReadFixedValue (Deserializer.Reader);
+                ReadFixedValue(Deserializer.Reader);
 
-                Deserializer.BaseStream.Seek (Position, SeekOrigin.Begin);
+                Deserializer.BaseStream.Seek(Position, SeekOrigin.Begin);
             }
         }
 
-        bool ICustomSerialization.Serialize (BinarySerializer Serializer)
+        bool ICustomSerialization.Serialize(BinarySerializer Serializer)
         {
             if (IsFixed)
-                Serializer.Sections[(uint) H3DSectionId.Contents].Values.Add (new RefValue {
-                    Parent = this,
-                    Position = Serializer.BaseStream.Position + 4,
-                    Value = GetFixedValueBuffer (),
+            {
+                Serializer.Sections[(uint)H3DSectionId.Contents].Values.Add(new RefValue()
+                {
+                    Parent        = this,
+                    Position      = Serializer.BaseStream.Position + 4,
+                    Value         = GetFixedValueBuffer(),
                     PointerOffset = 0
                 });
+            }
             else
-                Serializer.Sections[(uint) H3DSectionId.RawData].Values.Add (new RefValue {
-                    Parent = this,
-                    Position = Serializer.BaseStream.Position + 4,
-                    Value = RawBuffer,
-                    PointerOffset = (uint) _Offset
+            {
+                Serializer.Sections[(uint)H3DSectionId.RawData].Values.Add(new RefValue()
+                {
+                    Parent        = this,
+                    Position      = Serializer.BaseStream.Position + 4,
+                    Value         = RawBuffer,
+                    PointerOffset = (uint)_Offset
                 });
+            }
 
             return false;
         }
 
-        private void ReadFixedValue (BinaryReader Reader)
+        private void ReadFixedValue(BinaryReader Reader)
         {
-            var v = new float[4];
+            float[] v = new float[4];
 
-            for (var i = 0; i < Elements; i++)
-                switch (Format) {
-                    case PICAAttributeFormat.Byte:
-                        v[i] = Reader.ReadSByte ();
-                        break;
-                    case PICAAttributeFormat.Ubyte:
-                        v[i] = Reader.ReadByte ();
-                        break;
-                    case PICAAttributeFormat.Short:
-                        v[i] = Reader.ReadInt16 ();
-                        break;
-                    case PICAAttributeFormat.Float:
-                        v[i] = Reader.ReadSingle ();
-                        break;
+            for (int i = 0; i < Elements; i++)
+            {
+                switch (Format)
+                {
+                    case PICAAttributeFormat.Byte:  v[i] = Reader.ReadSByte();  break;
+                    case PICAAttributeFormat.Ubyte: v[i] = Reader.ReadByte();   break;
+                    case PICAAttributeFormat.Short: v[i] = Reader.ReadInt16();  break;
+                    case PICAAttributeFormat.Float: v[i] = Reader.ReadSingle(); break;
                 }
+            }
 
-            FixedValue = new Vector4 (v[0], v[1], v[2], v[3]);
+            FixedValue = new Vector4(v[0], v[1], v[2], v[3]);
         }
 
-        private byte[] GetFixedValueBuffer ()
+        private byte[] GetFixedValueBuffer()
         {
-            using (var MS = new MemoryStream ()) {
-                var Writer = new BinaryWriter (MS);
+            using (MemoryStream MS = new MemoryStream())
+            {
+                BinaryWriter Writer = new BinaryWriter(MS);
 
-                var v = new float[4];
+                float[] v = new float[4];
 
-                FixedValue.CopyTo (v);
+                FixedValue.CopyTo(v);
 
-                for (var i = 0; i < Elements; i++)
-                    switch (Format) {
-                        case PICAAttributeFormat.Byte:
-                            Writer.Write ((sbyte) v[i]);
-                            break;
-                        case PICAAttributeFormat.Ubyte:
-                            Writer.Write ((byte) v[i]);
-                            break;
-                        case PICAAttributeFormat.Short:
-                            Writer.Write ((short) v[i]);
-                            break;
-                        case PICAAttributeFormat.Float:
-                            Writer.Write (v[i]);
-                            break;
+                for (int i = 0; i < Elements; i++)
+                {
+                    switch (Format)
+                    {
+                        case PICAAttributeFormat.Byte:  Writer.Write((sbyte)v[i]); break;
+                        case PICAAttributeFormat.Ubyte: Writer.Write((byte)v[i]);  break;
+                        case PICAAttributeFormat.Short: Writer.Write((short)v[i]); break;
+                        case PICAAttributeFormat.Float: Writer.Write(v[i]);        break;
                     }
+                }
 
-                Writer.Align (4, 0);
+                Writer.Align(4, 0);
 
-                return MS.ToArray ();
+                return MS.ToArray();
             }
         }
     }

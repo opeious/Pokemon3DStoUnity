@@ -1,13 +1,37 @@
 ﻿namespace P3DS2U.Editor.SPICA.H3D
 {
-    public struct H3DPatriciaTreeNode : IPatriciaTreeNode
+    namespace SPICA.Formats.CtrH3D
     {
-        public uint ReferenceBit { get; set; }
+        public struct H3DPatriciaTreeNode : IPatriciaTreeNode
+        {
+            private uint   _ReferenceBit;
+            private ushort _LeftNodeIndex;
+            private ushort _RightNodeIndex;
+            private string _Name;
 
-        public ushort LeftNodeIndex { get; set; }
+            public uint ReferenceBit
+            {
+                get => _ReferenceBit;
+                set => _ReferenceBit = value;
+            }
 
-        public ushort RightNodeIndex { get; set; }
+            public ushort LeftNodeIndex
+            {
+                get => _LeftNodeIndex;
+                set => _LeftNodeIndex = value;
+            }
 
-        public string Name { get; set; }
+            public ushort RightNodeIndex
+            {
+                get => _RightNodeIndex;
+                set => _RightNodeIndex = value;
+            }
+
+            public string Name
+            {
+                get => _Name;
+                set => _Name = value;
+            }
+        }
     }
 }

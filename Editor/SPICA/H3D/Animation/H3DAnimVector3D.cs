@@ -5,29 +5,30 @@ namespace P3DS2U.Editor.SPICA.H3D.Animation
 {
     public class H3DAnimVector3D : ICustomSerialization
     {
-        [Ignore] private readonly H3DFloatKeyFrameGroup[] Vector;
-
-        public H3DAnimVector3D ()
-        {
-            Vector = new[] {
-                new H3DFloatKeyFrameGroup (),
-                new H3DFloatKeyFrameGroup (),
-                new H3DFloatKeyFrameGroup ()
-            };
-        }
+        [Ignore] private H3DFloatKeyFrameGroup[] Vector;
 
         public H3DFloatKeyFrameGroup X => Vector[0];
         public H3DFloatKeyFrameGroup Y => Vector[1];
         public H3DFloatKeyFrameGroup Z => Vector[2];
 
-        void ICustomSerialization.Deserialize (BinaryDeserializer Deserializer)
+        public H3DAnimVector3D()
         {
-            H3DAnimVector.SetVector (Deserializer, Vector);
+            Vector = new H3DFloatKeyFrameGroup[]
+            {
+                new H3DFloatKeyFrameGroup(),
+                new H3DFloatKeyFrameGroup(),
+                new H3DFloatKeyFrameGroup()
+            };
         }
 
-        bool ICustomSerialization.Serialize (BinarySerializer Serializer)
+        void ICustomSerialization.Deserialize(BinaryDeserializer Deserializer)
         {
-            H3DAnimVector.WriteVector (Serializer, Vector);
+            H3DAnimVector.SetVector(Deserializer, Vector);
+        }
+
+        bool ICustomSerialization.Serialize(BinarySerializer Serializer)
+        {
+            H3DAnimVector.WriteVector(Serializer, Vector);
 
             return true;
         }

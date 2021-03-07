@@ -12,384 +12,472 @@ using P3DS2U.Editor.SPICA.Serialization.Serializer;
 
 namespace P3DS2U.Editor.SPICA.Serialization
 {
-    internal class BinarySerializer : BinarySerialization
+        class BinarySerializer : BinarySerialization
     {
+        public readonly BinaryWriter Writer;
+
+        private struct ObjectInfo
+        {
+            public uint Position;
+            public int  Length;
+        }
+
         private const uint MainSection = 0;
+
+        private Dictionary<Type, Section> TypeSections;
+
+        private Dictionary<object, ObjectInfo> ObjPointers;
+
+        public readonly SortedDictionary<uint, Section> Sections;
 
         public readonly List<long> Pointers;
 
-        public readonly SortedDictionary<uint, Section> Sections;
-        public readonly BinaryWriter Writer;
-
-        private RefValue CurrentValue;
-
-        private readonly Dictionary<object, ObjectInfo> ObjPointers;
-
-        private readonly Dictionary<Type, Section> TypeSections;
-
-        public BinarySerializer (Stream BaseStream, SerializationOptions Options) : base (BaseStream, Options)
+        public BinarySerializer(Stream BaseStream, SerializationOptions Options) : base(BaseStream, Options)
         {
-            Writer = new BinaryWriter (BaseStream);
+            Writer = new BinaryWriter(BaseStream);
 
-            TypeSections = new Dictionary<Type, Section> ();
+            TypeSections = new Dictionary<Type, Section>();
 
-            ObjPointers = new Dictionary<object, ObjectInfo> ();
+            ObjPointers = new Dictionary<object, ObjectInfo>();
 
-            Sections = new SortedDictionary<uint, Section> ();
+            Sections = new SortedDictionary<uint, Section>();
 
-            Pointers = new List<long> ();
+            Pointers = new List<long>();
 
-            Sections.Add (MainSection, new Section ());
+            Sections.Add(MainSection, new Section());
         }
 
-        public void AddSection (uint SectionId, Section Section, Type Type)
+        public void AddSection(uint SectionId, Section Section, Type Type)
         {
-            TypeSections.Add (Type, Section);
+            TypeSections.Add(Type, Section);
 
-            if (!Sections.ContainsKey (SectionId)) Sections.Add (SectionId, Section);
+            if (!Sections.ContainsKey(SectionId))
+            {
+                Sections.Add(SectionId, Section);
+            }
         }
 
-        public void AddSection (uint SectionId, Section Section)
+        public void AddSection(uint SectionId, Section Section)
         {
-            Sections.Add (SectionId, Section);
+            Sections.Add(SectionId, Section);
         }
 
-        public void Serialize (object Value)
+        public void Serialize(object Value)
         {
-            Sections[MainSection].Values.Add (new RefValue (Value));
+            Sections[MainSection].Values.Add(new RefValue(Value));
 
-            foreach (var KV in Sections) WriteSection (KV.Value);
+            foreach (KeyValuePair<uint, Section> KV in Sections)
+            {
+                WriteSection(KV.Value);
+            }
         }
 
-        private void WriteSection (Section Section)
+        private void WriteSection(Section Section)
         {
             //Sort
-            if (Section.Comparer != null) {
-                Section.Values.RemoveAll (x => x.Value == null);
-                Section.Values.Sort (Section.Comparer);
+            if (Section.Comparer != null)
+            {
+                Section.Values.RemoveAll(x => x.Value == null);
+                Section.Values.Sort(Section.Comparer);
             }
 
             //Write
-            var HeaderPosition = BaseStream.Position;
+            long HeaderPosition = BaseStream.Position;
 
-            if (Section.Header != null) WriteValue (Section.Header);
+            if (Section.Header != null)
+            {
+                WriteValue(Section.Header);
+            }
 
-            Section.Position = (int) BaseStream.Position;
+            Section.Position = (int)BaseStream.Position;
 
-            WriteSection (Section.Values);
+            WriteSection(Section.Values);
 
             //Set section position and lengths, where:
             //Length is the data length, and length with header is
             //data length + header length.
             //Position is the header position (or data position if it doesn't have a header).
-            Section.Length = (int) (BaseStream.Position - Section.Position);
-            Section.LengthWithHeader = (int) (BaseStream.Position - HeaderPosition);
-            Section.HeaderLength = (int) (Section.Position - HeaderPosition);
+            Section.Length           = (int)(BaseStream.Position - Section.Position);
+            Section.LengthWithHeader = (int)(BaseStream.Position - HeaderPosition);
+            Section.HeaderLength     = (int)(Section.Position    - HeaderPosition);
 
-            Align (Section.Padding);
+            Align(Section.Padding);
         }
 
-        private void WriteSection (List<RefValue> Values, int Start = 0)
+        private RefValue CurrentValue;
+
+        private void WriteSection(List<RefValue> Values, int Start = 0)
         {
-            for (var Index = Start; Index < Values.Count; Index++) {
+            for (int Index = Start; Index < Values.Count; Index++)
+            {
                 CurrentValue = Values[Index];
 
-                WriteValue (Values[Index]);
+                WriteValue(Values[Index]);
             }
 
-            var LastIndex = Values.Count;
+            int LastIndex = Values.Count;
 
-            for (var Index = Start; Index < Values.Count; Index++) WriteSection (Values[Index].Childs);
+            for (int Index = Start; Index < Values.Count; Index++)
+            {
+                WriteSection(Values[Index].Childs);
+            }
 
-            if (Values.Count > LastIndex) WriteSection (Values, LastIndex);
+            if (Values.Count > LastIndex)
+            {
+                WriteSection(Values, LastIndex);
+            }
         }
 
-        public void WriteValue (object Value)
+        public void WriteValue(object Value)
         {
-            var Type = Value.GetType ();
+            Type Type = Value.GetType();
 
-            var Position = BaseStream.Position;
+            long Position = BaseStream.Position;
 
             if (Type.IsPrimitive || Type.IsEnum)
-                switch (Type.GetTypeCode (Type)) {
-                    case TypeCode.UInt64:
-                        Writer.Write ((ulong) Value);
-                        break;
-                    case TypeCode.UInt32:
-                        Writer.Write ((uint) Value);
-                        break;
-                    case TypeCode.UInt16:
-                        Writer.Write ((ushort) Value);
-                        break;
-                    case TypeCode.Byte:
-                        Writer.Write ((byte) Value);
-                        break;
-                    case TypeCode.Int64:
-                        Writer.Write ((long) Value);
-                        break;
-                    case TypeCode.Int32:
-                        Writer.Write ((int) Value);
-                        break;
-                    case TypeCode.Int16:
-                        Writer.Write ((short) Value);
-                        break;
-                    case TypeCode.SByte:
-                        Writer.Write ((sbyte) Value);
-                        break;
-                    case TypeCode.Single:
-                        Writer.Write ((float) Value);
-                        break;
-                    case TypeCode.Double:
-                        Writer.Write ((double) Value);
-                        break;
-                    case TypeCode.Boolean:
-                        Writer.Write ((bool) Value ? 1u : 0u);
-                        break;
+            {
+                switch (Type.GetTypeCode(Type))
+                {
+                    case TypeCode.UInt64:  Writer.Write((ulong)Value);          break;
+                    case TypeCode.UInt32:  Writer.Write((uint)Value);           break;
+                    case TypeCode.UInt16:  Writer.Write((ushort)Value);         break;
+                    case TypeCode.Byte:    Writer.Write((byte)Value);           break;
+                    case TypeCode.Int64:   Writer.Write((long)Value);           break;
+                    case TypeCode.Int32:   Writer.Write((int)Value);            break;
+                    case TypeCode.Int16:   Writer.Write((short)Value);          break;
+                    case TypeCode.SByte:   Writer.Write((sbyte)Value);          break;
+                    case TypeCode.Single:  Writer.Write((float)Value);          break;
+                    case TypeCode.Double:  Writer.Write((double)Value);         break;
+                    case TypeCode.Boolean: Writer.Write((bool)Value ? 1u : 0u); break;
                 }
+            }
             else if (Value is IList)
-                WriteList ((IList) Value);
+            {
+                WriteList((IList)Value);
+            }
             else if (Value is string)
-                Writer.Write (Encoding.ASCII.GetBytes ((string) Value + '\0'));
+            {
+                Writer.Write(Encoding.ASCII.GetBytes((string)Value + '\0'));
+            }
             else if (Value is Vector2)
-                Writer.Write ((Vector2) Value);
+            {
+                Writer.Write((Vector2)Value);
+            }
             else if (Value is Vector3)
-                Writer.Write ((Vector3) Value);
+            {
+                Writer.Write((Vector3)Value);
+            }
             else if (Value is Vector4)
-                Writer.Write ((Vector4) Value);
+            {
+                Writer.Write((Vector4)Value);
+            }
             else if (Value is Quaternion)
-                Writer.Write ((Quaternion) Value);
+            {
+                Writer.Write((Quaternion)Value);
+            }
             else if (Value is Matrix3x3)
-                Writer.Write ((Matrix3x3) Value);
+            {
+                Writer.Write((Matrix3x3)Value);
+            }
             else if (Value is Matrix3x4)
-                Writer.Write ((Matrix3x4) Value);
+            {
+                Writer.Write((Matrix3x4)Value);
+            }
             else if (Value is Matrix4x4)
-                Writer.Write ((Matrix4x4) Value);
+            {
+                Writer.Write((Matrix4x4)Value);
+            }
             else
-                WriteObject (Value);
+            {
+                WriteObject(Value);
+            }
 
             //Avoid writing the same Object more than once
-            if (Type.IsClass) AddObjInfo (Value, Position);
+            if (Type.IsClass) AddObjInfo(Value, Position);
         }
 
-        private void AddObjInfo (object Value, long Position)
+        private void AddObjInfo(object Value, long Position)
         {
-            if (!ObjPointers.ContainsKey (Value))
-                ObjPointers.Add (Value, new ObjectInfo {
-                    Position = (uint) Position,
-                    Length = (int) (BaseStream.Position - Position)
+            if (!ObjPointers.ContainsKey(Value))
+            {
+                ObjPointers.Add(Value, new ObjectInfo()
+                {
+                    Position = (uint)Position,
+                    Length   = (int)(BaseStream.Position - Position)
                 });
+            }
         }
 
-        private void WriteList (IList List)
+        private void WriteList(IList List)
         {
             if (List.Count == 0) return;
 
-            var Type = List.GetType ();
+            Type Type = List.GetType();
 
             Type = Type.IsArray
-                ? Type.GetElementType ()
-                : Type.GetGenericArguments ()[0];
+                ? Type.GetElementType()
+                : Type.GetGenericArguments()[0];
 
-            var IsBool = Type == typeof(bool);
-            var Inline = Type.IsDefined (typeof(InlineAttribute));
-            var IsValue = Type.IsValueType || Type.IsEnum || Inline;
+            bool IsBool  = Type == typeof(bool);
+            bool Inline  = Type.IsDefined(typeof(InlineAttribute));
+            bool IsValue = Type.IsValueType || Type.IsEnum || Inline;
 
-            var BW = new BitWriter (Writer);
+            BitWriter BW = new BitWriter(Writer);
 
-            foreach (var Value in List)
-                if (!IsValue) {
-                    var Ref = new RefValue {
-                        Value = Value,
-                        Position = BaseStream.Position,
-                        HasLength = IsList (Type)
+            foreach (object Value in List)
+            {
+                if (!IsValue)
+                {
+                    RefValue Ref = new RefValue()
+                    {
+                        Value     = Value,
+                        Position  = BaseStream.Position,
+                        HasLength = IsList(Type)
                     };
 
-                    AddReference (Type, Ref);
+                    AddReference(Type, Ref);
 
-                    BaseStream.Seek (Ref.HasLength ? 8 : 4, SeekOrigin.Current);
-                } else if (IsBool) {
-                    BW.WriteBit ((bool) Value);
-                } else {
-                    WriteValue (Value);
+                    BaseStream.Seek(Ref.HasLength ? 8 : 4, SeekOrigin.Current);
                 }
+                else if (IsBool)
+                {
+                    BW.WriteBit((bool)Value);
+                }
+                else
+                {
+                    WriteValue(Value);
+                }
+            }
 
-            BW.Flush ();
+            BW.Flush();
         }
 
-        private void WriteValue (RefValue Ref)
+        private void WriteValue(RefValue Ref)
         {
-            var Info = Ref.Info;
-            var Parent = Ref.Parent;
-            var Value = Ref.Value;
-            var Range = Info?.IsDefined (typeof(RangeAttribute)) ?? false;
-            var LenPos = GetLengthPos (Info);
+            FieldInfo Info   = Ref.Info;
+            object    Parent = Ref.Parent;
+            object    Value  = Ref.Value;
+            bool      Range  = Info?.IsDefined(typeof(RangeAttribute)) ?? false;
+            LengthPos LenPos = GetLengthPos(Info);
 
-            if (Value != null && (!(Value is IList) || ((IList) Value).Count > 0 || Range)) {
-                var ObjInfo = GetObjInfo (Value, Info);
+            if (Value != null && (!(Value is IList) || ((IList)Value).Count > 0 || Range))
+            {
+                ObjectInfo ObjInfo = GetObjInfo(Value, Info);
 
-                var Position = BaseStream.Position;
+                long Position = BaseStream.Position;
 
-                if (ObjInfo.Position == Position) {
+                if (ObjInfo.Position == Position)
+                {
                     if (Parent != null &&
                         Parent is ICustomSerializeCmd &&
                         Info?.FieldType == typeof(uint[]))
-                        ((ICustomSerializeCmd) Parent).SerializeCmd (this, Value);
-
-                    AddObjInfo (Value, Position);
-                    WriteValue (Value);
-                }
-
-                if (Ref.Position != -1) {
-                    var EndPos = BaseStream.Position;
-
-                    BaseStream.Seek (Ref.Position, SeekOrigin.Begin);
-
-                    var Pointer = ObjInfo.Position + Ref.PointerOffset;
-
-                    if (LenPos == LengthPos.AfterPtr) WritePointer (Pointer);
-
-                    if (Ref.HasLength) {
-                        if (Range)
-                            WritePointer ((uint) (ObjInfo.Length != 0 ? ObjInfo.Length : EndPos));
-                        else if (GetLengthSize (Info) == LengthSize.Short)
-                            Writer.Write ((ushort) ((IList) Value).Count);
-                        else
-                            Writer.Write (((IList) Value).Count);
+                    {
+                        ((ICustomSerializeCmd)Parent).SerializeCmd(this, Value);
                     }
 
-                    if (LenPos == LengthPos.BeforePtr) WritePointer (Pointer);
+                    AddObjInfo(Value, Position);
+                    WriteValue(Value);
+                }
 
-                    if (Ref.HasTwoPtr) WritePointer (Pointer);
+                if (Ref.Position != -1)
+                {
+                    long EndPos = BaseStream.Position;
 
-                    BaseStream.Seek (EndPos, SeekOrigin.Begin);
+                    BaseStream.Seek(Ref.Position, SeekOrigin.Begin);
+
+                    uint Pointer = ObjInfo.Position + Ref.PointerOffset;
+
+                    if (LenPos == LengthPos.AfterPtr)
+                    {
+                        WritePointer(Pointer);
+                    }
+
+                    if (Ref.HasLength)
+                    {
+                        if (Range)
+                        {
+                            WritePointer((uint)(ObjInfo.Length != 0 ? ObjInfo.Length : EndPos));
+                        }
+                        else if (GetLengthSize(Info) == LengthSize.Short)
+                        {
+                            Writer.Write((ushort)((IList)Value).Count);
+                        }
+                        else
+                        {
+                            Writer.Write(((IList)Value).Count);
+                        }
+                    }
+
+                    if (LenPos == LengthPos.BeforePtr)
+                    {
+                        WritePointer(Pointer);
+                    }
+
+                    if (Ref.HasTwoPtr)
+                    {
+                        WritePointer(Pointer);
+                    }
+
+                    BaseStream.Seek(EndPos, SeekOrigin.Begin);
                 }
             }
         }
 
-        public void WritePointer (uint Pointer)
+        public void WritePointer(uint Pointer)
         {
-            Pointers.Add (BaseStream.Position);
+            Pointers.Add(BaseStream.Position);
 
-            if (Options.PtrType == PointerType.SelfRelative && Pointer != 0) Pointer -= (uint) BaseStream.Position;
+            if (Options.PtrType == PointerType.SelfRelative && Pointer != 0)
+            {
+                Pointer -= (uint)BaseStream.Position;
+            }
 
-            Writer.Write (Pointer);
+            Writer.Write(Pointer);
         }
 
-        private ObjectInfo GetObjInfo (object Value, FieldInfo Info)
+        private ObjectInfo GetObjInfo(object Value, FieldInfo Info)
         {
-            var Output = new ObjectInfo {
-                Position = (uint) BaseStream.Position,
-                Length = 0
+            ObjectInfo Output = new ObjectInfo()
+            {
+                Position = (uint)BaseStream.Position,
+                Length   = 0
             };
 
-            if (ObjPointers.ContainsKey (Value)) {
+            if (ObjPointers.ContainsKey(Value))
+            {
                 Output = ObjPointers[Value];
-            } else if (Value is IList) {
+            }
+            else if (Value is IList)
+            {
                 //This is used to find lists with segments of already serialized values.
                 //We can avoid storing them again if the same sequence is repeated.
                 uint StartPos = 0;
-                var EndPos = 0;
-                var Matches = 0;
+                int  EndPos   = 0;
+                int  Matches  = 0;
 
-                foreach (var Elem in (IList) Value) {
-                    if (ObjPointers.ContainsKey (Elem) && (
+                foreach (object Elem in ((IList)Value))
+                {
+                    if (ObjPointers.ContainsKey(Elem) && (
                         EndPos == ObjPointers[Elem].Position ||
-                        EndPos == 0)) {
-                        if (Matches++ == 0) EndPos = (int) (StartPos = ObjPointers[Elem].Position);
-                    } else {
+                        EndPos == 0))
+                    {
+                        if (Matches++ == 0)
+                        {
+                            EndPos = (int)(StartPos = ObjPointers[Elem].Position);
+                        }
+                    }
+                    else
+                    {
                         break;
                     }
 
                     EndPos += ObjPointers[Elem].Length;
                 }
 
-                if (Matches > 0 && Matches == ((IList) Value).Count) {
+                if (Matches > 0 && Matches == ((IList)Value).Count)
+                {
                     Output.Position = StartPos;
-                    Output.Length = EndPos;
+                    Output.Length   = EndPos;
                 }
             }
 
             return Output;
         }
 
-        private void WriteObject (object Value)
+        private void WriteObject(object Value)
         {
-            var ValueType = Value.GetType ();
+            Type ValueType = Value.GetType();
 
-            if (ValueType.IsDefined (typeof(TypeChoiceAttribute)))
-                foreach (var Attr in ValueType.GetCustomAttributes<TypeChoiceAttribute> ())
-                    if (Attr.Type == ValueType) {
-                        Writer.Write (Attr.TypeVal);
+            if (ValueType.IsDefined(typeof(TypeChoiceAttribute)))
+            {
+                foreach (TypeChoiceAttribute Attr in ValueType.GetCustomAttributes<TypeChoiceAttribute>())
+                {
+                    if (Attr.Type == ValueType)
+                    {
+                        Writer.Write(Attr.TypeVal);
 
                         break;
                     }
+                }
+            }
 
             if (Value is ICustomSerialization)
-                if (((ICustomSerialization) Value).Serialize (this))
-                    return;
+            {
+                if (((ICustomSerialization)Value).Serialize(this)) return;
+            }
 
-            foreach (var Info in GetFieldsSorted (ValueType)) {
-                if (!Info.GetCustomAttribute<IfVersionAttribute> ()?.Compare (FileVersion) ?? false) continue;
+            foreach (FieldInfo Info in GetFieldsSorted(ValueType))
+            {
+                if (!Info.GetCustomAttribute<IfVersionAttribute>()?.Compare(FileVersion) ?? false) continue;
 
                 if (!(
-                    Info.IsDefined (typeof(IgnoreAttribute)) ||
-                    Info.IsDefined (typeof(CompilerGeneratedAttribute)))) {
-                    var FieldValue = Info.GetValue (Value);
+                    Info.IsDefined(typeof(IgnoreAttribute)) ||
+                    Info.IsDefined(typeof(CompilerGeneratedAttribute))))
+                {
+                    object FieldValue = Info.GetValue(Value);
 
-                    var Type = Info.FieldType;
+                    Type Type = Info.FieldType;
 
                     bool Inline;
 
-                    Inline = Info.IsDefined (typeof(InlineAttribute));
-                    Inline |= Type.IsDefined (typeof(InlineAttribute));
+                    Inline  = Info.IsDefined(typeof(InlineAttribute));
+                    Inline |= Type.IsDefined(typeof(InlineAttribute));
 
-                    if (Type.IsValueType || Type.IsEnum || Inline) {
-                        if (Type.IsPrimitive && Info.IsDefined (typeof(VersionAttribute)))
-                            FileVersion = Convert.ToInt32 (FieldValue);
+                    if (Type.IsValueType || Type.IsEnum || Inline)
+                    {
+                        if (Type.IsPrimitive && Info.IsDefined(typeof(VersionAttribute)))
+                        {
+                            FileVersion = Convert.ToInt32(FieldValue);
+                        }
 
-                        if (IsList (Type) && !Info.IsDefined (typeof(FixedLengthAttribute)))
-                            Writer.Write (((IList) FieldValue).Count);
+                        if (IsList(Type) && !Info.IsDefined(typeof(FixedLengthAttribute)))
+                        {
+                            Writer.Write(((IList)FieldValue).Count);
+                        }
 
-                        WriteValue (FieldValue);
-                    } else {
-                        var HasLength = !Info.IsDefined (typeof(FixedLengthAttribute)) && IsList (Type);
-                        var HasTwoPtr = Info.IsDefined (typeof(RepeatPointerAttribute));
+                        WriteValue(FieldValue);
+                    }
+                    else
+                    {
+                        bool HasLength = !Info.IsDefined(typeof(FixedLengthAttribute)) && IsList(Type);
+                        bool HasTwoPtr = Info.IsDefined(typeof(RepeatPointerAttribute));
 
-                        var Ref = new RefValue {
-                            Parent = Value,
-                            Info = Info,
-                            Value = FieldValue,
-                            Position = BaseStream.Position,
+                        RefValue Ref = new RefValue()
+                        {
+                            Parent    = Value,
+                            Info      = Info,
+                            Value     = FieldValue,
+                            Position  = BaseStream.Position,
                             HasLength = HasLength,
                             HasTwoPtr = HasTwoPtr
                         };
 
-                        AddReference (Type, Ref);
+                        AddReference(Type, Ref);
 
-                        var LenSize = HasLength ? GetIntLengthSize (Info) : 0;
+                        int LenSize = HasLength ? GetIntLengthSize(Info) : 0;
 
-                        BaseStream.Seek (4 + LenSize + (HasTwoPtr ? 4 : 0), SeekOrigin.Current);
+                        BaseStream.Seek(4 + LenSize + (HasTwoPtr ? 4 : 0), SeekOrigin.Current);
                     }
 
-                    Align (Info.GetCustomAttribute<PaddingAttribute> ()?.Size ?? 1);
+                    Align(Info.GetCustomAttribute<PaddingAttribute>()?.Size ?? 1);
                 }
             }
         }
 
-        private void AddReference (Type Type, RefValue Ref)
+        private void AddReference(Type Type, RefValue Ref)
         {
-            if (Ref.Info?.IsDefined (typeof(SectionAttribute)) ?? false)
-                Sections[Ref.Info.GetCustomAttribute<SectionAttribute> ().SectionId].Values.Add (Ref);
-            else if (TypeSections.ContainsKey (Type))
-                TypeSections[Type].Values.Add (Ref);
+            if (Ref.Info?.IsDefined(typeof(SectionAttribute)) ?? false)
+            {
+                Sections[Ref.Info.GetCustomAttribute<SectionAttribute>().SectionId].Values.Add(Ref);
+            }
+            else if (TypeSections.ContainsKey(Type))
+            {
+                TypeSections[Type].Values.Add(Ref);
+            }
             else
-                CurrentValue.Childs.Add (Ref);
-        }
-
-        private struct ObjectInfo
-        {
-            public uint Position;
-            public int Length;
+            {
+                CurrentValue.Childs.Add(Ref);
+            }
         }
     }
 }

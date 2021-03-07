@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace P3DS2U.Editor.SPICA.H3D.LUT
 {
@@ -6,11 +7,17 @@ namespace P3DS2U.Editor.SPICA.H3D.LUT
     {
         public readonly List<H3DLUTSampler> Samplers;
 
-        public H3DLUT ()
+        private string _Name;
+
+        public string Name
         {
-            Samplers = new List<H3DLUTSampler> ();
+            get => _Name;
+            set => _Name = value ?? throw new Exception("null");
         }
 
-        public string Name { get; set; }
+        public H3DLUT()
+        {
+            Samplers = new List<H3DLUTSampler>();
+        }
     }
 }

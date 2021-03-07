@@ -2,11 +2,12 @@
 {
     public class H3DAnimationCurve
     {
-        public ushort CurveIndex;
+        public float StartFrame;
         public float EndFrame;
-        public H3DLoopType PostRepeat;
 
         public H3DLoopType PreRepeat;
-        public float StartFrame;
+        public H3DLoopType PostRepeat;
+
+        public ushort CurveIndex;
     }
 }

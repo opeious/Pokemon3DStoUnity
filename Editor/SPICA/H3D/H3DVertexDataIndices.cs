@@ -14,13 +14,17 @@ namespace P3DS2U.Editor.SPICA.H3D
 
         private ushort Count;
 
-        public int MaxIndex {
-            get {
-                var Max = 0;
+        public int MaxIndex
+        {
+            get
+            {
+                int Max = 0;
 
-                foreach (var Index in Indices)
+                foreach (ushort Index in Indices)
+                {
                     if (Max < Index)
                         Max = Index;
+                }
 
                 return Max;
             }
@@ -28,57 +32,66 @@ namespace P3DS2U.Editor.SPICA.H3D
 
         [Ignore] public ushort[] Indices;
 
-        void ICustomSerialization.Deserialize (BinaryDeserializer Deserializer)
+        void ICustomSerialization.Deserialize(BinaryDeserializer Deserializer)
         {
-            var Is16Bits = Type == 1;
-            var Address = Deserializer.Reader.ReadUInt32 ();
-            var Position = Deserializer.BaseStream.Position;
+            bool Is16Bits = Type == 1;
+            uint Address  = Deserializer.Reader.ReadUInt32();
+            long Position = Deserializer.BaseStream.Position;
 
             Indices = new ushort[Count];
 
-            Deserializer.BaseStream.Seek (Address, SeekOrigin.Begin);
+            Deserializer.BaseStream.Seek(Address, SeekOrigin.Begin);
 
-            for (var Index = 0; Index < Count; Index++)
+            for (int Index = 0; Index < Count; Index++)
+            {
                 Indices[Index] = Is16Bits
-                    ? Deserializer.Reader.ReadUInt16 ()
-                    : Deserializer.Reader.ReadByte ();
+                    ? Deserializer.Reader.ReadUInt16()
+                    : Deserializer.Reader.ReadByte();
+            }
 
-            Deserializer.BaseStream.Seek (Position, SeekOrigin.Begin);
+            Deserializer.BaseStream.Seek(Position, SeekOrigin.Begin);
         }
 
-        bool ICustomSerialization.Serialize (BinarySerializer Serializer)
+        bool ICustomSerialization.Serialize(BinarySerializer Serializer)
         {
-            Serializer.Writer.Write (Type);
-            Serializer.Writer.Write ((byte) DrawMode);
-            Serializer.Writer.Write ((ushort) Indices.Length);
+            Serializer.Writer.Write(Type);
+            Serializer.Writer.Write((byte)DrawMode);
+            Serializer.Writer.Write((ushort)Indices.Length);
 
-            var Section = H3DSection.RawDataIndex16;
+            H3DSection Section = H3DSection.RawDataIndex16;
 
             object Data;
 
-            if (MaxIndex <= byte.MaxValue) {
+            if (MaxIndex <= byte.MaxValue)
+            {
                 Section = H3DSection.RawDataIndex8;
 
-                var Buffer = new byte[Indices.Length];
+                byte[] Buffer = new byte[Indices.Length];
 
-                for (var Index = 0; Index < Indices.Length; Index++) Buffer[Index] = (byte) Indices[Index];
+                for (int Index = 0; Index < Indices.Length; Index++)
+                {
+                    Buffer[Index] = (byte)Indices[Index];
+                }
 
                 Data = Buffer;
-            } else {
+            }
+            else
+            {
                 Data = Indices;
             }
 
-            var Position = Serializer.BaseStream.Position;
+            long Position = Serializer.BaseStream.Position;
 
-            H3DRelocator.AddCmdReloc (Serializer, Section, Position);
+            H3DRelocator.AddCmdReloc(Serializer, Section, Position);
 
-            Serializer.Sections[(uint) H3DSectionId.RawData].Values.Add (new RefValue {
-                Parent = this,
+            Serializer.Sections[(uint)H3DSectionId.RawData].Values.Add(new RefValue()
+            {
+                Parent   = this,
                 Position = Position,
-                Value = Data
+                Value    = Data
             });
 
-            Serializer.BaseStream.Seek (4, SeekOrigin.Current);
+            Serializer.BaseStream.Seek(4, SeekOrigin.Current);
 
             return true;
         }
