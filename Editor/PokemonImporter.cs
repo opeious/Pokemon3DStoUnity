@@ -322,7 +322,7 @@ namespace P3DS2U.Editor
                                     curveY.AddKey (KeyframeUtil.GetNew (
                                         AnimationUtils.GetTimeAtFrame (animationClip,
                                             (int) singleYFrame.Frame, currentMatAnim),
-                                        singleYFrame.Value,
+                                        1 - singleYFrame.Value,
                                         tangentMode));
                                     //TODO: expose this option
                                     // if (tangentMode == TangentMode.Linear) {
@@ -341,10 +341,19 @@ namespace P3DS2U.Editor
                                     } else {
                                         tangentMode = TangentMode.Linear;
                                     }
+                                    float value;
+                                    if (targetType != H3DTargetType.MaterialTexCoord2Trans)
+                                    {
+                                        value = (float)Math.Abs(Math.Round(1 - singleXFrame.Value, MidpointRounding.AwayFromZero)); 
+                                    }
+                                    else
+                                    {
+                                        value = 2 - singleXFrame.Value;
+                                    }
                                     curveX.AddKey (KeyframeUtil.GetNew (
                                         AnimationUtils.GetTimeAtFrame (animationClip,
                                             (int) singleXFrame.Frame, currentMatAnim),
-                                        singleXFrame.Value,
+                                        value,
                                         tangentMode));
                                     //TODO: expose this option
                                     // if (tangentMode == TangentMode.Linear) {
@@ -531,8 +540,7 @@ namespace P3DS2U.Editor
                         new Vector4 (mainTextureRepresentation.TextureCoord.Scale.X,
                             mainTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
                     newMaterial.SetVector (Shader.PropertyToID (shaderImportSettings.BaseMapOffset),
-                        new Vector4 (mainTextureRepresentation.TextureCoord.Translation.X,
-                            mainTextureRepresentation.TextureCoord.Translation.Y));
+                        new Vector4 (0, 0));
                     newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.BaseMap),
                         mainTexture);
                     newMaterial.mainTexture = mainTexture;
