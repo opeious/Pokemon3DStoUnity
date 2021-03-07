@@ -87,8 +87,9 @@ namespace P3DS2U.Editor
       public AnimationImportOptions PetAnimationsToImport;
       public AnimationImportOptions MovementAnimationsToImport;
       [Tooltip("Feature in Progress")]
-      public bool MaterialAnimationsWip;
+      public bool MaterialAnimations;
       public bool VisibilityAnimations;
+      public bool InterpolateAnimations;
       public bool RenameGeneratedAnimationFiles;
    }
    
@@ -96,7 +97,7 @@ namespace P3DS2U.Editor
    {
 
       private bool _generated;
-      [SerializeField] public WhatToImport whatToImport;
+      [SerializeField] public WhatToImport ImporterSettings;
       
       [SerializeField] private List<MergedBinary> mergedBinariesPreview;
       
@@ -110,7 +111,7 @@ namespace P3DS2U.Editor
       private P3ds2USettingsScriptableObject ()
       {
          customShaderSettings = new P3ds2UShaderProperties ();
-         whatToImport = new WhatToImport {
+         ImporterSettings = new WhatToImport {
             StartIndex = 0,
             EndIndex = 0,
             ImportModel = true,
@@ -118,7 +119,8 @@ namespace P3DS2U.Editor
             ImportMaterials = true,
             ApplyMaterials = true,
             SkeletalAnimations = true,
-            MaterialAnimationsWip = false,
+            MaterialAnimations = true,
+            InterpolateAnimations = false,
             VisibilityAnimations = true,
             RenameGeneratedAnimationFiles = true,
             FightAnimationsToImport = new AnimationImportOptions(),
@@ -127,15 +129,15 @@ namespace P3DS2U.Editor
          };
          foreach (string animationName in AnimationNaming.animationNames["Fight"])
          {
-            whatToImport.FightAnimationsToImport.Add(animationName, true);
+            ImporterSettings.FightAnimationsToImport.Add(animationName, true);
          }
          foreach (string animationName in AnimationNaming.animationNames["Pet"])
          {
-            whatToImport.PetAnimationsToImport.Add(animationName, true);
+            ImporterSettings.PetAnimationsToImport.Add(animationName, true);
          }
          foreach (string animationName in AnimationNaming.animationNames["Movement"])
          {
-            whatToImport.MovementAnimationsToImport.Add(animationName, true);
+            ImporterSettings.MovementAnimationsToImport.Add(animationName, true);
          }
          Instance = this;
          RegeneratePreview ();
@@ -203,7 +205,7 @@ namespace P3DS2U.Editor
             });
          }
 
-         whatToImport.EndIndex = mergedBinariesPreview.Count - 1;
+         ImporterSettings.EndIndex = mergedBinariesPreview.Count - 1;
       }
    }
 
@@ -235,11 +237,11 @@ namespace P3DS2U.Editor
             EditorGUI.BeginChangeCheck ();
             DrawDefaultInspector ();
             if (EditorGUI.EndChangeCheck ()) {
-               var wti = settingsTarget.whatToImport;
+               var wti = settingsTarget.ImporterSettings;
                if (!wti.ImportModel) {
                   wti.ApplyMaterials = false;
                   wti.SkeletalAnimations = false;
-                  wti.MaterialAnimationsWip = false;
+                  wti.MaterialAnimations = false;
                   wti.RenameGeneratedAnimationFiles = false;
                   wti.VisibilityAnimations = false;
                }
@@ -250,15 +252,15 @@ namespace P3DS2U.Editor
 
                if (!wti.ImportMaterials) {
                   wti.ApplyMaterials = false;
-                  wti.MaterialAnimationsWip = false;
+                  wti.MaterialAnimations = false;
                }
 
                if (!wti.ApplyMaterials) {
-                  wti.MaterialAnimationsWip = false;
+                  wti.MaterialAnimations = false;
                }
 
                if (!wti.SkeletalAnimations) {
-                  wti.MaterialAnimationsWip = false;
+                  wti.MaterialAnimations = false;
                   wti.RenameGeneratedAnimationFiles = false;
                   wti.VisibilityAnimations = false;
                }

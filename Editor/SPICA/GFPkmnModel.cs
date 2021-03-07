@@ -98,7 +98,7 @@ namespace P3DS2U.Editor.SPICA
                         var MatAnim = Mot.ToH3DMaterialAnimation ();
                         var VisAnim = Mot.ToH3DVisibilityAnimation ();
 
-                        if (P3ds2USettingsScriptableObject.Instance.whatToImport.RenameGeneratedAnimationFiles) {
+                        if (P3ds2USettingsScriptableObject.Instance.ImporterSettings.RenameGeneratedAnimationFiles) {
                             string motionUsage = "";
                             switch (animFilesCount)
                             {
