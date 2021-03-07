@@ -25,166 +25,183 @@ namespace P3DS2U.Editor.SPICA
 
             Input.Seek (Header.Entries[0].Address, SeekOrigin.Begin);
 
-            var MagicNum = Reader.ReadUInt32 ();
+            if (Reader.PeekChar() != -1)
+            {
+                var MagicNum = Reader.ReadUInt32();
 
-            switch (MagicNum) {
-                case GFModelConstant:
-                    var MdlPack = new GFModelPack ();
+                switch (MagicNum)
+                {
+                    case GFModelConstant:
+                        var MdlPack = new GFModelPack();
 
-                    //High Poly Pokémon model
-                    Input.Seek (Header.Entries[0].Address, SeekOrigin.Begin);
+                        //High Poly Pokémon model
+                        Input.Seek(Header.Entries[0].Address, SeekOrigin.Begin);
 
-                    MdlPack.Models.Add (new GFModel (Reader, "PM_HighPoly"));
+                        MdlPack.Models.Add(new GFModel(Reader, "PM_HighPoly"));
 
-                    //Low Poly Pokémon model
-                    Input.Seek (Header.Entries[1].Address, SeekOrigin.Begin);
+                        //Low Poly Pokémon model
+                        Input.Seek(Header.Entries[1].Address, SeekOrigin.Begin);
 
-                    MdlPack.Models.Add (new GFModel (Reader, "PM_LowPoly"));
+                        MdlPack.Models.Add(new GFModel(Reader, "PM_LowPoly"));
 
-                    //Pokémon Shader package
-                    Input.Seek (Header.Entries[2].Address, SeekOrigin.Begin);
+                        //Pokémon Shader package
+                        Input.Seek(Header.Entries[2].Address, SeekOrigin.Begin);
 
-                    var PSHeader = GFPackageExtensions.GetPackageHeader (Input);
+                        var PSHeader = GFPackageExtensions.GetPackageHeader(Input);
 
-                    foreach (var Entry in PSHeader.Entries) {
-                        Input.Seek (Entry.Address, SeekOrigin.Begin);
+                        foreach (var Entry in PSHeader.Entries)
+                        {
+                            Input.Seek(Entry.Address, SeekOrigin.Begin);
 
-                        MdlPack.Shaders.Add (new GFShader (Reader));
-                    }
-
-                    //More shaders
-                    Input.Seek (Header.Entries[3].Address, SeekOrigin.Begin);
-
-                    if (GFPackageExtensions.IsValidPackage (Input)) {
-                        var PCHeader = GFPackageExtensions.GetPackageHeader (Input);
-
-                        foreach (var Entry in PCHeader.Entries) {
-                            Input.Seek (Entry.Address, SeekOrigin.Begin);
-
-                            MdlPack.Shaders.Add (new GFShader (Reader));
+                            MdlPack.Shaders.Add(new GFShader(Reader));
                         }
-                    }
 
-                    Output = MdlPack.ToH3D ();
+                        //More shaders
+                        Input.Seek(Header.Entries[3].Address, SeekOrigin.Begin);
 
-                    break;
+                        if (GFPackageExtensions.IsValidPackage(Input))
+                        {
+                            var PCHeader = GFPackageExtensions.GetPackageHeader(Input);
 
-                case GFTextureConstant:
-                    Output = new H3D.H3D ();
-
-                    foreach (var Entry in Header.Entries) {
-                        Input.Seek (Entry.Address, SeekOrigin.Begin);
-
-                        Output.Textures.Add (new GFTexture (Reader).ToH3DTexture ());
-                    }
-
-                    break;
-
-                case GFMotionConstant:
-                    Output = new H3D.H3D ();
-
-                    if (Skeleton == null) break;
-                    for (var Index = 0; Index < Header.Entries.Length; Index++) {
-                        Input.Seek (Header.Entries[Index].Address, SeekOrigin.Begin);
-
-                        if (Input.Position + 4 > Input.Length) break;
-                        if (Reader.ReadUInt32 () != GFMotionConstant) continue;
-
-                        Input.Seek (-4, SeekOrigin.Current);
-
-                        var Mot = new GFMotion (Reader, Index);
-
-                        var SklAnim = Mot.ToH3DSkeletalAnimation (Skeleton);
-                        var MatAnim = Mot.ToH3DMaterialAnimation ();
-                        var VisAnim = Mot.ToH3DVisibilityAnimation ();
-
-                        if (P3ds2USettingsScriptableObject.Instance.ImporterSettings.RenameGeneratedAnimationFiles) {
-                            string motionUsage = "";
-                            switch (animFilesCount)
+                            foreach (var Entry in PCHeader.Entries)
                             {
-                                case 0: motionUsage = "Fight"; break;
-                                case 1: motionUsage = "Pet"; break;
-                                case 2: motionUsage = "Movement"; break;
-                            }
+                                Input.Seek(Entry.Address, SeekOrigin.Begin);
 
-                            string animationName =
-                                $"{motionUsage}_{AnimationNaming.animationNames[motionUsage][Index].ToLower()}";
-                        
-                            bool needToImport = 
-                                PokemonImporter.AnimationImportOptions[animFilesCount][AnimationNaming.animationNames[motionUsage][Index]];
-                            if (needToImport)
+                                MdlPack.Shaders.Add(new GFShader(Reader));
+                            }
+                        }
+
+                        Output = MdlPack.ToH3D();
+
+                        break;
+
+                    case GFTextureConstant:
+                        Output = new H3D.H3D();
+
+                        foreach (var Entry in Header.Entries)
+                        {
+                            Input.Seek(Entry.Address, SeekOrigin.Begin);
+
+                            Output.Textures.Add(new GFTexture(Reader).ToH3DTexture());
+                        }
+
+                        break;
+
+                    case GFMotionConstant:
+                        Output = new H3D.H3D();
+
+                        if (Skeleton == null) break;
+                        for (var Index = 0; Index < Header.Entries.Length; Index++)
+                        {
+                            Input.Seek(Header.Entries[Index].Address, SeekOrigin.Begin);
+
+                            if (Input.Position + 4 > Input.Length) break;
+                            if (Reader.ReadUInt32() != GFMotionConstant) continue;
+
+                            Input.Seek(-4, SeekOrigin.Current);
+
+                            var Mot = new GFMotion(Reader, Index);
+
+                            var SklAnim = Mot.ToH3DSkeletalAnimation(Skeleton);
+                            var MatAnim = Mot.ToH3DMaterialAnimation();
+                            var VisAnim = Mot.ToH3DVisibilityAnimation();
+
+                            if (P3ds2USettingsScriptableObject.Instance.ImporterSettings.RenameGeneratedAnimationFiles)
+                            {
+                                string motionUsage = "";
+                                switch (animFilesCount)
+                                {
+                                    case 0: motionUsage = "Fight"; break;
+                                    case 1: motionUsage = "Pet"; break;
+                                    case 2: motionUsage = "Movement"; break;
+                                    default: return Output;
+                                }
+
+                                string animationName =
+                                    $"{motionUsage}_{AnimationNaming.animationNames[motionUsage][Index].ToLower()}";
+
+                                bool needToImport =
+                                    PokemonImporter.AnimationImportOptions[animFilesCount][AnimationNaming.animationNames[motionUsage][Index]];
+                                if (needToImport)
+                                {
+                                    if (SklAnim != null)
+                                    {
+                                        SklAnim.Name = animationName;
+
+                                        if (Header.Entries[Index].Length != 0)
+                                        {
+                                            Output.SkeletalAnimations.Add(SklAnim);
+                                        }
+                                    }
+
+                                    if (MatAnim != null)
+                                    {
+                                        MatAnim.Name = animationName;
+
+                                        if (Header.Entries[Index].Length != 0)
+                                        {
+                                            Output.MaterialAnimations.Add(MatAnim);
+                                        }
+                                    }
+
+                                    if (VisAnim != null)
+                                    {
+                                        VisAnim.Name = animationName;
+
+                                        if (Header.Entries[Index].Length != 0)
+                                        {
+                                            Output.VisibilityAnimations.Add(VisAnim);
+                                        }
+                                    }
+                                }
+                            }
+                            else
                             {
                                 if (SklAnim != null)
                                 {
-                                    SklAnim.Name = animationName;
-                                
-                                    if (Header.Entries[Index].Length != 0)
-                                    {
-                                        Output.SkeletalAnimations.Add(SklAnim);
-                                    }
+                                    SklAnim.Name = $"Motion_{Mot.Index}";
+
+                                    Output.SkeletalAnimations.Add(SklAnim);
                                 }
 
                                 if (MatAnim != null)
                                 {
-                                    MatAnim.Name = animationName;
+                                    MatAnim.Name = $"Motion_{Mot.Index}";
 
-                                    if (Header.Entries[Index].Length != 0)
-                                    {
-                                        Output.MaterialAnimations.Add(MatAnim);
-                                    }
+                                    Output.MaterialAnimations.Add(MatAnim);
                                 }
 
                                 if (VisAnim != null)
                                 {
-                                    VisAnim.Name = animationName;
+                                    VisAnim.Name = $"Motion_{Mot.Index}";
 
-                                    if (Header.Entries[Index].Length != 0)
-                                    {
-                                        Output.VisibilityAnimations.Add(VisAnim);
-                                    }
+                                    Output.VisibilityAnimations.Add(VisAnim);
                                 }
-                            }   
-                        } else {
-                            if (SklAnim != null) {
-                                SklAnim.Name = $"Motion_{Mot.Index}";
-
-                                Output.SkeletalAnimations.Add (SklAnim);
-                            }
-
-                            if (MatAnim != null) {
-                                MatAnim.Name = $"Motion_{Mot.Index}";
-
-                                Output.MaterialAnimations.Add (MatAnim);
-                            }
-
-                            if (VisAnim != null) {
-                                VisAnim.Name = $"Motion_{Mot.Index}";
-
-                                Output.VisibilityAnimations.Add (VisAnim);
                             }
                         }
-                    }
 
-                    break;
+                        break;
 
-                case BCHConstant:
-                    Output = new H3D.H3D ();
+                    case BCHConstant:
+                        Output = new H3D.H3D();
 
-                    foreach (var Entry in Header.Entries) {
-                        Input.Seek (Entry.Address, SeekOrigin.Begin);
+                        foreach (var Entry in Header.Entries)
+                        {
+                            Input.Seek(Entry.Address, SeekOrigin.Begin);
 
-                        MagicNum = Reader.ReadUInt32 ();
+                            MagicNum = Reader.ReadUInt32();
 
-                        if (MagicNum != BCHConstant) continue;
+                            if (MagicNum != BCHConstant) continue;
 
-                        Input.Seek (-4, SeekOrigin.Current);
+                            Input.Seek(-4, SeekOrigin.Current);
 
-                        var Buffer = Reader.ReadBytes (Entry.Length);
+                            var Buffer = Reader.ReadBytes(Entry.Length);
 
-                        Output.Merge (H3D.H3D.Open (Buffer));
-                    }
+                            Output.Merge(H3D.H3D.Open(Buffer));
+                        }
 
-                    break;
+                        break;
+                }
             }
 
             return Output;

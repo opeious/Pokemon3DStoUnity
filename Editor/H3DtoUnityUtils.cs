@@ -40,15 +40,30 @@ namespace P3DS2U.Editor
                         var packHeader = GFPackageExtensions.GetPackageHeader (fs);
                         if (packHeader.Magic == "PC") {
                             fs.Seek (packHeader.Entries[0].Address, SeekOrigin.Begin);
-                            var magicNum2 = reader.ReadUInt32 ();
-                            switch (magicNum2) {
-                                case MODEL:
-                                    return FileType.Model;
-                                case TEXTURE:
-                                    return FileType.Texture;
-                                case MOTION:
-                                    return FileType.Animation;
+
+                            try
+                            {
+                                if (reader == null || reader.PeekChar() == -1)
+                                    return FileType.Undefined;
+
+                                var magicNum2 = reader.ReadUInt32();
+                                switch (magicNum2)
+                                {
+                                    case MODEL:
+                                        return FileType.Model;
+                                    case TEXTURE:
+                                        return FileType.Texture;
+                                    case MOTION:
+                                        return FileType.Animation;
+
+                                }
                             }
+                            catch (System.Exception e)
+                            {
+                                Debug.LogError("Error: " + e.Message + ": "+e.StackTrace);
+                                return FileType.Undefined;
+                            }
+
                         }
                     }
                 }
