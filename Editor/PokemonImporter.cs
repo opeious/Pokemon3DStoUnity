@@ -169,7 +169,7 @@ namespace P3DS2U.Editor
         private static void GenerateAnimationController(GameObject modelGo, string combinedExportFolder,
             string modelName)
         {
-            var animationsFolderPath = combinedExportFolder + "/Animations/";
+            var animationsFolderPath = combinedExportFolder + "Animations/";
             var animator = modelGo.AddComponent<Animator> ();
 
             var animatorController = new UnityEditor.Animations.AnimatorController ();
