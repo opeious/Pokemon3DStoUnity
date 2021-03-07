@@ -16,6 +16,7 @@ using Random = UnityEngine.Random;
 /*
  *TODO: Flame shader
  *TODO: Separate the model and the container prefabs, to have the model drag-droppable in the animation previews. Try catch the controller creation
+ *TODO: Autogenerate emmision maps and emission shaders
  *TODO: Shaders in ase format (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null && UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().ToString().Contains("UniversalRenderPipelineAsset"))
  *TODO: AssetBundles/Addressable build size optimizations
  *TODO: Environments/Characters
