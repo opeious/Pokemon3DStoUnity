@@ -15,6 +15,8 @@ using Random = UnityEngine.Random;
 
 /*
  *TODO: Flame shader
+ *TODO: Separate the model and the container prefabs, to have the model drag-droppable in the animation previews. Try catch the controller creation
+ *TODO: Autogenerate emmision maps and emission shaders
  *TODO: Shaders in ase format (UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset != null && UnityEngine.Rendering.GraphicsSettings.renderPipelineAsset.GetType().ToString().Contains("UniversalRenderPipelineAsset"))
  *TODO: AssetBundles/Addressable build size optimizations
  *TODO: Environments/Characters
@@ -25,7 +27,7 @@ namespace P3DS2U.Editor
     public class PokemonImporter : EditorWindow
     {
         public const string ImportPath = "Assets/Bin3DS/";
-        private const string ExportPath = "Assets/Exported/";
+        public const string ExportPath = "Assets/Exported/";
 
         private static int _processedCount;
 
@@ -53,6 +55,7 @@ namespace P3DS2U.Editor
         public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
         {
             try {
+                string ExportPath = importSettings.ExportPath;
                 AnimationImportOptions.Add(importSettings.ImporterSettings.FightAnimationsToImport);
                 AnimationImportOptions.Add(importSettings.ImporterSettings.PetAnimationsToImport);
                 AnimationImportOptions.Add(importSettings.ImporterSettings.MovementAnimationsToImport);
@@ -144,7 +147,7 @@ namespace P3DS2U.Editor
                         modelGo.transform.SetParent (go.transform);
                         modelGo.name = "Model";
                         
-                        go.name = modelName + "Container";
+                        go.name = modelName + " (Container)";
                         var prefabPath =
                             AssetDatabase.GenerateUniqueAssetPath (ExportPath + kvp.Key.Replace (".bin", "") + "/" + kvp.Key.Replace (".bin", "") + ".prefab");
                         PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
@@ -168,7 +171,7 @@ namespace P3DS2U.Editor
         private static void GenerateAnimationController(GameObject modelGo, string combinedExportFolder,
             string modelName)
         {
-            var animationsFolderPath = combinedExportFolder + "/Animations/";
+            var animationsFolderPath = combinedExportFolder + "Animations/";
             var animator = modelGo.AddComponent<Animator> ();
 
             var animatorController = new UnityEditor.Animations.AnimatorController ();
