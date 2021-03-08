@@ -1,7 +1,7 @@
 {
     "name": "com.opeious.pokemon3dstounity",
     "displayName": "Pokemon 3DS to Unity",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "unity": "2019.4",
     "description": "Directly import Pokemon Binary files into Unity",
     "keywords": [
@@ -10,7 +10,7 @@
         "unity"
     ],
     "author:": {
-    	"name": "opeious",
+    	"name": "Opeious",
     	"url": "https://github.com/opeious/"
     },
     "category": "Unity"

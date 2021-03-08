@@ -18,19 +18,20 @@ Usage:
 
 What does the package do at the moment:
 -
-- Open the Binary using SPICA's parser
+- Open the Binary using SPICA's H3D parser
 - Translate the 3D model to Unity Mesh system and skinned mesh renderers
 - Generate material files from the textures 
 - Automatically copy over some of the shader settings to the newly created materials
 - Skins and generates the skeleton for the mesh
 - Generates skeletal animations from the binaries
+- Generate material / vis animations and append them to skeletal animations
+- Renames animations, skips repeated animations
 - Saves the translated mon as prefab
 - Supports bulk processing
 
 To do:
 -
-- Better, more optimized Toonshader
-- Material animations
+- Expose Material animations for custom shaders 
 - Flame shader
 - AssetBundles/Addressable build sizeoptimizations
 
@@ -40,6 +41,7 @@ Updating:
 
 ChangeLog:
 -
+- v1.6: Full material / vis animation support, bunch of fixes related to animations and skipping corrupt files etc.
 - v1.5: Added Visiblity animations, fixed iris/body shaders, Material aniamtions (preview)
 - v1.4: Added UI, made the plugin customizable, animation renaming, etc
 - v1.3: Skeletal animation generation
