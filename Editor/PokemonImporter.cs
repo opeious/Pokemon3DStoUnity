@@ -174,11 +174,10 @@ namespace P3DS2U.Editor
             var animationsFolderPath = combinedExportFolder + "Animations/";
             var animator = modelGo.AddComponent<Animator> ();
 
-            var animatorController = new UnityEditor.Animations.AnimatorController ();
+            var animatorController = UnityEditor.Animations.AnimatorController.CreateAnimatorControllerAtPath(animationsFolderPath + $"animController-{modelName}.controller");
 
             var files = Directory.GetFiles (animationsFolderPath);
-            
-            animatorController.AddLayer ("AllAnims");
+
             // animatorController.layers[0].stateMachine.AddState ("1");
             foreach (var animationFilePath in files) {
                 var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip> (animationFilePath);
@@ -188,7 +187,6 @@ namespace P3DS2U.Editor
             }
 
             animator.runtimeAnimatorController = animatorController;
-            AssetDatabase.CreateAsset (animatorController,  animationsFolderPath + $"animController-{modelName}.controller");
             AssetDatabase.Refresh();
         }
 
