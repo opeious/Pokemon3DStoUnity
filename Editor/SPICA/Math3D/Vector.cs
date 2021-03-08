@@ -77,26 +77,7 @@ namespace P3DS2U.Editor.SPICA.Math3D
             return Quaternion.Normalize (Rotation);
         }
 
-        public static Vector3 ToEuler (this Quaternion q)
-        {
-            var x = new Vector3 (
-            (float) Math.Atan2 (2 * (q.X * q.W + q.Y * q.Z), 1 - 2 * (q.X * q.X + q.Y * q.Y)),
-            -(float) Math.Asin (2 * (q.X * q.Z - q.W * q.Y)),
-            (float) Math.Atan2 (2 * (q.X * q.Y + q.Z * q.W), 1 - 2 * (q.Y * q.Y + q.Z * q.Z)));
-            // var x = q.CoputeAngles ();
-            if (x.X != x.X) {
-                x.X = 0;
-            }
-
-            if (x.Y != x.Y) {
-                x.Y = 0;
-            }
-
-            if (x.Z != x.Z) {
-                x.Z = 0;
-            } 
-            return x;
-        }
+        public static Vector3 ToEuler (this Quaternion q) => q.ComputeAngles ();
     }
 }
 
@@ -125,7 +106,7 @@ public static class QuaternionExtensions
         return (float) Math.Atan2(siny_cosp, cosy_cosp);
     }
 
-    public static Vector3 CoputeAngles(this Quaternion q)
+    public static Vector3 ComputeAngles(this Quaternion q)
     {
         return new Vector3(ComputeXAngle(q), ComputeYAngle(q), ComputeZAngle(q));
     }

@@ -430,8 +430,8 @@ namespace P3DS2U.Editor
         //Hit me up, if you know a better way of loading the animations from the binaries
         private static void GenerateSkeletalAnimations (H3D h3DScene, string combinedExportFolder)
         {
-            var tempFilePath = Application.dataPath + "/BinInterimAnimation.dae";
             CurrentAnimationExportFolder = combinedExportFolder + "/Animations/";
+            var tempFilePath = CurrentAnimationExportFolder + "/BinInterimAnimation.dae";
             if (!Directory.Exists (CurrentAnimationExportFolder)) {
                 Directory.CreateDirectory (CurrentAnimationExportFolder);
             }

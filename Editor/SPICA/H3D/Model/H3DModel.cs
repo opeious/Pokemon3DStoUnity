@@ -50,6 +50,9 @@ namespace P3DS2U.Editor.SPICA.H3D.Model
 
         public H3DModel()
         {
+            if (UserDefinedAddress == 0) {
+                //Remove warning   
+            }
             WorldTransform = new Matrix3x4();
 
             Materials = new H3DDict<H3DMaterial>();

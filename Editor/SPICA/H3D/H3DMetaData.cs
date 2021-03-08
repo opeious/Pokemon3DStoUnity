@@ -58,6 +58,9 @@ namespace P3DS2U.Editor.SPICA.H3D
 
         public void Clear()
         {
+            if (CollectionChanged == null) {
+                //Remove warning
+            }
             Values.Clear();
         }
 
