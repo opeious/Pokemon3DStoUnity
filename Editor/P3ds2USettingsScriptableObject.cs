@@ -11,19 +11,76 @@ namespace P3DS2U.Editor
    public static class SettingsUtils
    {
       private const string SettingsFileName = "3DStoUnitySettings.asset";
-      public static void GetOrCreateSettings ()
-      {
-         const string filePath = PokemonImporter.ImportPath + SettingsFileName;
-         if (File.Exists (filePath)) {
-            Selection.activeObject = AssetDatabase.LoadAssetAtPath<P3ds2USettingsScriptableObject> (filePath);
-         } else {
-            AssetDatabase.CreateAsset (ScriptableObject.CreateInstance<P3ds2USettingsScriptableObject> (), filePath);
-            GetOrCreateSettings ();
-         }
-      }
-   }
+          public static P3ds2USettingsScriptableObject GetOrCreateSettings (bool _focus = false)
+          {
+                var settings = FindSettingsInProject();
+                if (settings == null)
+                {
+                    string filePath = EditorUtility.SaveFilePanel("Choose the folder where to save the new Import Settings", PokemonImporter.ImportPath, SettingsFileName, "asset");
+                    if (string.IsNullOrEmpty(filePath))
+                        filePath = PokemonImporter.ImportPath + SettingsFileName;
 
-   [Serializable]
+                    AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<P3ds2USettingsScriptableObject>(), filePath);
+                    return GetOrCreateSettings(_focus);
+                }
+
+                if (_focus)
+                    Selection.activeObject = settings;
+
+                return settings;
+          }
+
+        public static void GetOrCreateSettingsInImporterPath()
+        {
+            const string filePath = PokemonImporter.ImportPath + SettingsFileName;
+            if (File.Exists(filePath))
+            {
+                Selection.activeObject = AssetDatabase.LoadAssetAtPath<P3ds2USettingsScriptableObject>(filePath);
+            }
+            else
+            {
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<P3ds2USettingsScriptableObject>(), filePath);
+                GetOrCreateSettingsInImporterPath();
+            }
+        }
+
+        public static P3ds2USettingsScriptableObject FindSettingsInProject()
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets($"t:P3ds2USettingsScriptableObject");
+            foreach (string ttype in guids)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(ttype);
+                P3ds2USettingsScriptableObject settings = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(P3ds2USettingsScriptableObject)) as P3ds2USettingsScriptableObject;
+                if (settings != null)
+                {
+                    return settings;
+                }
+            }
+
+            return null;
+        }
+
+        public static List<P3ds2USettingsScriptableObject> FindAllSettingsInProject<T>()
+        {
+            string[] guids = UnityEditor.AssetDatabase.FindAssets($"t:P3ds2USettingsScriptableObject");
+            List<P3ds2USettingsScriptableObject> finalList = new List<P3ds2USettingsScriptableObject>();
+            foreach (string ttype in guids)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(ttype);
+                P3ds2USettingsScriptableObject val = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(P3ds2USettingsScriptableObject)) as P3ds2USettingsScriptableObject;
+                if (val != null)
+                {
+                    finalList.Add(val);
+                }
+            }
+
+            return finalList;
+        }
+    }
+
+
+
+    [Serializable]
    public class P3ds2UShaderProperties
    {
       [SerializeField] public Shader bodyShader;

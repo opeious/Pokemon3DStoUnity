@@ -49,7 +49,7 @@ namespace P3DS2U.Editor
                     " \nPlease place .bin files to be imported in that directory or subdirectories, Files with the same name will be merged together",
                     "ok");
             }
-            SettingsUtils.GetOrCreateSettings ();
+            SettingsUtils.GetOrCreateSettings(true);
         }
         
         public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
