@@ -39,7 +39,7 @@ namespace P3DS2U.Editor
         private static string CurrentAnimationExportFolder = "";
         public static List<AnimationImportOptions> AnimationImportOptions = new List<AnimationImportOptions>();
 
-        [MenuItem ("3DStoUnity/Open Pokemon Binary Importer")]
+        [MenuItem ("3DStoUnity/Find Settings Object")]
         private static void ImportPokemonAction ()
         {
             if (!Directory.Exists (ImportPath)) {
@@ -797,10 +797,6 @@ namespace P3DS2U.Editor
                 "Feature in the pipeline, will consider Addressables in the future too. Going either route way will reduce the final build size significantly and allow for DLC content in your project",
                 "ok");
             return;
-            if (!Directory.Exists ("Assets/TestPath")) {
-                Directory.CreateDirectory ("Assets/TestPath");
-            }
-            BuildPipeline.BuildAssetBundles ("Assets/TestPath", BuildAssetBundleOptions.None, BuildTarget.Android);
         }
     }
 }

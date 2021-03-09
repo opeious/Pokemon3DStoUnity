@@ -361,20 +361,20 @@ namespace P3DS2U.Editor
             {
                 settingsTarget.ResetPaths(1);
             }
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.BeginVertical ();
-            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (115));
+            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (100), GUILayout.Height (140));
             
-            if (GUI.Button (new Rect (5, 10, 100, 50), "Import")) {
+            if (GUILayout.Button ("Import", GUILayout.Width (100), GUILayout.Height (50))) {
                settingsTarget.StartImporting ();
             }
-            if (GUI.Button (new Rect (5, 65, 100, 50), "Refresh")) {
+            if (GUILayout.Button ("Refresh", GUILayout.Width (100), GUILayout.Height (50))) {
                settingsTarget.RegeneratePreview ();
             }
-            GUI.Label (new Rect (105, 35, 600, 40), " If you are not sure what settings to use,\n try the defaults!");
+            GUILayout.Label ("If you are not sure what settings to use, try the defaults!");
             EditorGUILayout.EndScrollView ();
             EditorGUI.BeginChangeCheck ();
             
@@ -414,7 +414,7 @@ namespace P3DS2U.Editor
                   wti.VisibilityAnimations = false;
                }
             }
-            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (100));
+            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (100), GUILayout.Height (10));
             EditorGUILayout.EndScrollView ();
             EditorGUILayout.EndVertical ();
          }

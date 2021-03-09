@@ -34,11 +34,14 @@ namespace P3DS2U.Editor
             DestroyImmediate(editor);
         }
 
+        private Vector2 MScrollViewPos;
+
         private void OnGUI()
         {
-            if (settings != null)
-            {
+            if (settings != null) {
+                MScrollViewPos = EditorGUILayout.BeginScrollView (MScrollViewPos);
                  editor.OnInspectorGUI();
+                 EditorGUILayout.EndScrollView ();
             }
         }
     }
