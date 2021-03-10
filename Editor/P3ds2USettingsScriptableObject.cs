@@ -143,6 +143,8 @@ namespace P3DS2U.Editor
       public bool ImportTextures;
       public bool ImportMaterials;
       public bool ApplyMaterials;
+      public bool ImportFireMaterials;
+      
       public bool SkeletalAnimations;
       public AnimationImportOptions FightAnimationsToImport;
       public AnimationImportOptions PetAnimationsToImport;
@@ -186,6 +188,7 @@ namespace P3DS2U.Editor
                 ApplyMaterials = true,
                 SkeletalAnimations = true,
                 MaterialAnimations = true,
+                ImportFireMaterials = false,
                 InterpolateAnimations = false,
                 VisibilityAnimations = true,
                 RenameGeneratedAnimationFiles = true,
@@ -218,7 +221,7 @@ namespace P3DS2U.Editor
             customShaderSettings.bodyShader = Shader.Find ("Shader Graphs/LitPokemonShader");
             customShaderSettings.irisShader = Shader.Find ("Shader Graphs/LitPokemonIrisShader");
             customShaderSettings.fireCoreShader = Shader.Find ("Shader Graphs/LitPokemonFireCoreShader");
-            customShaderSettings.fireStencilShader = Shader.Find ("Shader Graphs/LitPokemonFireStencilShader");
+            customShaderSettings.fireStencilShader = Shader.Find ("Shader Graphs/LitPokemonFireStencil");
             _generated = true;
          }
       }
@@ -399,15 +402,18 @@ namespace P3DS2U.Editor
                   wti.MaterialAnimations = false;
                   wti.RenameGeneratedAnimationFiles = false;
                   wti.VisibilityAnimations = false;
+                  wti.ImportFireMaterials = false;
                }
 
                if (!wti.ImportTextures) {
                   wti.ImportMaterials = false;
+                  wti.ImportFireMaterials = false;
                }
 
                if (!wti.ImportMaterials) {
                   wti.ApplyMaterials = false;
                   wti.MaterialAnimations = false;
+                  wti.ImportFireMaterials = false;
                }
 
                if (!wti.ApplyMaterials) {
@@ -418,6 +424,10 @@ namespace P3DS2U.Editor
                   wti.MaterialAnimations = false;
                   wti.RenameGeneratedAnimationFiles = false;
                   wti.VisibilityAnimations = false;
+               }
+
+               if (wti.ImportFireMaterials) {
+                  FireImporterSettingsUtil.ThrowWarningAndChangeSettings ();
                }
             }
             EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (100), GUILayout.Height (10));

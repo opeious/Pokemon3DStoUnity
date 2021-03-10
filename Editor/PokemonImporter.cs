@@ -5,6 +5,7 @@ using System.Linq;
 using CurveExtended;
 using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.COLLADA;
+using P3DS2U.Editor.SPICA.Commands;
 using P3DS2U.Editor.SPICA.H3D;
 using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
@@ -106,7 +107,7 @@ namespace P3DS2U.Editor
                     var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
                     if (importSettings.ImporterSettings.ImportModel) {
                         try {
-                            meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
+                            meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder, importSettings);
                         }
                         catch (Exception e) {
                             Debug.LogError (
@@ -676,7 +677,7 @@ namespace P3DS2U.Editor
         }
 
 
-        private static Dictionary<string, SkinnedMeshRenderer> GenerateMeshInUnityScene (H3D h3DScene, string exportPath)
+        private static Dictionary<string, SkinnedMeshRenderer> GenerateMeshInUnityScene (H3D h3DScene, string exportPath, P3ds2USettingsScriptableObject importSettings)
         {
             var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
             var toBeDestroyed = GameObject.Find ("GeneratedUnityObject");
@@ -708,6 +709,23 @@ namespace P3DS2U.Editor
                                       h3DModel.Meshes.IndexOf (h3DMesh) + "_" + h3DMesh.SubMeshes.IndexOf (subMesh);
                     var modelGo = Instantiate (emptyGo, sceneGo.transform);
                     modelGo.name = subMeshName;
+                    if (importSettings.ImporterSettings.ImportFireMaterials) {
+                        if (modelGo.name.Contains ("FireCore")) {
+                            try {
+                                modelGo.layer = LayerMask.NameToLayer ("FireCore");
+                            }
+                            catch (Exception) {
+                                // 
+                            }
+                        } else if (modelGo.name.Contains ("FireSten")) {
+                            try {
+                                modelGo.layer = LayerMask.NameToLayer ("FireMask");
+                            }
+                            catch (Exception) {
+                                //
+                            }
+                        }
+                    }
 
                     var meshFilter = modelGo.AddComponent<MeshFilter> ();
                     var mesh = new Mesh ();
