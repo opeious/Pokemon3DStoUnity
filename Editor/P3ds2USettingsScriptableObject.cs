@@ -85,6 +85,8 @@ namespace P3DS2U.Editor
    {
       [SerializeField] public Shader bodyShader;
       [SerializeField] public Shader irisShader;
+      [SerializeField] public Shader fireCoreShader;
+      [SerializeField] public Shader fireStencilShader;
       
       // public string BaseMap = Shader.PropertyToID ("_BaseMap");
       public string BaseMap =  ("_BaseMap");
@@ -96,6 +98,8 @@ namespace P3DS2U.Editor
       public string OcclusionMap =  ("_OcclusionMap");
       public string OcclusionMapTiling =  ("_OcclusionMapTiling");
       public string OcclusionMapOffset =  ("_OcclusionMapOffset");
+      public string Constant4Color =  ("_Constant4Color");
+      public string Constant3Color =  ("_Constant3Color");
    }
    
    [Serializable]
@@ -213,6 +217,8 @@ namespace P3DS2U.Editor
          if (!_generated) {
             customShaderSettings.bodyShader = Shader.Find ("Shader Graphs/LitPokemonShader");
             customShaderSettings.irisShader = Shader.Find ("Shader Graphs/LitPokemonIrisShader");
+            customShaderSettings.fireCoreShader = Shader.Find ("Shader Graphs/LitPokemonFireCoreShader");
+            customShaderSettings.fireStencilShader = Shader.Find ("Shader Graphs/LitPokemonFireStencilShader");
             _generated = true;
          }
       }
@@ -366,7 +372,7 @@ namespace P3DS2U.Editor
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.BeginVertical ();
-            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (100), GUILayout.Height (140));
+            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (140));
             
             if (GUILayout.Button ("Import", GUILayout.Width (100), GUILayout.Height (50))) {
                settingsTarget.StartImporting ();
@@ -374,7 +380,7 @@ namespace P3DS2U.Editor
             if (GUILayout.Button ("Refresh", GUILayout.Width (100), GUILayout.Height (50))) {
                settingsTarget.RegeneratePreview ();
             }
-            GUILayout.Label ("If you are not sure what settings to use, try the defaults!");
+            GUILayout.Label ("If you are not sure what settings to use, try the defaults!", GUILayout.ExpandWidth (true));
             EditorGUILayout.EndScrollView ();
             EditorGUI.BeginChangeCheck ();
             
