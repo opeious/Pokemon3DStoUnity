@@ -85,6 +85,8 @@ namespace P3DS2U.Editor
    {
       [SerializeField] public Shader bodyShader;
       [SerializeField] public Shader irisShader;
+      [SerializeField] public Shader fireCoreShader;
+      [SerializeField] public Shader fireStencilShader;
       
       // public string BaseMap = Shader.PropertyToID ("_BaseMap");
       public string BaseMap =  ("_BaseMap");
@@ -96,6 +98,8 @@ namespace P3DS2U.Editor
       public string OcclusionMap =  ("_OcclusionMap");
       public string OcclusionMapTiling =  ("_OcclusionMapTiling");
       public string OcclusionMapOffset =  ("_OcclusionMapOffset");
+      public string Constant4Color =  ("_Constant4Color");
+      public string Constant3Color =  ("_Constant3Color");
    }
    
    [Serializable]
@@ -139,6 +143,8 @@ namespace P3DS2U.Editor
       public bool ImportTextures;
       public bool ImportMaterials;
       public bool ApplyMaterials;
+      public bool ImportFireMaterials;
+      
       public bool SkeletalAnimations;
       public AnimationImportOptions FightAnimationsToImport;
       public AnimationImportOptions PetAnimationsToImport;
@@ -182,6 +188,7 @@ namespace P3DS2U.Editor
                 ApplyMaterials = true,
                 SkeletalAnimations = true,
                 MaterialAnimations = true,
+                ImportFireMaterials = false,
                 InterpolateAnimations = false,
                 VisibilityAnimations = true,
                 RenameGeneratedAnimationFiles = true,
@@ -213,6 +220,8 @@ namespace P3DS2U.Editor
          if (!_generated) {
             customShaderSettings.bodyShader = Shader.Find ("Shader Graphs/LitPokemonShader");
             customShaderSettings.irisShader = Shader.Find ("Shader Graphs/LitPokemonIrisShader");
+            customShaderSettings.fireCoreShader = Shader.Find ("Shader Graphs/LitPokemonFireCoreShader");
+            customShaderSettings.fireStencilShader = Shader.Find ("Shader Graphs/LitPokemonFireStencil");
             _generated = true;
          }
       }
@@ -366,7 +375,7 @@ namespace P3DS2U.Editor
             EditorGUILayout.EndVertical();
 
             EditorGUILayout.BeginVertical ();
-            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (100), GUILayout.Height (140));
+            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (140));
             
             if (GUILayout.Button ("Import", GUILayout.Width (100), GUILayout.Height (50))) {
                settingsTarget.StartImporting ();
@@ -374,7 +383,7 @@ namespace P3DS2U.Editor
             if (GUILayout.Button ("Refresh", GUILayout.Width (100), GUILayout.Height (50))) {
                settingsTarget.RegeneratePreview ();
             }
-            GUILayout.Label ("If you are not sure what settings to use, try the defaults!");
+            GUILayout.Label ("If you are not sure what settings to use, try the defaults!", GUILayout.ExpandWidth (true));
             EditorGUILayout.EndScrollView ();
             EditorGUI.BeginChangeCheck ();
             
@@ -393,15 +402,18 @@ namespace P3DS2U.Editor
                   wti.MaterialAnimations = false;
                   wti.RenameGeneratedAnimationFiles = false;
                   wti.VisibilityAnimations = false;
+                  wti.ImportFireMaterials = false;
                }
 
                if (!wti.ImportTextures) {
                   wti.ImportMaterials = false;
+                  wti.ImportFireMaterials = false;
                }
 
                if (!wti.ImportMaterials) {
                   wti.ApplyMaterials = false;
                   wti.MaterialAnimations = false;
+                  wti.ImportFireMaterials = false;
                }
 
                if (!wti.ApplyMaterials) {
@@ -412,6 +424,10 @@ namespace P3DS2U.Editor
                   wti.MaterialAnimations = false;
                   wti.RenameGeneratedAnimationFiles = false;
                   wti.VisibilityAnimations = false;
+               }
+
+               if (wti.ImportFireMaterials) {
+                  FireImporterSettingsUtil.ThrowWarningAndChangeSettings ();
                }
             }
             EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (100), GUILayout.Height (10));

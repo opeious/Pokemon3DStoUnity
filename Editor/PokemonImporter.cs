@@ -5,6 +5,7 @@ using System.Linq;
 using CurveExtended;
 using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.COLLADA;
+using P3DS2U.Editor.SPICA.Commands;
 using P3DS2U.Editor.SPICA.H3D;
 using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
@@ -106,7 +107,7 @@ namespace P3DS2U.Editor
                     var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
                     if (importSettings.ImporterSettings.ImportModel) {
                         try {
-                            meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder);
+                            meshDict = GenerateMeshInUnityScene (h3DScene, combinedExportFolder, importSettings);
                         }
                         catch (Exception e) {
                             Debug.LogError (
@@ -509,6 +510,14 @@ namespace P3DS2U.Editor
             AssetDatabase.Refresh ();
         }
 
+        public enum MaterialType
+        {
+            Body,
+            Iris,
+            Core,
+            Stencil
+        }
+
         private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath,
             P3ds2UShaderProperties shaderImportSettings)
         {
@@ -520,9 +529,26 @@ namespace P3DS2U.Editor
             var matDict = new Dictionary<string, Material> ();
             foreach (var h3dMaterial in h3DScene.Models[0].Materials) {
                 var filePath = currentMaterialExportFolder + h3dMaterial.Name + ".mat";
-                var shaderToApply = (int) h3dMaterial.MaterialParams.MetaData[0].Values[0] == 2
-                    ? shaderImportSettings.irisShader
-                    : shaderImportSettings.bodyShader;
+                Shader shaderToApply;
+                MaterialType materialType;
+                if ((int) h3dMaterial.MaterialParams.MetaData[0].Values[0] == 2) {
+                    shaderToApply = shaderImportSettings.irisShader;
+                    materialType = MaterialType.Iris;   
+                } else {
+                    shaderToApply = shaderImportSettings.bodyShader;
+                    materialType = MaterialType.Body;
+                }
+                if (h3dMaterial.MaterialParams.StencilTest.Enabled) {
+                    if (h3dMaterial.MaterialParams.StencilTest.Function == (PICATestFunc) 1) {
+                        shaderToApply = shaderImportSettings.fireCoreShader;
+                        materialType = MaterialType.Core;
+                    }
+                    if (h3dMaterial.MaterialParams.StencilTest.Function == (PICATestFunc) 2) {
+                        shaderToApply = shaderImportSettings.fireStencilShader;
+                        materialType = MaterialType.Stencil;
+                    }
+                }
+                
                 Material newMaterial;
                 if (File.Exists (filePath)) {
                     newMaterial = AssetDatabase.LoadAssetAtPath<Material> (filePath);
@@ -613,6 +639,32 @@ namespace P3DS2U.Editor
                         occlusionTexture);
                 }
 
+                if (materialType == MaterialType.Core) {
+                    newMaterial.SetColor (Shader.PropertyToID (shaderImportSettings.Constant4Color),
+                        new Color32 (
+                            h3dMaterial.MaterialParams.Constant4Color.R,
+                            h3dMaterial.MaterialParams.Constant4Color.G,
+                            h3dMaterial.MaterialParams.Constant4Color.B,
+                            h3dMaterial.MaterialParams.Constant4Color.A
+                        ));
+                    // newMaterial.SetVector ("_TestV4", testVector4);
+                } else if (materialType == MaterialType.Stencil) {
+                    newMaterial.SetColor (Shader.PropertyToID (shaderImportSettings.Constant4Color),
+                        new Color32 (
+                            h3dMaterial.MaterialParams.Constant4Color.R,
+                            h3dMaterial.MaterialParams.Constant4Color.G,
+                            h3dMaterial.MaterialParams.Constant4Color.B,
+                            h3dMaterial.MaterialParams.Constant4Color.A
+                        ));
+                    newMaterial.SetColor (Shader.PropertyToID (shaderImportSettings.Constant3Color),
+                        new Color32 (
+                            h3dMaterial.MaterialParams.Constant3Color.R,
+                            h3dMaterial.MaterialParams.Constant3Color.G,
+                            h3dMaterial.MaterialParams.Constant3Color.B,
+                            h3dMaterial.MaterialParams.Constant3Color.A
+                        ));
+                }
+
                 if (!File.Exists (filePath)) {
                     AssetDatabase.CreateAsset (newMaterial, currentMaterialExportFolder + h3dMaterial.Name + ".mat");
                 }
@@ -625,7 +677,7 @@ namespace P3DS2U.Editor
         }
 
 
-        private static Dictionary<string, SkinnedMeshRenderer> GenerateMeshInUnityScene (H3D h3DScene, string exportPath)
+        private static Dictionary<string, SkinnedMeshRenderer> GenerateMeshInUnityScene (H3D h3DScene, string exportPath, P3ds2USettingsScriptableObject importSettings)
         {
             var meshDict = new Dictionary<string, SkinnedMeshRenderer> ();
             var toBeDestroyed = GameObject.Find ("GeneratedUnityObject");
@@ -657,6 +709,23 @@ namespace P3DS2U.Editor
                                       h3DModel.Meshes.IndexOf (h3DMesh) + "_" + h3DMesh.SubMeshes.IndexOf (subMesh);
                     var modelGo = Instantiate (emptyGo, sceneGo.transform);
                     modelGo.name = subMeshName;
+                    if (importSettings.ImporterSettings.ImportFireMaterials) {
+                        if (modelGo.name.Contains ("FireCore")) {
+                            try {
+                                modelGo.layer = LayerMask.NameToLayer ("FireCore");
+                            }
+                            catch (Exception) {
+                                // 
+                            }
+                        } else if (modelGo.name.Contains ("FireSten")) {
+                            try {
+                                modelGo.layer = LayerMask.NameToLayer ("FireMask");
+                            }
+                            catch (Exception) {
+                                //
+                            }
+                        }
+                    }
 
                     var meshFilter = modelGo.AddComponent<MeshFilter> ();
                     var mesh = new Mesh ();
