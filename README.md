@@ -1,8 +1,7 @@
-![ui](https://user-images.githubusercontent.com/3764951/110187525-abc7c400-7e3e-11eb-857a-3e0a1e39837e.gif)
-
 Installation:
 -
-- If you have a git account, add this project as a dependency in `Packages/manifest.json`  
+- Note: This plugin only works with the Universal Render Pipeline at the moment.
+- If you have a git account, add this project as a dependency in `Packages/manifest.json` in the root your your project
 `"com.opeious.pokemon3dstounity": "https://github.com/opeious/Pokemon3DStoUnity.git",`
 
 - If you don't have git setup, download and put the entire project into your Assets Folder
@@ -15,6 +14,20 @@ Usage:
 - Place your 3DS files in `Assets/Bin3DS` that would've been created
 - Hit import again
 - Exported files and prefabs get added to  `Assets/Exported`
+
+Settings to change for Fire to work:
+-
+![2021-03-11 00_01_26-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/110681966-69b4ce80-8200-11eb-9334-269ffc47ba27.png)
+- Add two new layers called "FireCore" and "FireMask"
+
+- Either create a new ForwardRenderer (sample attached in root of this repo), or select your existing ForwardRenderer
+- The default ForwardRenderer will be with URP settings in `Assets/Setting`
+- In the ForwardRenderer: From Opaque Layer Mask remove FireCore and FireMask.
+- Add two render objects one for each layer, for their individual settings refer the image below
+- In your project settings. (URP Renderer Settings) If you created a new ForwardRenderer, set the new one as default
+
+![2021-03-10 23_58_49-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/110682434-ec3d8e00-8200-11eb-977a-b309efb81cce.png)
+
 
 What does the package do at the moment:
 -
@@ -31,8 +44,7 @@ What does the package do at the moment:
 
 To do:
 -
-- Expose Material animations for custom shaders 
-- Flame shader
+- Expose Material animations for custom shaders
 - AssetBundles/Addressable build sizeoptimizations
 
 Updating:
@@ -41,6 +53,7 @@ Updating:
 
 ChangeLog:
 -
+- v1.7: Fire Shader
 - v1.6: Full material / vis animation support, bunch of fixes related to animations and skipping corrupt files etc.
 - v1.5: Added Visiblity animations, fixed iris/body shaders, Material aniamtions (preview)
 - v1.4: Added UI, made the plugin customizable, animation renaming, etc
