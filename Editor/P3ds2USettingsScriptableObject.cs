@@ -170,7 +170,7 @@ namespace P3DS2U.Editor
    
    public class P3ds2USettingsScriptableObject : ScriptableObject
    {
-      [HideInInspector] public string PackageVersion;
+      [HideInInspector] public string PackageVersion = "";
 
          private bool _generated;
       [SerializeField] public WhatToImport ImporterSettings;
@@ -187,10 +187,22 @@ namespace P3DS2U.Editor
         public string ExportPath { get { return ImporterSettings.ExportPath; } }
         public string ImportPath { get { return ImporterSettings.ImportPath; } }
 
+        [Serializable]
+        public class PackageJsonObject
+        {
+           public string version;
+        }
+        
       private P3ds2USettingsScriptableObject ()
       {
-         var x = JsonConvert.SerializeObject (File.ReadAllText ("Assets/3dsToUnity/package.json"));
-         
+         try {
+            var packageJsonObject =
+               JsonUtility.FromJson<PackageJsonObject> (File.ReadAllText ("Assets/3dsToUnity/package.json"));
+            PackageVersion = packageJsonObject.version;
+         }
+         catch (Exception) {
+            //ignored
+         }
          customShaderSettings = new P3ds2UShaderProperties ();
             ImporterSettings = new WhatToImport {
                 StartIndex = 0,
@@ -347,6 +359,11 @@ namespace P3DS2U.Editor
 
             var wti = settingsTarget.ImporterSettings;
             EditorGUILayout.BeginVertical();
+                        
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Version: " + settingsTarget.PackageVersion + "\n");
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Paths");
             EditorGUILayout.EndHorizontal();
