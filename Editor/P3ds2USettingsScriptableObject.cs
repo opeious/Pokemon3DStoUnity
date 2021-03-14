@@ -100,6 +100,13 @@ namespace P3DS2U.Editor
       public string OcclusionMapOffset =  ("_OcclusionMapOffset");
       public string Constant4Color =  ("_Constant4Color");
       public string Constant3Color =  ("_Constant3Color");
+
+      public string Tex0TranslateX = "material._BaseMapOffset.x";
+      public string Tex1TranslateX = "material._OcclusionMapOffset.x";
+      public string Tex2TranslateX = "material._NormalMapOffset.x";
+      public string Tex0TranslateY = "material._BaseMapOffset.y";
+      public string Tex1TranslateY = "material._OcclusionMapOffset.y";
+      public string Tex2TranslateY = "material._NormalMapOffset.y";
    }
    
    [Serializable]
