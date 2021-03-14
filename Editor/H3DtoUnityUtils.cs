@@ -95,17 +95,17 @@ namespace P3DS2U.Editor
         {
             switch (matAnimationModifier) {
                 case MatAnimationModifier.Tex0TranslateX:
-                    return "material._BaseMapOffset.x";
+                    return P3ds2USettingsScriptableObject.Instance.customShaderSettings.Tex0TranslateX;
                 case MatAnimationModifier.Tex1TranslateX:
-                    return "material._OcclusionMapOffset.x";
+                    return P3ds2USettingsScriptableObject.Instance.customShaderSettings.Tex1TranslateX;                
                 case MatAnimationModifier.Tex2TranslateX:
-                    return "material._NormalMapOffset.x";
+                    return P3ds2USettingsScriptableObject.Instance.customShaderSettings.Tex2TranslateX;                
                 case MatAnimationModifier.Tex0TranslateY:
-                    return "material._BaseMapOffset.y";
+                    return P3ds2USettingsScriptableObject.Instance.customShaderSettings.Tex0TranslateY;
                 case MatAnimationModifier.Tex1TranslateY:
-                    return "material._OcclusionMapOffset.y";
+                    return P3ds2USettingsScriptableObject.Instance.customShaderSettings.Tex1TranslateY;
                 case MatAnimationModifier.Tex2TranslateY:
-                    return "material._NormalMapOffset.y";
+                    return P3ds2USettingsScriptableObject.Instance.customShaderSettings.Tex2TranslateY;
                 default:
                     throw new ArgumentOutOfRangeException (nameof(matAnimationModifier), matAnimationModifier, null);
             }
