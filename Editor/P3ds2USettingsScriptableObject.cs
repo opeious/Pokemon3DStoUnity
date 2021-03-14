@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.VersionControl;
 using UnityEngine;
@@ -16,7 +17,7 @@ namespace P3DS2U.Editor
                 var settings = FindSettingsInProject();
                 if (settings == null)
                 {
-                    string filePath = EditorUtility.SaveFilePanel("Choose the folder where to save the new Import Settings", PokemonImporter.ImportPath, SettingsFileName, "asset");
+                    string filePath = EditorUtility.SaveFilePanelInProject("Choose the folder where to save the new Import Settings", SettingsFileName, "asset", "Save", PokemonImporter.ImportPath);
                     if (string.IsNullOrEmpty(filePath))
                         filePath = PokemonImporter.ImportPath + SettingsFileName;
 
@@ -24,9 +25,11 @@ namespace P3DS2U.Editor
                     return GetOrCreateSettings(_focus);
                 }
 
-                if (_focus)
-                    Selection.activeObject = settings;
+                if (_focus) {
+                   Selection.activeObject = settings;
+                }
 
+                Pokemon3DSToUnityEditorWindow.settings = settings;
                 return settings;
           }
 
@@ -167,8 +170,9 @@ namespace P3DS2U.Editor
    
    public class P3ds2USettingsScriptableObject : ScriptableObject
    {
+      [HideInInspector] public string PackageVersion;
 
-      private bool _generated;
+         private bool _generated;
       [SerializeField] public WhatToImport ImporterSettings;
       
       [SerializeField] private List<MergedBinary> mergedBinariesPreview;
@@ -185,6 +189,8 @@ namespace P3DS2U.Editor
 
       private P3ds2USettingsScriptableObject ()
       {
+         var x = JsonConvert.SerializeObject (File.ReadAllText ("Assets/3dsToUnity/package.json"));
+         
          customShaderSettings = new P3ds2UShaderProperties ();
             ImporterSettings = new WhatToImport {
                 StartIndex = 0,

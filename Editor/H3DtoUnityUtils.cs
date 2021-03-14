@@ -6,7 +6,6 @@ using System.Text;
 using P3DS2U.Editor.SPICA;
 using P3DS2U.Editor.SPICA.Commands;
 using P3DS2U.Editor.SPICA.Converters;
-using P3DS2U.Editor.SPICA.H3D.Animation;
 using P3DS2U.Editor.SPICA.H3D.Model;
 using P3DS2U.Editor.SPICA.H3D.Model.Material;
 using UnityEngine;
@@ -58,7 +57,7 @@ namespace P3DS2U.Editor
 
                                 }
                             }
-                            catch (System.Exception e)
+                            catch (Exception e)
                             {
                                 Debug.LogError("Error: " + e.Message + ": "+e.StackTrace);
                                 return FileType.Undefined;

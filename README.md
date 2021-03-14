@@ -18,6 +18,12 @@ Usage:
 - Hit import again
 - Exported files and prefabs get added to  `Assets/Exported`
 
+Contributions:
+-
+If you would like to contribute to this project, I would recommend going through the TODOs at the top of `PokemonImporter.cs` in the `main` branch:
+https://github.com/opeious/Pokemon3DStoUnity/blob/main/Editor/PokemonImporter.cs
+
+
 Settings to change for Fire to work:
 -
 ![2021-03-11 00_01_26-NVIDIA GeForce Overlay](https://user-images.githubusercontent.com/3764951/110681966-69b4ce80-8200-11eb-9334-269ffc47ba27.png)
@@ -45,17 +51,13 @@ What does the package do at the moment:
 - Saves the translated mon as prefab
 - Supports bulk processing
 
-To do:
--
-- Expose Material animations for custom shaders
-- AssetBundles/Addressable build sizeoptimizations
-
 Updating:
 -
 - Unity package manager doesn't currently support version of git packages, for now just remove the project as a dependency and add it again
 
 ChangeLog:
 -
+- v1.8: Fixes, delete settings to regenerate defaults, custom shader support for material animations
 - v1.7: Fire Shader
 - v1.6: Full material / vis animation support, bunch of fixes related to animations and skipping corrupt files etc.
 - v1.5: Added Visiblity animations, fixed iris/body shaders, Material aniamtions (preview)
