@@ -18,6 +18,10 @@ Usage:
 - Hit import again
 - Exported files and prefabs get added to  `Assets/Exported`
 
+Troubleshooting:
+-
+If you face any issues or just looking for a community of likeminded developers:  https://discord.gg/zZVQYh7W (Discord Server)
+
 Contributions:
 -
 If you would like to contribute to this project, I would recommend going through the TODOs at the top of `PokemonImporter.cs` in the `main` branch:
