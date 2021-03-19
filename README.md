@@ -18,6 +18,8 @@ Usage:
 - Hit import again
 - Exported files and prefabs get added to  `Assets/Exported`
 
+For a step-by-step guide / more info: https://gbatemp.net/threads/tutorial-export-your-pokemon-animated-models-from-3ds-to-unity-engine-3d.532962/ 
+
 Troubleshooting:
 -
 If you face any issues or just looking for a community of likeminded developers:  https://discord.gg/zZVQYh7W (Discord Server)
