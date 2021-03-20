@@ -63,6 +63,7 @@ Updating:
 
 ChangeLog:
 -
+- v1.9: Fix (Changed parser to allow reading of Binaries that are set to read only.)
 - v1.8: Fixes, delete settings to regenerate defaults, custom shader support for material animations
 - v1.7: Fire Shader
 - v1.6: Full material / vis animation support, bunch of fixes related to animations and skipping corrupt files etc.
