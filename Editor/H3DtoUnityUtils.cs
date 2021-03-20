@@ -28,7 +28,7 @@ namespace P3DS2U.Editor
 
         public static FileType GetBinaryFileType (string fileName)
         {
-            using (var fs = new FileStream (fileName, FileMode.Open)) {
+            using (var fs = new FileStream (fileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                 if (fs.Length > 4) {
                     var reader = new BinaryReader (fs);
                     var magicNum = reader.ReadUInt32 ();

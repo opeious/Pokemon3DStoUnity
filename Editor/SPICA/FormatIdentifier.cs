@@ -33,7 +33,7 @@ namespace P3DS2U.Editor.SPICA
             //Formats that can only be indetified by "magic numbers"
             H3D.H3D Output = null;
 
-            using (var FS = new FileStream (FileName, FileMode.Open)) {
+            using (var FS = new FileStream (FileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                 if (FS.Length > 4) {
                     var Reader = new BinaryReader (FS);
 
