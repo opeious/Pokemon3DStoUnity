@@ -22,7 +22,7 @@ For a step-by-step guide / more info: https://gbatemp.net/threads/tutorial-expor
 
 Troubleshooting:
 -
-If you face any issues or just looking for a community of likeminded developers:  https://discord.gg/zZVQYh7W (Discord Server)
+If you face any issues or just looking for a community of likeminded developers:  https://discord.gg/pYBWwAa (Discord Server)
 
 Contributions:
 -
