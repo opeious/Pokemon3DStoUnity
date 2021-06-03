@@ -150,7 +150,9 @@ namespace P3DS2U.Editor
       public bool ImportModel;
       public bool ImportTextures;
       public bool ImportMaterials;
+      public bool ImportShinyMaterials;
       public bool ApplyMaterials;
+      public bool ApplyShinyMaterials;
       public bool ImportFireMaterials;
       
       public bool SkeletalAnimations;
@@ -435,16 +437,24 @@ namespace P3DS2U.Editor
 
                if (!wti.ImportTextures) {
                   wti.ImportMaterials = false;
+                  wti.ImportShinyMaterials = false;
                   wti.ImportFireMaterials = false;
                }
-
+               
                if (!wti.ImportMaterials) {
                   wti.ApplyMaterials = false;
+               }
+
+               if (!wti.ImportShinyMaterials) {
+                  wti.ApplyShinyMaterials = false;
+               }
+
+               if (!wti.ImportMaterials && !wti.ImportShinyMaterials) {
                   wti.MaterialAnimations = false;
                   wti.ImportFireMaterials = false;
                }
 
-               if (!wti.ApplyMaterials) {
+               if (!wti.ApplyMaterials && !wti.ApplyShinyMaterials) {
                   wti.MaterialAnimations = false;
                }
 

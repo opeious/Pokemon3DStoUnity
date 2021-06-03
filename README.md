@@ -63,6 +63,7 @@ Updating:
 
 ChangeLog:
 -
+- v2.0: Added option to generate and apply shiny materials
 - v1.9: Fix (Changed parser to allow reading of Binaries that are set to read only.)
 - v1.8: Fixes, delete settings to regenerate defaults, custom shader support for material animations
 - v1.7: Fire Shader

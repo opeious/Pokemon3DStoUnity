@@ -116,12 +116,19 @@ namespace P3DS2U.Editor
                     }
 
                     var matDict = new Dictionary<string, Material> ();
+                    
+                    if (importSettings.ImporterSettings.ImportShinyMaterials) {
+                        matDict = GenerateShinyMaterialFiles (h3DScene, combinedExportFolder, importSettings.customShaderSettings);
+                    }
+
                     if (importSettings.ImporterSettings.ImportMaterials) {
                         matDict = GenerateMaterialFiles (h3DScene, combinedExportFolder, importSettings.customShaderSettings);   
                     }
 
                     if (importSettings.ImporterSettings.ApplyMaterials) {
                         AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);   
+                    } else if (importSettings.ImporterSettings.ApplyShinyMaterials) {
+                        AddMaterialsToGeneratedMeshes (meshDict, matDict, h3DScene);
                     }
 
                     if (importSettings.ImporterSettings.SkeletalAnimations) {
@@ -515,6 +522,164 @@ namespace P3DS2U.Editor
             Iris,
             Core,
             Stencil
+        }
+
+        private static Dictionary<string, Material> GenerateShinyMaterialFiles (H3D h3DScene, string exportPath,
+            P3ds2UShaderProperties shaderImportSettings)
+        {
+            var currentMaterialExportFolder = exportPath + "/Materials/Shiny/";
+            if (!Directory.Exists (currentMaterialExportFolder)) {
+                Directory.CreateDirectory (currentMaterialExportFolder);
+            }
+            
+            var matDict = new Dictionary<string, Material> ();
+            foreach (var h3dMaterial in h3DScene.Models[0].Materials) {
+                var filePath = currentMaterialExportFolder + h3dMaterial.Name + ".mat";
+                Shader shaderToApply;
+                MaterialType materialType;
+                if ((int) h3dMaterial.MaterialParams.MetaData[0].Values[0] == 2) {
+                    shaderToApply = shaderImportSettings.irisShader;
+                    materialType = MaterialType.Iris;   
+                } else {
+                    shaderToApply = shaderImportSettings.bodyShader;
+                    materialType = MaterialType.Body;
+                }
+                if (h3dMaterial.MaterialParams.StencilTest.Enabled) {
+                    if (h3dMaterial.MaterialParams.StencilTest.Function == (PICATestFunc) 1) {
+                        shaderToApply = shaderImportSettings.fireCoreShader;
+                        materialType = MaterialType.Core;
+                    }
+                    if (h3dMaterial.MaterialParams.StencilTest.Function == (PICATestFunc) 2) {
+                        shaderToApply = shaderImportSettings.fireStencilShader;
+                        materialType = MaterialType.Stencil;
+                    }
+                }
+                
+                Material newMaterial;
+                if (File.Exists (filePath)) {
+                    newMaterial = AssetDatabase.LoadAssetAtPath<Material> (filePath);
+                    newMaterial.shader = shaderToApply;
+                } else {
+                    newMaterial = new Material (shaderToApply);
+                }
+
+                newMaterial.shaderKeywords = new[]
+                    {"_MAIN_LIGHT_CALCULATE_SHADOWS", "_MAIN_LIGHT_SHADOW_CASCADE", " _SHADOWS_SOFT"};
+
+                var mainTexturePath = exportPath + "/Textures/" + h3dMaterial.Texture0Name + "_1.png";
+                var mainTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (mainTexturePath, typeof(Texture2D));
+                if (mainTexture != null) {
+                    var mainTextureRepresentation = new TextureUtils.H3DTextureRepresentation {
+                        TextureCoord = h3dMaterial.MaterialParams.TextureCoords[0],
+                        TextureMapper = h3dMaterial.TextureMappers[0]
+                    };
+
+                    var importer = (TextureImporter) AssetImporter.GetAtPath (mainTexturePath);
+                    importer.wrapModeU =
+                        TextureUtils.PicaToUnityTextureWrapMode (mainTextureRepresentation.TextureMapper.WrapU);
+                    importer.wrapModeV =
+                        TextureUtils.PicaToUnityTextureWrapMode (mainTextureRepresentation.TextureMapper.WrapV);
+                    importer.maxTextureSize = 256;
+                    AssetDatabase.ImportAsset (mainTexturePath, ImportAssetOptions.ForceUpdate);
+
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.BaseMapTiling),
+                        new Vector4 (mainTextureRepresentation.TextureCoord.Scale.X,
+                            mainTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
+                    newMaterial.SetVector (Shader.PropertyToID (shaderImportSettings.BaseMapOffset),
+                        new Vector4 (0, 0));
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.BaseMap),
+                        mainTexture);
+                    newMaterial.mainTexture = mainTexture;
+                }
+
+                var normalMapPath = exportPath +  "/Textures/" + h3dMaterial.Texture2Name + "_1.png";
+                var normalTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (normalMapPath, typeof(Texture2D));
+                if (normalTexture != null) {
+                    var normalTextureRepresentation = new TextureUtils.H3DTextureRepresentation {
+                        TextureCoord = h3dMaterial.MaterialParams.TextureCoords[2],
+                        TextureMapper = h3dMaterial.TextureMappers[2]
+                    };
+
+                    var importer = (TextureImporter) AssetImporter.GetAtPath (normalMapPath);
+                    // importer.textureType = TextureImporterType.NormalMap;
+                    importer.wrapModeU =
+                        TextureUtils.PicaToUnityTextureWrapMode (normalTextureRepresentation.TextureMapper.WrapU);
+                    importer.wrapModeV =
+                        TextureUtils.PicaToUnityTextureWrapMode (normalTextureRepresentation.TextureMapper.WrapV);
+                    importer.maxTextureSize = 256;
+                    AssetDatabase.ImportAsset (normalMapPath, ImportAssetOptions.ForceUpdate);
+
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.NormalMapTiling),
+                        new Vector4 (normalTextureRepresentation.TextureCoord.Scale.X,
+                            normalTextureRepresentation.TextureCoord.Scale.Y, 0, 0));
+                    newMaterial.SetVector (Shader.PropertyToID (shaderImportSettings.NormalMapOffset),
+                        new Vector4 (normalTextureRepresentation.TextureCoord.Translation.X,
+                            normalTextureRepresentation.TextureCoord.Translation.Y));
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.NormalMap),
+                        normalTexture);
+                }
+
+                var occlusionMapPath = exportPath +  "/Textures/"  + h3dMaterial.Texture1Name + "_1.png";
+                var occlusionTexture = (Texture2D) AssetDatabase.LoadAssetAtPath (occlusionMapPath, typeof(Texture2D));
+                if (occlusionTexture != null) {
+                    var occlusionMapRepresentation = new TextureUtils.H3DTextureRepresentation {
+                        TextureCoord = h3dMaterial.MaterialParams.TextureCoords[1],
+                        TextureMapper = h3dMaterial.TextureMappers[1]
+                    };
+
+                    var importer = (TextureImporter) AssetImporter.GetAtPath (occlusionMapPath);
+                    importer.wrapModeU =
+                        TextureUtils.PicaToUnityTextureWrapMode (occlusionMapRepresentation.TextureMapper.WrapU);
+                    importer.wrapModeV =
+                        TextureUtils.PicaToUnityTextureWrapMode (occlusionMapRepresentation.TextureMapper.WrapV);
+                    importer.maxTextureSize = 256;
+                    AssetDatabase.ImportAsset (occlusionMapPath, ImportAssetOptions.ForceUpdate);
+
+                    newMaterial.SetVector (Shader.PropertyToID(shaderImportSettings.OcclusionMapTiling),
+                        new Vector4 (occlusionMapRepresentation.TextureCoord.Scale.X,
+                            occlusionMapRepresentation.TextureCoord.Scale.Y, 0, 0));
+                    newMaterial.SetVector (Shader.PropertyToID (shaderImportSettings.OcclusionMapOffset),
+                        new Vector4 (occlusionMapRepresentation.TextureCoord.Translation.X,
+                            occlusionMapRepresentation.TextureCoord.Translation.Y));
+                    newMaterial.SetTexture (Shader.PropertyToID (shaderImportSettings.OcclusionMap),
+                        occlusionTexture);
+                }
+
+                if (materialType == MaterialType.Core) {
+                    newMaterial.SetColor (Shader.PropertyToID (shaderImportSettings.Constant4Color),
+                        new Color32 (
+                            h3dMaterial.MaterialParams.Constant4Color.R,
+                            h3dMaterial.MaterialParams.Constant4Color.G,
+                            h3dMaterial.MaterialParams.Constant4Color.B,
+                            h3dMaterial.MaterialParams.Constant4Color.A
+                        ));
+                    // newMaterial.SetVector ("_TestV4", testVector4);
+                } else if (materialType == MaterialType.Stencil) {
+                    newMaterial.SetColor (Shader.PropertyToID (shaderImportSettings.Constant4Color),
+                        new Color32 (
+                            h3dMaterial.MaterialParams.Constant4Color.R,
+                            h3dMaterial.MaterialParams.Constant4Color.G,
+                            h3dMaterial.MaterialParams.Constant4Color.B,
+                            h3dMaterial.MaterialParams.Constant4Color.A
+                        ));
+                    newMaterial.SetColor (Shader.PropertyToID (shaderImportSettings.Constant3Color),
+                        new Color32 (
+                            h3dMaterial.MaterialParams.Constant3Color.R,
+                            h3dMaterial.MaterialParams.Constant3Color.G,
+                            h3dMaterial.MaterialParams.Constant3Color.B,
+                            h3dMaterial.MaterialParams.Constant3Color.A
+                        ));
+                }
+
+                if (!File.Exists (filePath)) {
+                    AssetDatabase.CreateAsset (newMaterial, currentMaterialExportFolder + h3dMaterial.Name + ".mat");
+                }
+
+                matDict.Add (h3dMaterial.Name, newMaterial);
+            }
+
+            AssetDatabase.SaveAssets ();
+            return matDict;
         }
 
         private static Dictionary<string, Material> GenerateMaterialFiles (H3D h3DScene, string exportPath,
