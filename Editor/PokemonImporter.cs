@@ -147,7 +147,10 @@ namespace P3DS2U.Editor
                     if (modelGo != null) {
                         var modelName = kvp.Key.Replace (".bin", "");
                         if (importSettings.ImporterSettings.SkeletalAnimations) {
-                            GenerateAnimationController (modelGo, combinedExportFolder, modelName);
+                            if (importSettings.customAnimatorSettings.baseController == null)
+                            { GenerateAnimationController(modelGo, combinedExportFolder, modelName); }
+                            else
+                            { GenerateAnimationOverrideController(modelGo, combinedExportFolder, modelName, importSettings.customAnimatorSettings); }
                         }
                         
                         var go = new GameObject ("GeneratedUnityObject");
@@ -194,6 +197,143 @@ namespace P3DS2U.Editor
             }
 
             animator.runtimeAnimatorController = animatorController;
+            AssetDatabase.Refresh();
+        }
+
+        private static void GenerateAnimationOverrideController(GameObject modelGo, string combinedExportFolder,
+            string modelName, P3ds2UAnimatorProperties animatorImportSettings)
+        {
+            var animationsFolderPath = combinedExportFolder + "Animations/";
+            var animator = modelGo.AddComponent<Animator>();
+            var animatorOverrideController = AssetHelper.GetAsset<AnimatorOverrideController>($"animController-{modelName}", animationsFolderPath + $"animController-{modelName}.overrideController");
+            animatorOverrideController.runtimeAnimatorController = animatorImportSettings.baseController;
+
+            var files = Directory.GetFiles(animationsFolderPath);
+            var overrides = new List<KeyValuePair<string, string>>();
+            
+            #region Animation Key Pairs
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Idle".ToLower(), animatorImportSettings.Fight_Idle));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Appear".ToLower(), animatorImportSettings.Appear));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Transform".ToLower(), animatorImportSettings.Transform));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Release".ToLower(), animatorImportSettings.Release));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Dropping".ToLower(), animatorImportSettings.Dropping));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Landing".ToLower(), animatorImportSettings.Landing));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Release_without_Landing".ToLower(), animatorImportSettings.Release_without_Landing));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Mega_Upgraded".ToLower(), animatorImportSettings.Mega_Upgraded));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Attack".ToLower(), animatorImportSettings.Attack));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Attack_2".ToLower(), animatorImportSettings.Attack_2));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Attack_3".ToLower(), animatorImportSettings.Attack_3));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Attack_4".ToLower(), animatorImportSettings.Attack_4));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "No_Touch_Attack".ToLower(), animatorImportSettings.No_Touch_Attack));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "No_Touch_Attack_2".ToLower(), animatorImportSettings.No_Touch_Attack_2));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "No_Touch_Attack_3".ToLower(), animatorImportSettings.No_Touch_Attack_3));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "No_Touch_Attack_4".ToLower(), animatorImportSettings.No_Touch_Attack_4));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Be_Attacked".ToLower(), animatorImportSettings.Be_Attacked));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Lost".ToLower(), animatorImportSettings.Lost));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Empty".ToLower(), animatorImportSettings.Fight_Empty));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Eye_Emotion".ToLower(), animatorImportSettings.Fight_Eye_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Eye_2_Emotion".ToLower(), animatorImportSettings.Fight_Eye_2_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Eye_3_Emotion".ToLower(), animatorImportSettings.Fight_Eye_3_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Mouth_Emotion".ToLower(), animatorImportSettings.Fight_Mouth_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Mouth_2_Emotion".ToLower(), animatorImportSettings.Fight_Mouth_2_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "Mouth_3_Emotion".ToLower(), animatorImportSettings.Fight_Mouth_3_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "State".ToLower(), animatorImportSettings.Fight_State));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "State_2".ToLower(), animatorImportSettings.Fight_State_2));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "State_3".ToLower(), animatorImportSettings.Fight_State_3));
+            overrides.Add(new KeyValuePair<string, string>("Fight_" + "State_4".ToLower(), animatorImportSettings.Fight_State_4));
+
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Idle".ToLower(), animatorImportSettings.Pet_Idle));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Turn".ToLower(), animatorImportSettings.Turn));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Look_Back".ToLower(), animatorImportSettings.Look_Back));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Look_Back_Happily".ToLower(), animatorImportSettings.Look_Back_Happily));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Falling_Aasleep".ToLower(), animatorImportSettings.Falling_Asleep));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Sleepy".ToLower(), animatorImportSettings.Sleepy));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Sleepy_Awaken".ToLower(), animatorImportSettings.Sleepy_Awaken));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Sleeping".ToLower(), animatorImportSettings.Sleeping));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Awaken".ToLower(), animatorImportSettings.Awaken));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Refuse".ToLower(), animatorImportSettings.Refuse));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Thinking".ToLower(), animatorImportSettings.Thinking));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Agree".ToLower(), animatorImportSettings.Agree));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Happy".ToLower(), animatorImportSettings.Happy));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Very_Happy".ToLower(), animatorImportSettings.Very_Happy));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Look_Around".ToLower(), animatorImportSettings.Look_Around));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Rub_Eyes".ToLower(), animatorImportSettings.Rub_Eyes));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Comfortable".ToLower(), animatorImportSettings.Comfortable));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Sad".ToLower(), animatorImportSettings.Sad));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Salutate".ToLower(), animatorImportSettings.Salutate));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Happy_2".ToLower(), animatorImportSettings.Happy_2));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Angry".ToLower(), animatorImportSettings.Angry));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Begin_Eating".ToLower(), animatorImportSettings.Begin_Eating));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Eating".ToLower(), animatorImportSettings.Eating));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Eating_Finished".ToLower(), animatorImportSettings.Eating_Finished));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "No_Eating".ToLower(), animatorImportSettings.No_Eating));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Empty".ToLower(), animatorImportSettings.Pet_Empty));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Eye_Emotion".ToLower(), animatorImportSettings.Pet_Eye_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Eye_2_Emotion".ToLower(), animatorImportSettings.Pet_Eye_2_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Eye_3_Emotion".ToLower(), animatorImportSettings.Pet_Eye_3_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Mouth_Emotion".ToLower(), animatorImportSettings.Pet_Mouth_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Mouth_2_Emotion".ToLower(), animatorImportSettings.Pet_Mouth_2_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "Mouth_3_Emotion".ToLower(), animatorImportSettings.Pet_Mouth_3_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "State".ToLower(), animatorImportSettings.Pet_State));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "State_2".ToLower(), animatorImportSettings.Pet_State_2));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "State_3".ToLower(), animatorImportSettings.Pet_State_3));
+            overrides.Add(new KeyValuePair<string, string>("Pet_" + "State_4".ToLower(), animatorImportSettings.Pet_State_4));
+
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Idle".ToLower(), animatorImportSettings.Movement_Idle));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Empty".ToLower(), animatorImportSettings.Movement_Empty));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Walk".ToLower(), animatorImportSettings.Walk));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Run".ToLower(), animatorImportSettings.Run));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Empty_2".ToLower(), animatorImportSettings.Empty_2));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Start_Walk".ToLower(), animatorImportSettings.Start_Walk));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "End_Walk".ToLower(), animatorImportSettings.End_Walk));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Empty_3".ToLower(), animatorImportSettings.Empty_3));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Start_Run".ToLower(), animatorImportSettings.Start_Run));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "End_Run".ToLower(), animatorImportSettings.End_Run));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Empty_4".ToLower(), animatorImportSettings.Empty_4));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Start_Run_2".ToLower(), animatorImportSettings.Start_Run_2));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "End_Run_2".ToLower(), animatorImportSettings.End_Run_2));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Empty_5".ToLower(), animatorImportSettings.Empty_5));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Eye_Emotion".ToLower(), animatorImportSettings.Movement_Eye_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Eye_2_Emotion".ToLower(), animatorImportSettings.Movement_Eye_2_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Eye_3_Emotion".ToLower(), animatorImportSettings.Movement_Eye_3_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Mouth_Emotion".ToLower(), animatorImportSettings.Movement_Mouth_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Mouth_2_Emotion".ToLower(), animatorImportSettings.Movement_Mouth_2_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "Mouth_3_Emotion".ToLower(), animatorImportSettings.Movement_Mouth_3_Emotion));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "State".ToLower(), animatorImportSettings.Movement_State));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "State_2".ToLower(), animatorImportSettings.Movement_State_2));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "State_3".ToLower(), animatorImportSettings.Movement_State_3));
+            overrides.Add(new KeyValuePair<string, string>("Movement_" + "State_4".ToLower(), animatorImportSettings.Movement_State_4));
+
+            #endregion
+
+            Debug.Log("Fight_" + "Idle".ToLower());
+            foreach (var animationFilePath in files)
+            {
+                var animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(animationFilePath);
+                if (animationClip != null)
+                {
+                    foreach (KeyValuePair<string, string> anim in overrides)
+                    {
+                        Debug.Log("Animation Clip name is: " + animationClip.name + " and Key is: " + anim.Key);
+                        if (animationClip.name == anim.Key)
+                        {
+                            
+                            try
+                            { animatorOverrideController[anim.Value] = animationClip; }
+                            catch (Exception e)
+                            {
+                                Debug.LogWarning("Override Animation" + anim.Value + "either does not exist or is written incorrectly.\n" + e.Message + "\n" +
+                                e.StackTrace);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            
+            animatorOverrideController.SaveAsset(animationsFolderPath + $"animController-{modelName}.overrideController");
+            animator.runtimeAnimatorController = animatorOverrideController;
             AssetDatabase.Refresh();
         }
 

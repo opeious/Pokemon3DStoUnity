@@ -138,7 +138,114 @@ namespace P3DS2U.Editor
    [Serializable]
    public class AnimationImportOptions: SerializableDictionary<string, bool>{}
 
-   [Serializable]
+    [Serializable]
+    public class P3ds2UAnimatorProperties
+    {
+        [SerializeField] public UnityEditor.Animations.AnimatorController baseController;
+
+        #region Fight Animations
+        public string Fight_Idle = ("Idle");
+        public string Appear = ("Appear");
+        public string Transform = ("Transform");
+        public string Release = ("Release");
+        public string Dropping = ("Dropping");
+        public string Landing = ("Landing");
+        public string Release_without_Landing = ("Release_without_Landing");
+        public string Mega_Upgraded = ("Mega_Upgraded");
+        public string Attack = ("Attack");
+        public string Attack_2 = ("Attack_2");
+        public string Attack_3 = ("Attack_3");
+        public string Attack_4 = ("Attack_4");
+        public string No_Touch_Attack = ("No_Touch_Attack");
+        public string No_Touch_Attack_2 = ("No_Touch_Attack_2");
+        public string No_Touch_Attack_3 = ("No_Touch_Attack_3");
+        public string No_Touch_Attack_4 = ("No_Touch_Attack_4");
+        public string Be_Attacked = ("Be_Attacked");
+        public string Lost = ("Lost");
+        public string Fight_Empty = ("Empty");
+        public string Fight_Eye_Emotion = ("Eye_Emotion");
+        public string Fight_Eye_2_Emotion = ("Eye_2_Emotion");
+        public string Fight_Eye_3_Emotion = ("Eye_3_Emotion");
+        public string Fight_Mouth_Emotion = ("Mouth_Emotion");
+        public string Fight_Mouth_2_Emotion = ("Mouth_2_Emotion");
+        public string Fight_Mouth_3_Emotion = ("Mouth_3_Emotion");
+        public string Fight_State = ("State");
+        public string Fight_State_2 = ("State_2");
+        public string Fight_State_3 = ("State_3");
+        public string Fight_State_4 = ("State_4");
+        #endregion
+
+        #region Pet Animations
+        public string Pet_Idle = ("Idle");
+        public string Turn = ("Turn");
+        public string Look_Back = ("Look_Back");
+        public string Look_Back_Happily = ("Look_Back_Happily");
+        public string Falling_Asleep = ("Falling_Asleep");
+        public string Sleepy = ("Sleepy");
+        public string Sleepy_Awaken = ("Sleepy_Awaken");
+        public string Sleeping = ("Sleeping");
+        public string Awaken = ("Awaken");
+        public string Refuse = ("Refuse");
+        public string Thinking = ("Thinking");
+        public string Agree = ("Agree");
+        public string Happy = ("Happy");
+        public string Very_Happy = ("Very_Happy");
+        public string Look_Around = ("Look_Around");
+        public string Rub_Eyes = ("Rub_Eyes");
+        public string Comfortable = ("Comfortable");
+        public string Relax = ("Relax");
+        public string Sad = ("Sad");
+        public string Salutate = ("Salutate");
+        public string Happy_2 = ("Happy_2");
+        public string Angry = ("Angry");
+        public string Begin_Eating = ("Begin_Eating");
+        public string Eating = ("Eating");
+        public string Eating_Finished = ("Eating_Finished");
+        public string No_Eating = ("No_Eating");
+        public string Pet_Empty = ("Empty");
+        public string Pet_Eye_Emotion = ("Eye_Emotion");
+        public string Pet_Eye_2_Emotion = ("Eye_2_Emotion");
+        public string Pet_Eye_3_Emotion = ("Eye_3_Emotion");
+        public string Pet_Mouth_Emotion = ("Mouth_Emotion");
+        public string Pet_Mouth_2_Emotion = ("Mouth_2_Emotion");
+        public string Pet_Mouth_3_Emotion = ("Mouth_3_Emotion");
+        public string Pet_State = ("State");
+        public string Pet_State_2 = ("State_2");
+        public string Pet_State_3 = ("State_3");
+        public string Pet_State_4 = ("State_4");
+        #endregion
+
+        #region Movement Animations
+        public string Movement_Idle = ("Idle");
+        public string Movement_Empty = ("Empty");
+        public string Walk = ("Walk");
+        public string Run = ("Run");
+        public string Empty_2 = ("Empty_2");
+        public string Start_Walk = ("Start_Walk");
+        public string End_Walk = ("End_Walk");
+        public string Empty_3 = ("Empty_3");
+        public string Start_Run = ("Start_Run");
+        public string End_Run = ("End_Run");
+        public string Empty_4 = ("Empty_4");
+        public string Start_Run_2 = ("Start_Run_2");
+        public string End_Run_2 = ("End_Run_2");
+        public string Empty_5 = ("Empty_5");
+        public string Movement_Eye_Emotion = ("Eye_Emotion");
+        public string Movement_Eye_2_Emotion = ("Eye_2_Emotion");
+        public string Movement_Eye_3_Emotion = ("Eye_3_Emotion");
+        public string Movement_Mouth_Emotion = ("Mouth_Emotion");
+        public string Movement_Mouth_2_Emotion = ("Mouth_2_Emotion");
+        public string Movement_Mouth_3_Emotion = ("Mouth_3_Emotion");
+        public string Movement_State = ("State");
+        public string Movement_State_2 = ("State_2");
+        public string Movement_State_3 = ("State_3");
+        public string Movement_State_4 = ("State_4");
+        #endregion
+
+        //public string test = AnimationNaming.animationNames["Fight"][0];
+    }
+
+    [Serializable]
    public class WhatToImport
    {
       [Header("Models import range")]
@@ -178,6 +285,8 @@ namespace P3DS2U.Editor
       [SerializeField] private List<MergedBinary> mergedBinariesPreview;
       
       public P3ds2UShaderProperties customShaderSettings;
+
+      [Tooltip("Name clips same as in custom controller.")] public P3ds2UAnimatorProperties customAnimatorSettings;
 
       public static P3ds2USettingsScriptableObject Instance;
 
