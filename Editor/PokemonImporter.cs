@@ -1107,7 +1107,15 @@ namespace P3DS2U.Editor
                     mesh.tangents = unityMeshTangents.ToArray ();
                     mesh.uv = unityMeshUV.ToArray ();
                     unityMeshTriangles.Reverse ();
+#if UNITY_2019_1
+                    int[] fixedTriangles = new int[unityMeshTriangles.Count];
+                    for (int i = 0; i < unityMeshTriangles.Count; i++)
+                        fixedTriangles[i] = (int)unityMeshTriangles[i];
+
+                    mesh.SetTriangles(fixedTriangles, 0);
+#else
                     mesh.SetTriangles (unityMeshTriangles, 0);
+#endif
 
                     mesh.boneWeights = unityVertexBones.ToArray ();
 
