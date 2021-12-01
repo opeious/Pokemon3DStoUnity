@@ -154,20 +154,28 @@ namespace P3DS2U.Editor
                             else
                             { GenerateAnimationOverrideController(modelGo, combinedExportFolder, modelName, importSettings.customAnimatorSettings); }
                         }
-                        
-                        var go = new GameObject ("GeneratedUnityObject");
-                        modelGo.transform.SetParent (go.transform);
-                        modelGo.name = "Model";
-                        
-                        go.name = modelName + " (Container)";
+
+                        //var go = new GameObject ("GeneratedUnityObject");
+                        //modelGo.transform.SetParent (go.transform);
+                        modelGo.transform.parent = null;
+                        modelGo.name = modelName;
+                        //modelGo.name = "Model";
+
+                        //go.name = modelName + " (Container)";
                         var prefabPath =
                             AssetDatabase.GenerateUniqueAssetPath (ExportPath + kvp.Key.Replace (".bin", "") + "/" + kvp.Key.Replace (".bin", "") + ".prefab");
-                        PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
+                        PrefabUtility.SaveAsPrefabAssetAndConnect (modelGo, prefabPath, InteractionMode.UserAction);
 
-                        go.transform.localPosition = new Vector3 {
+                        /*go.transform.localPosition = new Vector3 {
                             x = Random.Range (-100f, 100f),
                             y = 0,
                             z = Random.Range (-100f, 100f)
+                        };*/
+
+                        modelGo.transform.localPosition = new Vector3 {
+                            x = Random.Range(-100f, 100f),
+                            y = 0,
+                            z = Random.Range(-100f, 100f)
                         };
 
                         // Export model as FBX?
