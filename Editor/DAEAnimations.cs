@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -171,7 +171,7 @@ namespace P3DS2U.Editor.SPICA.COLLADA
 
                             var PElem = SklAnim.Elements.FirstOrDefault (x => x.Name == Parent?.Name);
 
-                            var InvScale = Vector3.One;
+                            var InvScale = Vector3.One /** .01f*/;
 
                             if (Elem.Content is H3DAnimTransform Transform) {
                                 //Compensate parent bone scale (basically, don't inherit scales)
@@ -241,7 +241,7 @@ namespace P3DS2U.Editor.SPICA.COLLADA
 
                                 switch (i) {
                                     case 0:
-                                        StrTrans = DAEUtils.VectorStr (QuatTransform.GetTranslationValue (Frame));
+                                        StrTrans = DAEUtils.VectorStr (QuatTransform.GetTranslationValue (Frame) * .01f);
                                         break;
                                     case 1:
                                         StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
