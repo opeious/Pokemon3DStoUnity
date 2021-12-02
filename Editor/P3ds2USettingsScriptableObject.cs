@@ -551,7 +551,8 @@ namespace P3DS2U.Editor {
 
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.PropertyField(modelExport);
+            EditorGUILayout.Space();
+            //EditorGUILayout.PropertyField(modelExport);
             EditorGUILayout.PropertyField(scaleFactor);
             EditorGUILayout.PropertyField(spawnModelsIntoScene);
 
