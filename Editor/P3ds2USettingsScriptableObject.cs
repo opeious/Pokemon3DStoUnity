@@ -542,7 +542,6 @@ namespace P3DS2U.Editor {
             Undo.RecordObject(settingsTarget, "Changed Settings");
 
             if (EditorGUI.EndChangeCheck()) {
-                Undo.RecordObject(settingsTarget, "Test");
                 settingsTarget.RegeneratePreview();
 
                 if (!wti.ImportModel) {
