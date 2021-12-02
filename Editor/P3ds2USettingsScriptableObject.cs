@@ -266,6 +266,8 @@ namespace P3DS2U.Editor {
         public bool InterpolateAnimations = true;
         public bool RenameGeneratedAnimationFiles = true;
 
+        [HideInInspector] public List<string> importPaths = new List<string>();
+        [HideInInspector] public List<string> exportPaths = new List<string>();
         [HideInInspector] public string ImportPath;
         [HideInInspector] public string ExportPath;
         [HideInInspector] public int SelectedImportIndex;
@@ -473,29 +475,6 @@ namespace P3DS2U.Editor {
     [CustomEditor(typeof(P3ds2USettingsScriptableObject))]
     public class P3ds2USettingsScriptableObjectEditor : UnityEditor.Editor {
 
-        const string IMPORT_LABEL_KEY = "P3DS2U_pathLabelsImport";
-        const string EXPORT_LABEL_KEY = "P3DS2U_pathLabelsExport";
-
-        SerializedProperty modelExport;
-        SerializedProperty scaleFactor;
-        SerializedProperty spawnModelsIntoScene;
-        SerializedProperty spawnAtRandomPosition;
-        SerializedProperty ImporterSettings;
-        SerializedProperty mergedBinariesPreview;
-        SerializedProperty customShaderSettings;
-        SerializedProperty customAnimatorSettings;
-
-        void OnEnable() {
-            modelExport = serializedObject.FindProperty("modelExport");
-            scaleFactor = serializedObject.FindProperty("scaleFactor");
-            spawnModelsIntoScene = serializedObject.FindProperty("spawnModelsIntoScene");
-            spawnAtRandomPosition = serializedObject.FindProperty("spawnAtRandomPosition");
-            ImporterSettings = serializedObject.FindProperty("ImporterSettings");
-            mergedBinariesPreview = serializedObject.FindProperty("mergedBinariesPreview");
-            customShaderSettings = serializedObject.FindProperty("customShaderSettings");
-            customAnimatorSettings = serializedObject.FindProperty("customAnimatorSettings");
-        }
-
         public override void OnInspectorGUI() {
             var settingsTarget = target as P3ds2USettingsScriptableObject;
 
@@ -518,6 +497,7 @@ namespace P3DS2U.Editor {
             GUILayout.Label("Paths", EditorStyles.boldLabel);
 
             EditorGUI.BeginChangeCheck();
+
             DrawImportPath(settingsTarget);
             DrawExportPath(settingsTarget);
 
@@ -539,35 +519,30 @@ namespace P3DS2U.Editor {
             EditorGUILayout.Space();
 
             EditorGUILayout.BeginHorizontal();
-            var chosenFormat1 = settingsTarget.chosenFormat == 0;
-
-            chosenFormat1 = EditorGUILayout.ToggleLeft("Each pokemon is in a separate folder", chosenFormat1);
-            settingsTarget.chosenFormat = chosenFormat1 ? 0 : settingsTarget.chosenFormat;
-
-            var chosenFormat2 = settingsTarget.chosenFormat == 1;
-
-            chosenFormat2 = EditorGUILayout.ToggleLeft("Each folder has a type of binary ('Mdls','Tex','Etc')", chosenFormat2);
-            settingsTarget.chosenFormat = chosenFormat2 ? 1 : settingsTarget.chosenFormat;
-
+            settingsTarget.chosenFormat = EditorGUILayout.ToggleLeft("Each pokemon is in a separate folder", settingsTarget.chosenFormat == 0) ? 0 : settingsTarget.chosenFormat;
+            settingsTarget.chosenFormat = EditorGUILayout.ToggleLeft("Each folder has a type of binary ('Mdls','Tex','Etc')", settingsTarget.chosenFormat == 1) ? 1 : settingsTarget.chosenFormat;
             EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.Space();
+            EditorGUILayout.Space(10);
             //EditorGUILayout.PropertyField(modelExport);
-            EditorGUILayout.PropertyField(scaleFactor);
-            EditorGUILayout.PropertyField(spawnModelsIntoScene);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("scaleFactor"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("spawnModelsIntoScene"));
 
             if (!settingsTarget.spawnModelsIntoScene)
                 GUI.enabled = false;
 
-            EditorGUILayout.PropertyField(spawnAtRandomPosition);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("spawnAtRandomPosition"));
             GUI.enabled = true;
 
-            EditorGUILayout.PropertyField(ImporterSettings);
-            EditorGUILayout.PropertyField(mergedBinariesPreview);
-            EditorGUILayout.PropertyField(customShaderSettings);
-            EditorGUILayout.PropertyField(customAnimatorSettings);
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("ImporterSettings"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("mergedBinariesPreview"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("customShaderSettings"));
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("customAnimatorSettings"));
+
+            Undo.RecordObject(settingsTarget, "Changed Settings");
 
             if (EditorGUI.EndChangeCheck()) {
+                Undo.RecordObject(settingsTarget, "Test");
                 settingsTarget.RegeneratePreview();
 
                 if (!wti.ImportModel) {
@@ -618,18 +593,11 @@ namespace P3DS2U.Editor {
             serializedObject.ApplyModifiedProperties();
         }
 
-        List<string> GetLastPathLabels(string key) {
-            var pathLabel = PlayerPrefs.GetString(key).Replace("/", " \u2044 ");
-            return !string.IsNullOrEmpty(pathLabel) ? pathLabel.Split(',').ToList() : new List<string>();
-        }
+        void SavePathLabel(string label, List<string> pathLabels) {
+            var formattedLabel = label.Replace("/", " \u2044 ");
 
-        List<string> SavePathLabels(string key, string label, List<string> pathLabels) {
-            if (!string.IsNullOrEmpty(label) && !pathLabels.Contains(label))
-                pathLabels.Insert(0, label.Replace("/", " \u2044 "));
-
-            pathLabels = pathLabels.Distinct().ToList();
-            PlayerPrefs.SetString(key, string.Join(",", pathLabels));
-            return pathLabels;
+            if (!string.IsNullOrEmpty(label) && !pathLabels.Contains(formattedLabel))
+                pathLabels.Insert(0, formattedLabel);
         }
 
         void DrawImportPath(P3ds2USettingsScriptableObject settingsTarget) {
@@ -638,20 +606,20 @@ namespace P3DS2U.Editor {
             EditorGUILayout.LabelField(new GUIContent("Import Path", "Location where located the .bin sources."), GUILayout.Width(EditorGUIUtility.labelWidth));
 
             var wti = settingsTarget.ImporterSettings;
-            var pathLabels = SavePathLabels(IMPORT_LABEL_KEY, wti.ImportPath, GetLastPathLabels(IMPORT_LABEL_KEY));
+            SavePathLabel(wti.ImportPath, wti.importPaths);
 
-            wti.SelectedImportIndex = EditorGUILayout.Popup(wti.SelectedImportIndex, pathLabels.ToArray(), GUILayout.MinWidth(90));
-            wti.SelectedImportIndex = Mathf.Clamp(wti.SelectedImportIndex, 0, pathLabels.Count - 1);
-            wti.ImportPath = pathLabels != null && pathLabels.Count > 0 ? pathLabels[wti.SelectedImportIndex].Replace(" \u2044 ", "/") : "";
+            wti.SelectedImportIndex = EditorGUILayout.Popup(wti.SelectedImportIndex, wti.importPaths.ToArray(), GUILayout.MinWidth(90));
+            wti.SelectedImportIndex = Mathf.Clamp(wti.SelectedImportIndex, 0, wti.importPaths.Count - 1);
+            wti.ImportPath = wti.importPaths != null && wti.importPaths.Count > 0 ? wti.importPaths[wti.SelectedImportIndex].Replace(" \u2044 ", "/") : "";
 
             if (GUILayout.Button(new GUIContent("...", "Browse to a new location"), EditorStyles.miniButton, GUILayout.Width(25))) {
                 settingsTarget.SetImportPath();
                 // Save the new path
-                SavePathLabels(IMPORT_LABEL_KEY, wti.ImportPath, pathLabels);
+                SavePathLabel(wti.ImportPath, wti.importPaths);
             }
 
             if (GUILayout.Button(new GUIContent("default", "Clear and set the default path"), EditorStyles.miniButton, GUILayout.Width(55))) {
-                PlayerPrefs.DeleteKey(IMPORT_LABEL_KEY);
+                wti.importPaths.Clear();
                 settingsTarget.ResetPaths(0);
             }
 
@@ -664,20 +632,20 @@ namespace P3DS2U.Editor {
             EditorGUILayout.LabelField(new GUIContent("Export Path", "Location where will save the converted models."), GUILayout.Width(EditorGUIUtility.labelWidth));
 
             var wti = settingsTarget.ImporterSettings;
-            var pathLabels = SavePathLabels(EXPORT_LABEL_KEY, wti.ExportPath, GetLastPathLabels(EXPORT_LABEL_KEY));
+            SavePathLabel(wti.ExportPath, wti.exportPaths);
 
-            wti.SelectedExportIndex = EditorGUILayout.Popup(wti.SelectedExportIndex, pathLabels.ToArray(), GUILayout.MinWidth(90));
-            wti.SelectedExportIndex = Mathf.Clamp(wti.SelectedExportIndex, 0, pathLabels.Count - 1);
-            wti.ExportPath = pathLabels != null && pathLabels.Count > 0 ? pathLabels[wti.SelectedExportIndex].Replace(" \u2044 ", "/") : "";
+            wti.SelectedExportIndex = EditorGUILayout.Popup(wti.SelectedExportIndex, wti.exportPaths.ToArray(), GUILayout.MinWidth(90));
+            wti.SelectedExportIndex = Mathf.Clamp(wti.SelectedExportIndex, 0, wti.exportPaths.Count - 1);
+            wti.ExportPath = wti.exportPaths != null && wti.exportPaths.Count > 0 ? wti.exportPaths[wti.SelectedExportIndex].Replace(" \u2044 ", "/") : "";
 
             if (GUILayout.Button(new GUIContent("...", "Browse to a new location"), EditorStyles.miniButton, GUILayout.Width(25))) {
                 settingsTarget.SetExportPath();
                 // Save the new path
-                SavePathLabels(EXPORT_LABEL_KEY, wti.ExportPath, pathLabels);
+                SavePathLabel(wti.ExportPath, wti.exportPaths);
             }
 
             if (GUILayout.Button(new GUIContent("default", "Clear and set the default path"), EditorStyles.miniButton, GUILayout.Width(55))) {
-                PlayerPrefs.DeleteKey(EXPORT_LABEL_KEY);
+                wti.exportPaths.Clear();
                 settingsTarget.ResetPaths(1);
             }
 
