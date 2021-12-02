@@ -1,59 +1,53 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace P3DS2U.Editor
-{
-   public static class SettingsUtils
-   {
-      private const string SettingsFileName = "3DStoUnitySettings.asset";
-          public static P3ds2USettingsScriptableObject GetOrCreateSettings (bool _focus = false)
-          {
-                var settings = FindSettingsInProject();
-                if (settings == null)
-                {
-                    string filePath = EditorUtility.SaveFilePanelInProject("Choose the folder where to save the new Import Settings", SettingsFileName, "asset", "Save", PokemonImporter.ImportPath);
-                    if (string.IsNullOrEmpty(filePath))
-                        filePath = PokemonImporter.ImportPath + SettingsFileName;
+namespace P3DS2U.Editor {
 
-                    AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<P3ds2USettingsScriptableObject>(), filePath);
-                    return GetOrCreateSettings(_focus);
-                }
+    public static class SettingsUtils {
 
-                if (_focus) {
-                   Selection.activeObject = settings;
-                }
+        private const string SettingsFileName = "3DStoUnitySettings.asset";
 
-                Pokemon3DSToUnityEditorWindow.settings = settings;
-                return settings;
-          }
+        public static P3ds2USettingsScriptableObject GetOrCreateSettings(bool _focus = false) {
+            var settings = FindSettingsInProject();
+            if (settings == null) {
+                string filePath = EditorUtility.SaveFilePanelInProject("Choose the folder where to save the new Import Settings", SettingsFileName, "asset", "Save", PokemonImporter.ImportPath);
+                if (string.IsNullOrEmpty(filePath))
+                    filePath = PokemonImporter.ImportPath + SettingsFileName;
 
-        public static void GetOrCreateSettingsInImporterPath()
-        {
+                AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<P3ds2USettingsScriptableObject>(), filePath);
+                return GetOrCreateSettings(_focus);
+            }
+
+            if (_focus) {
+                Selection.activeObject = settings;
+            }
+
+            Pokemon3DSToUnityEditorWindow.settings = settings;
+            return settings;
+        }
+
+        public static void GetOrCreateSettingsInImporterPath() {
             const string filePath = PokemonImporter.ImportPath + SettingsFileName;
-            if (File.Exists(filePath))
-            {
+            if (File.Exists(filePath)) {
                 Selection.activeObject = AssetDatabase.LoadAssetAtPath<P3ds2USettingsScriptableObject>(filePath);
             }
-            else
-            {
+            else {
                 AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<P3ds2USettingsScriptableObject>(), filePath);
                 GetOrCreateSettingsInImporterPath();
             }
         }
 
-        public static P3ds2USettingsScriptableObject FindSettingsInProject()
-        {
-            string[] guids = UnityEditor.AssetDatabase.FindAssets($"t:P3ds2USettingsScriptableObject");
-            foreach (string ttype in guids)
-            {
-                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(ttype);
-                P3ds2USettingsScriptableObject settings = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(P3ds2USettingsScriptableObject)) as P3ds2USettingsScriptableObject;
-                if (settings != null)
-                {
+        public static P3ds2USettingsScriptableObject FindSettingsInProject() {
+            var guids = AssetDatabase.FindAssets($"t:P3ds2USettingsScriptableObject");
+
+            foreach (string ttype in guids) {
+                var path = AssetDatabase.GUIDToAssetPath(ttype);
+                var settings = AssetDatabase.LoadAssetAtPath(path, typeof(P3ds2USettingsScriptableObject)) as P3ds2USettingsScriptableObject;
+                if (settings != null) {
                     return settings;
                 }
             }
@@ -61,16 +55,14 @@ namespace P3DS2U.Editor
             return null;
         }
 
-        public static List<P3ds2USettingsScriptableObject> FindAllSettingsInProject<T>()
-        {
-            string[] guids = UnityEditor.AssetDatabase.FindAssets($"t:P3ds2USettingsScriptableObject");
-            List<P3ds2USettingsScriptableObject> finalList = new List<P3ds2USettingsScriptableObject>();
-            foreach (string ttype in guids)
-            {
-                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(ttype);
-                P3ds2USettingsScriptableObject val = UnityEditor.AssetDatabase.LoadAssetAtPath(path, typeof(P3ds2USettingsScriptableObject)) as P3ds2USettingsScriptableObject;
-                if (val != null)
-                {
+        public static List<P3ds2USettingsScriptableObject> FindAllSettingsInProject<T>() {
+            var guids = AssetDatabase.FindAssets($"t:P3ds2USettingsScriptableObject");
+            var finalList = new List<P3ds2USettingsScriptableObject>();
+
+            foreach (var ttype in guids) {
+                var path = AssetDatabase.GUIDToAssetPath(ttype);
+                var val = AssetDatabase.LoadAssetAtPath(path, typeof(P3ds2USettingsScriptableObject)) as P3ds2USettingsScriptableObject;
+                if (val != null) {
                     finalList.Add(val);
                 }
             }
@@ -79,68 +71,63 @@ namespace P3DS2U.Editor
         }
     }
 
+    [Serializable]
+    public class P3ds2UShaderProperties {
 
+        [SerializeField] public Shader bodyShader;
+        [SerializeField] public Shader irisShader;
+        [SerializeField] public Shader fireCoreShader;
+        [SerializeField] public Shader fireStencilShader;
+
+        // public string BaseMap = Shader.PropertyToID ("_BaseMap");
+        public string BaseMap = ("_BaseMap");
+        public string BaseMapTiling = ("_BaseMapTiling");
+        public string BaseMapOffset = ("_BaseMapOffset");
+        public string NormalMap = ("_NormalMap");
+        public string NormalMapTiling = ("_NormalMapTiling");
+        public string NormalMapOffset = ("_NormalOffset");
+        public string OcclusionMap = ("_OcclusionMap");
+        public string OcclusionMapTiling = ("_OcclusionMapTiling");
+        public string OcclusionMapOffset = ("_OcclusionMapOffset");
+        public string Constant4Color = ("_Constant4Color");
+        public string Constant3Color = ("_Constant3Color");
+
+        public string Tex0TranslateX = "material._BaseMapOffset.x";
+        public string Tex1TranslateX = "material._OcclusionMapOffset.x";
+        public string Tex2TranslateX = "material._NormalMapOffset.x";
+        public string Tex0TranslateY = "material._BaseMapOffset.y";
+        public string Tex1TranslateY = "material._OcclusionMapOffset.y";
+        public string Tex2TranslateY = "material._NormalMapOffset.y";
+    }
 
     [Serializable]
-   public class P3ds2UShaderProperties
-   {
-      [SerializeField] public Shader bodyShader;
-      [SerializeField] public Shader irisShader;
-      [SerializeField] public Shader fireCoreShader;
-      [SerializeField] public Shader fireStencilShader;
-      
-      // public string BaseMap = Shader.PropertyToID ("_BaseMap");
-      public string BaseMap =  ("_BaseMap");
-      public string BaseMapTiling =  ("_BaseMapTiling");
-      public string BaseMapOffset = ("_BaseMapOffset");
-      public string NormalMap =  ("_NormalMap");
-      public string NormalMapTiling =  ("_NormalMapTiling");
-      public string NormalMapOffset = ("_NormalOffset");
-      public string OcclusionMap =  ("_OcclusionMap");
-      public string OcclusionMapTiling =  ("_OcclusionMapTiling");
-      public string OcclusionMapOffset =  ("_OcclusionMapOffset");
-      public string Constant4Color =  ("_Constant4Color");
-      public string Constant3Color =  ("_Constant3Color");
+    public class MergedBinary : PropertyAttribute {
+        [SerializeField] public List<string> PokemonMergedBinary;
+    }
 
-      public string Tex0TranslateX = "material._BaseMapOffset.x";
-      public string Tex1TranslateX = "material._OcclusionMapOffset.x";
-      public string Tex2TranslateX = "material._NormalMapOffset.x";
-      public string Tex0TranslateY = "material._BaseMapOffset.y";
-      public string Tex1TranslateY = "material._OcclusionMapOffset.y";
-      public string Tex2TranslateY = "material._NormalMapOffset.y";
-   }
-   
-   [Serializable]
-   public class MergedBinary : PropertyAttribute
-   {
-      [SerializeField] public List<string> PokemonMergedBinary;
-   }
- 
-   [CustomPropertyDrawer(typeof(MergedBinary))]
-   public class MergedBinaryEditor : PropertyDrawer
-   {
-      public override float GetPropertyHeight(SerializedProperty property,
-         GUIContent label)
-      {
-         return EditorGUI.GetPropertyHeight(property, label, true);
-      }
- 
-      public override void OnGUI(Rect position,
-         SerializedProperty property,
-         GUIContent label)
-      {
-         GUI.enabled = false;
-         EditorGUI.PropertyField(position, property, label, true);
-         GUI.enabled = true;
-      }
-   }
+    [CustomPropertyDrawer(typeof(MergedBinary))]
+    public class MergedBinaryEditor : PropertyDrawer {
 
-   [Serializable]
-   public class AnimationImportOptions: SerializableDictionary<string, bool>{}
+        public override float GetPropertyHeight(SerializedProperty property,
+           GUIContent label) {
+            return EditorGUI.GetPropertyHeight(property, label, true);
+        }
+
+        public override void OnGUI(Rect position,
+           SerializedProperty property,
+           GUIContent label) {
+            GUI.enabled = false;
+            EditorGUI.PropertyField(position, property, label, true);
+            GUI.enabled = true;
+        }
+    }
 
     [Serializable]
-    public class P3ds2UAnimatorProperties
-    {
+    public class AnimationImportOptions : SerializableDictionary<string, bool> { }
+
+    [Serializable]
+    public class P3ds2UAnimatorProperties {
+
         [SerializeField] public UnityEditor.Animations.AnimatorController baseController;
 
         #region Fight Animations
@@ -246,73 +233,103 @@ namespace P3DS2U.Editor
     }
 
     [Serializable]
-   public class WhatToImport
-   {
-      [Header("Models import range")]
-      [Min(0)] 
-      public int StartIndex;
-      [Min(0)]
-      public int EndIndex;
-      [Space(10)]
-      public bool ImportModel;
-      public bool ImportTextures;
-      public bool ImportMaterials;
-      public bool ImportShinyMaterials;
-      public bool ApplyMaterials;
-      public bool ApplyShinyMaterials;
-      public bool ImportFireMaterials;
-      
-      public bool SkeletalAnimations;
-      public AnimationImportOptions FightAnimationsToImport;
-      public AnimationImportOptions PetAnimationsToImport;
-      public AnimationImportOptions MovementAnimationsToImport;
-      [Tooltip("Feature in Progress")]
-      public bool MaterialAnimations;
-      public bool VisibilityAnimations;
-      public bool InterpolateAnimations;
-      public bool RenameGeneratedAnimationFiles;
-      [HideInInspector] public string ExportPath;
-      [HideInInspector] public string ImportPath;
-   }
-   
-   public class P3ds2USettingsScriptableObject : ScriptableObject
-   {
-      [HideInInspector] public string PackageVersion = "";
+    public enum ExportFormat {
+        SeparatedFolders,
+        FoldersWithBinaries
+    }
 
-         private bool _generated;
-      [SerializeField] public WhatToImport ImporterSettings;
-      
-      [SerializeField] private List<MergedBinary> mergedBinariesPreview;
-      
-      public P3ds2UShaderProperties customShaderSettings;
+    [Serializable]
+    public enum ModelExport {
+        Prefab,
+        Fbx,
+        // Other?
+    }
 
-      [Tooltip("Name clips same as in custom controller.")] public P3ds2UAnimatorProperties customAnimatorSettings;
+    [Serializable]
+    public class WhatToImport {
 
-      public static P3ds2USettingsScriptableObject Instance;
+        [Header("Models Import Range")]
+        [Min(0)] public int StartIndex;
+        [Min(0)] public int EndIndex;
 
-      [HideInInspector] public int chosenFormat; // 0 or 1
-      public static bool ImportInProgress;
-      
-        public string ExportPath { get { return ImporterSettings.ExportPath; } }
-        public string ImportPath { get { return ImporterSettings.ImportPath; } }
+        [Space(10)]
+        public bool ImportModel = true;
+        public bool ImportTextures = true;
+        public bool ImportMaterials = true;
+        public bool ImportShinyMaterials = true;
+        public bool ApplyMaterials = true;
+        public bool ApplyShinyMaterials;
+        public bool ImportFireMaterials;
+
+        public bool SkeletalAnimations = true;
+        public AnimationImportOptions FightAnimationsToImport;
+        public AnimationImportOptions PetAnimationsToImport;
+        public AnimationImportOptions MovementAnimationsToImport;
+
+        [Tooltip("Feature in Progress")]
+        public bool MaterialAnimations = true;
+        public bool VisibilityAnimations = true;
+        public bool InterpolateAnimations = true;
+        public bool RenameGeneratedAnimationFiles = true;
+
+        [HideInInspector] public string ImportPath;
+        [HideInInspector] public string ExportPath;
+        [HideInInspector] public int SelectedImportIndex;
+        [HideInInspector] public int SelectedExportIndex;
+    }
+
+    public class P3ds2USettingsScriptableObject : ScriptableObject {
+
+        private string m_PackageVersion;
+        public string PackageVersion {
+            get {
+                if (string.IsNullOrEmpty(m_PackageVersion)) {
+                    var packagePath = AssetDatabase.GetAllAssetPaths()
+                                                   .Where(p => p.ToLower().Contains("3dstounity"))
+                                                   .FirstOrDefault(p => p.ToLower().EndsWith("package.json"));
+                    // Can't get version
+                    if (string.IsNullOrEmpty(packagePath))
+                        return "";
+
+                    var packageJsonObject = JsonUtility.FromJson<PackageJsonObject>(File.ReadAllText(packagePath));
+                    return m_PackageVersion = packageJsonObject.version;
+                }
+
+                return m_PackageVersion;
+            }
+        }
+
+        public ExportFormat chosenFormat; // 0 or 1
+        public ModelExport modelExport;
+        [Min(.001f)] public float scaleFactor = .01f;
+        public bool spawnModelsIntoScene = true;
+        public bool spawnAtRandomPosition = true;
+
+        [Space]
+        public WhatToImport ImporterSettings;
+
+        [SerializeField] 
+        private List<MergedBinary> mergedBinariesPreview;
+
+        public P3ds2UShaderProperties customShaderSettings;
+        
+        [Tooltip("Name clips same as in custom controller.")]
+        public P3ds2UAnimatorProperties customAnimatorSettings;
+
+        private bool _generated;
+
+        public static P3ds2USettingsScriptableObject Instance;
+        public static bool ImportInProgress { get; private set; }
+        public string ImportPath => ImporterSettings.ImportPath;
+        public string ExportPath => ImporterSettings.ExportPath;
 
         [Serializable]
-        public class PackageJsonObject
-        {
-           public string version;
+        public class PackageJsonObject {
+            public string version;
         }
-        
-      private P3ds2USettingsScriptableObject ()
-      {
-         try {
-            var packageJsonObject =
-               JsonUtility.FromJson<PackageJsonObject> (File.ReadAllText ("Assets/3dsToUnity/package.json"));
-            PackageVersion = packageJsonObject.version;
-         }
-         catch (Exception) {
-            //ignored
-         }
-         customShaderSettings = new P3ds2UShaderProperties ();
+
+        private P3ds2USettingsScriptableObject() {
+            customShaderSettings = new P3ds2UShaderProperties();
             ImporterSettings = new WhatToImport {
                 StartIndex = 0,
                 EndIndex = 0,
@@ -332,56 +349,59 @@ namespace P3DS2U.Editor
                 ExportPath = PokemonImporter.ExportPath,
                 ImportPath = PokemonImporter.ImportPath,
             };
-         foreach (string animationName in AnimationNaming.animationNames["Fight"])
-         {
-            ImporterSettings.FightAnimationsToImport.Add(animationName, true);
-         }
-         foreach (string animationName in AnimationNaming.animationNames["Pet"])
-         {
-            ImporterSettings.PetAnimationsToImport.Add(animationName, true);
-         }
-         foreach (string animationName in AnimationNaming.animationNames["Movement"])
-         {
-            ImporterSettings.MovementAnimationsToImport.Add(animationName, true);
-         }
-         Instance = this;
-         RegeneratePreview ();
-         chosenFormat = 0;
-      }
-      
-      private void OnEnable ()
-      {
-         if (!_generated) {
-            customShaderSettings.bodyShader = Shader.Find ("Shader Graphs/LitPokemonShader");
-            customShaderSettings.irisShader = Shader.Find ("Shader Graphs/LitPokemonIrisShader");
-            customShaderSettings.fireCoreShader = Shader.Find ("Shader Graphs/LitPokemonFireCoreShader");
-            customShaderSettings.fireStencilShader = Shader.Find ("Shader Graphs/LitPokemonFireStencil");
-            _generated = true;
-         }
-      }
+            foreach (string animationName in AnimationNaming.animationNames["Fight"]) {
+                ImporterSettings.FightAnimationsToImport.Add(animationName, true);
+            }
+            foreach (string animationName in AnimationNaming.animationNames["Pet"]) {
+                ImporterSettings.PetAnimationsToImport.Add(animationName, true);
+            }
+            foreach (string animationName in AnimationNaming.animationNames["Movement"]) {
+                ImporterSettings.MovementAnimationsToImport.Add(animationName, true);
+            }
+            Instance = this;
+            RegeneratePreview();
+            chosenFormat = 0;
+        }
 
-      private Dictionary<string, List<string>> ScenesDict = new Dictionary<string, List<string>> ();
-
-      public void StartImporting ()
-      {
-         ImportInProgress = true;
-         PokemonImporter.StartImportingBinaries (this, ScenesDict);
-         ImportInProgress = false;
-      }
-
-        public void SetImportPath()
-        {
-            string path = EditorUtility.SaveFolderPanel("Choose Import folder", "Assets/", "Bin3DS");
-            if (!string.IsNullOrEmpty(path))
-            {
-                ImporterSettings.ImportPath = "Assets" + path.Replace(Application.dataPath+"/", "/")+"/";
+        private void OnEnable() {
+            if (!_generated) {
+                customShaderSettings.bodyShader = Shader.Find("Shader Graphs/LitPokemonShader");
+                customShaderSettings.irisShader = Shader.Find("Shader Graphs/LitPokemonIrisShader");
+                customShaderSettings.fireCoreShader = Shader.Find("Shader Graphs/LitPokemonFireCoreShader");
+                customShaderSettings.fireStencilShader = Shader.Find("Shader Graphs/LitPokemonFireStencil");
+                _generated = true;
             }
         }
 
-        public void ResetPaths(int _path = 0)
-        {
-            switch (_path)
-            {
+        private Dictionary<string, List<string>> ScenesDict = new Dictionary<string, List<string>>();
+
+        public void StartImporting() {
+            ImportInProgress = true;
+            PokemonImporter.StartImportingBinaries(this, ScenesDict);
+            ImportInProgress = false;
+        }
+
+        public void SetImportPath() {
+            var currentPath = string.IsNullOrEmpty(ImporterSettings.ImportPath) ? "Assets/" : ImporterSettings.ImportPath;
+            string path = EditorUtility.SaveFolderPanel("Choose Import folder", currentPath, "Bin3DS");
+
+            if (!string.IsNullOrEmpty(path) && Directory.Exists(path)) {
+                if (path.StartsWith(Application.dataPath))
+                    ImporterSettings.ImportPath = "Assets" + path.Replace(Application.dataPath, "") + "/";
+                else
+                    ImporterSettings.ImportPath = path + "/";
+            }
+        }
+
+        public void SetExportPath() {
+            var path = EditorUtility.SaveFolderPanel("Choose Export folder", "Assets/", "Exported");
+
+            if (!string.IsNullOrEmpty(path) && path.StartsWith(Application.dataPath))
+                ImporterSettings.ExportPath = "Assets" + path.Replace(Application.dataPath + "/", "/") + "/";
+        }
+
+        public void ResetPaths(int _path = 0) {
+            switch (_path) {
                 case 0:
                     ImporterSettings.ImportPath = PokemonImporter.ImportPath;
                     break;
@@ -395,197 +415,266 @@ namespace P3DS2U.Editor
             }
         }
 
-        public void SetExportPath()
-        {
-            string path = EditorUtility.SaveFolderPanel("Choose Export folder", "Assets/", "Exported");
-            if (!string.IsNullOrEmpty(path))
-            {
-                ImporterSettings.ExportPath = "Assets" + path.Replace(Application.dataPath + "/", "/") + "/";
-            }
-        }
-
-      public void RegeneratePreview ()
-      {
-         if (ImportInProgress) 
+        public void RegeneratePreview() {
+            if (ImportInProgress)
                 return;
 
-         if (!System.IO.Directory.Exists(ImportPath))
-            Directory.CreateDirectory(ImportPath);
+            if (!Directory.Exists(ImportPath))
+                Directory.CreateDirectory(ImportPath);
 
-         if (!System.IO.Directory.Exists(ExportPath))
-            Directory.CreateDirectory(ExportPath);
- 
-         ScenesDict = new Dictionary<string, List<string>> ();
-         if (chosenFormat == 1) {
-            var allFiles = DirectoryUtils.GetAllFilesRecursive (ImporterSettings.ImportPath);
-            foreach (var singleFile in allFiles) {
-               var trimmedName = Path.GetFileName (singleFile);
-               if (!ScenesDict.ContainsKey (trimmedName)) {
-                  ScenesDict.Add (trimmedName, new List<string> {singleFile});
-               } else {
-                  ScenesDict[trimmedName].Add (singleFile);
-               }
-            }  
-         } else {
-            var allFolders = Directory.GetDirectories (ImporterSettings.ImportPath);
-            foreach (var singleFolder in allFolders) {
-               var allFiles = Directory.GetFiles (singleFolder).ToList ();
-               for (var i = allFiles.Count - 1; i >= 0; i--) {
-                  if (allFiles[i].Contains (".meta")) {
-                     allFiles.RemoveAt (i);
-                  }
-               }
+            if (!Directory.Exists(ExportPath))
+                Directory.CreateDirectory(ExportPath);
 
-               var trimmedFolderName = Path.GetFileName (singleFolder);
-               foreach (var singleFile in allFiles) {
-                  if (!ScenesDict.ContainsKey (trimmedFolderName)) {
-                     ScenesDict.Add (trimmedFolderName, new List<string> {singleFile});
-                  } else {
-                     ScenesDict[trimmedFolderName].Add (singleFile);
-                  }
-               }
+            ScenesDict = new Dictionary<string, List<string>>();
+            
+            if (chosenFormat == ExportFormat.FoldersWithBinaries) {
+                var allFiles = DirectoryUtils.GetAllFilesRecursive(ImporterSettings.ImportPath);
+
+                foreach (var singleFile in allFiles) {
+                    var trimmedName = Path.GetFileName(singleFile);
+                    if (!ScenesDict.ContainsKey(trimmedName)) {
+                        ScenesDict.Add(trimmedName, new List<string> { singleFile });
+                    }
+                    else {
+                        ScenesDict[trimmedName].Add(singleFile);
+                    }
+                }
             }
-         }
-         
-         mergedBinariesPreview = new List<MergedBinary> ();
-         foreach (var scene in ScenesDict) {
-            mergedBinariesPreview.Add (new MergedBinary {
-               PokemonMergedBinary = scene.Value
-            });
-         }
+            else {
+                var allFolders = Directory.GetDirectories(ImporterSettings.ImportPath);
 
-         ImporterSettings.EndIndex = mergedBinariesPreview.Count - 1;
-      }
-   }
+                foreach (var singleFolder in allFolders) {
+                    var allFiles = Directory.GetFiles(singleFolder).ToList();
+                    for (var i = allFiles.Count - 1; i >= 0; i--) {
+                        if (allFiles[i].Contains(".meta")) {
+                            allFiles.RemoveAt(i);
+                        }
+                    }
 
-   [CustomEditor(typeof(P3ds2USettingsScriptableObject))]
-   public class P3ds2USettingsScriptableObjectEditor : UnityEditor.Editor
-   {
-      public override void OnInspectorGUI ()
-      {
-         var settingsTarget = target as P3ds2USettingsScriptableObject;
-         if (settingsTarget != null) {
+                    var trimmedFolderName = Path.GetFileName(singleFolder);
+                    foreach (var singleFile in allFiles) {
+                        if (!ScenesDict.ContainsKey(trimmedFolderName)) {
+                            ScenesDict.Add(trimmedFolderName, new List<string> { singleFile });
+                        }
+                        else {
+                            ScenesDict[trimmedFolderName].Add(singleFile);
+                        }
+                    }
+                }
+            }
+
+            mergedBinariesPreview = new List<MergedBinary>();
+
+            foreach (var scene in ScenesDict) {
+                mergedBinariesPreview.Add(new MergedBinary {
+                    PokemonMergedBinary = scene.Value
+                });
+            }
+
+            ImporterSettings.EndIndex = mergedBinariesPreview.Count - 1;
+        }
+    }
+
+    [CustomEditor(typeof(P3ds2USettingsScriptableObject))]
+    public class P3ds2USettingsScriptableObjectEditor : UnityEditor.Editor {
+
+        const string IMPORT_LABEL_KEY = "P3DS2U_pathLabelsImport";
+        const string EXPORT_LABEL_KEY = "P3DS2U_pathLabelsExport";
+
+        SerializedProperty chosenFormat;
+        SerializedProperty modelExport;
+        SerializedProperty scaleFactor;
+        SerializedProperty spawnModelsIntoScene;
+        SerializedProperty spawnAtRandomPosition;
+        SerializedProperty ImporterSettings;
+        SerializedProperty mergedBinariesPreview;
+        SerializedProperty customShaderSettings;
+        SerializedProperty customAnimatorSettings;
+
+        void OnEnable() {
+            chosenFormat = serializedObject.FindProperty("chosenFormat");
+            modelExport = serializedObject.FindProperty("modelExport");
+            scaleFactor = serializedObject.FindProperty("scaleFactor");
+            spawnModelsIntoScene = serializedObject.FindProperty("spawnModelsIntoScene");
+            spawnAtRandomPosition = serializedObject.FindProperty("spawnAtRandomPosition");
+            ImporterSettings = serializedObject.FindProperty("ImporterSettings");
+            mergedBinariesPreview = serializedObject.FindProperty("mergedBinariesPreview");
+            customShaderSettings = serializedObject.FindProperty("customShaderSettings");
+            customAnimatorSettings = serializedObject.FindProperty("customAnimatorSettings");
+        }
+
+        public override void OnInspectorGUI() {
+            var settingsTarget = target as P3ds2USettingsScriptableObject;
+
+            if (!settingsTarget)
+                return;
 
             var wti = settingsTarget.ImporterSettings;
-            EditorGUILayout.BeginVertical();
-                        
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Version: " + settingsTarget.PackageVersion + "\n");
-            EditorGUILayout.EndHorizontal();
 
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Paths");
-            EditorGUILayout.EndHorizontal();
+            serializedObject.Update();
 
-            EditorGUILayout.Space();
-
-            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.BeginVertical();
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("...", GUILayout.Width(50), GUILayout.Width(50)))
-            {
-                settingsTarget.SetImportPath();
-            }
-            GUILayout.Label("Import path: " + wti.ImportPath);
-
+            // TODO: Draw title with texture?
+            GUILayout.Label("Pokemon3DStoUnity", EditorStyles.boldLabel);
+            GUILayout.Label($"Version: {settingsTarget.PackageVersion}", EditorStyles.boldLabel);
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space();
+
+            EditorGUILayout.Space(20);
+
+            GUILayout.Label("Paths", EditorStyles.boldLabel);
+
+            EditorGUI.BeginChangeCheck();
+            DrawImportPath(settingsTarget);
+            DrawExportPath(settingsTarget);
+
+            EditorGUILayout.Space(20);
             EditorGUILayout.BeginHorizontal();
-            if (GUILayout.Button("...", GUILayout.Width(50), GUILayout.Width(50)))
-            {
-                settingsTarget.SetExportPath();
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("Import", GUILayout.Width(100), GUILayout.Height(30)))
+                settingsTarget.StartImporting();
+
+            if (GUILayout.Button("Refresh", GUILayout.Width(100), GUILayout.Height(30)))
+                settingsTarget.RegeneratePreview();
+
+            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(20);
+
+            EditorGUILayout.HelpBox("If you are not sure what settings to use, try the defaults!", MessageType.Info);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.PropertyField(chosenFormat);
+            EditorGUILayout.PropertyField(modelExport);
+            EditorGUILayout.PropertyField(scaleFactor);
+            EditorGUILayout.PropertyField(spawnModelsIntoScene);
+
+            if (!settingsTarget.spawnModelsIntoScene)
+                GUI.enabled = false;
+
+            EditorGUILayout.PropertyField(spawnAtRandomPosition);
+            GUI.enabled = true;
+
+            EditorGUILayout.PropertyField(ImporterSettings);
+            EditorGUILayout.PropertyField(mergedBinariesPreview);
+            EditorGUILayout.PropertyField(customShaderSettings);
+            EditorGUILayout.PropertyField(customAnimatorSettings);
+
+            if (EditorGUI.EndChangeCheck()) {
+                settingsTarget.RegeneratePreview();
+
+                if (!wti.ImportModel) {
+                    wti.ApplyMaterials = false;
+                    wti.SkeletalAnimations = false;
+                    wti.MaterialAnimations = false;
+                    wti.RenameGeneratedAnimationFiles = false;
+                    wti.VisibilityAnimations = false;
+                    wti.ImportFireMaterials = false;
+                }
+
+                if (!wti.ImportTextures) {
+                    wti.ImportMaterials = false;
+                    wti.ImportShinyMaterials = false;
+                    wti.ImportFireMaterials = false;
+                }
+
+                if (!wti.ImportMaterials) {
+                    wti.ApplyMaterials = false;
+                }
+
+                if (!wti.ImportShinyMaterials) {
+                    wti.ApplyShinyMaterials = false;
+                }
+
+                if (!wti.ImportMaterials && !wti.ImportShinyMaterials) {
+                    wti.MaterialAnimations = false;
+                    wti.ImportFireMaterials = false;
+                }
+
+                if (!wti.ApplyMaterials && !wti.ApplyShinyMaterials) {
+                    wti.MaterialAnimations = false;
+                }
+
+                if (!wti.SkeletalAnimations) {
+                    wti.MaterialAnimations = false;
+                    wti.RenameGeneratedAnimationFiles = false;
+                    wti.VisibilityAnimations = false;
+                }
+
+                if (wti.ImportFireMaterials)
+                    FireImporterSettingsUtil.ThrowWarningAndChangeSettings();
             }
 
-            GUILayout.Label("Export path: " + wti.ExportPath);
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.Space(30);
             EditorGUILayout.EndVertical();
-            EditorGUILayout.BeginVertical();
-            if (GUILayout.Button("Reset Path", GUILayout.Width(200), GUILayout.Width(150)))
-            {
+
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        List<string> GetLastPathLabels(string key) {
+            var pathLabel = PlayerPrefs.GetString(key).Replace("/", " \u2044 ");
+            return !string.IsNullOrEmpty(pathLabel) ? pathLabel.Split(',').ToList() : new List<string>();
+        }
+
+        List<string> SavePathLabels(string key, string label, List<string> pathLabels) {
+            if (!string.IsNullOrEmpty(label) && !pathLabels.Contains(label))
+                pathLabels.Insert(0, label.Replace("/", " \u2044 "));
+
+            pathLabels = pathLabels.Distinct().ToList();
+            PlayerPrefs.SetString(key, string.Join(",", pathLabels));
+            return pathLabels;
+        }
+
+        void DrawImportPath(P3ds2USettingsScriptableObject settingsTarget) {
+            GUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField(new GUIContent("Import Path", "Location where located the .bin sources."), GUILayout.Width(EditorGUIUtility.labelWidth));
+
+            var wti = settingsTarget.ImporterSettings;
+            var pathLabels = SavePathLabels(IMPORT_LABEL_KEY, wti.ImportPath, GetLastPathLabels(IMPORT_LABEL_KEY));
+
+            wti.SelectedImportIndex = EditorGUILayout.Popup(wti.SelectedImportIndex, pathLabels.ToArray(), GUILayout.MinWidth(90));
+            wti.SelectedImportIndex = Mathf.Clamp(wti.SelectedImportIndex, 0, pathLabels.Count - 1);
+            wti.ImportPath = pathLabels != null && pathLabels.Count > 0 ? pathLabels[wti.SelectedImportIndex].Replace(" \u2044 ", "/") : "";
+
+            if (GUILayout.Button(new GUIContent("...", "Browse to a new location"), EditorStyles.miniButton, GUILayout.Width(25))) {
+                settingsTarget.SetImportPath();
+                // Save the new path
+                SavePathLabels(IMPORT_LABEL_KEY, wti.ImportPath, pathLabels);
+            }
+
+            if (GUILayout.Button(new GUIContent("default", "Clear and set the default path"), EditorStyles.miniButton, GUILayout.Width(55))) {
+                PlayerPrefs.DeleteKey(IMPORT_LABEL_KEY);
                 settingsTarget.ResetPaths(0);
             }
-            EditorGUILayout.Space();
-            if (GUILayout.Button("Reset Path", GUILayout.Width(200), GUILayout.Width(150)))
-            {
+
+            GUILayout.EndHorizontal();
+        }
+
+        void DrawExportPath(P3ds2USettingsScriptableObject settingsTarget) {
+            GUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField(new GUIContent("Export Path", "Location where will save the converted models."), GUILayout.Width(EditorGUIUtility.labelWidth));
+
+            var wti = settingsTarget.ImporterSettings;
+            var pathLabels = SavePathLabels(EXPORT_LABEL_KEY, wti.ExportPath, GetLastPathLabels(EXPORT_LABEL_KEY));
+
+            wti.SelectedExportIndex = EditorGUILayout.Popup(wti.SelectedExportIndex, pathLabels.ToArray(), GUILayout.MinWidth(90));
+            wti.SelectedExportIndex = Mathf.Clamp(wti.SelectedExportIndex, 0, pathLabels.Count - 1);
+            wti.ExportPath = pathLabels != null && pathLabels.Count > 0 ? pathLabels[wti.SelectedExportIndex].Replace(" \u2044 ", "/") : "";
+
+            if (GUILayout.Button(new GUIContent("...", "Browse to a new location"), EditorStyles.miniButton, GUILayout.Width(25))) {
+                settingsTarget.SetExportPath();
+                // Save the new path
+                SavePathLabels(EXPORT_LABEL_KEY, wti.ExportPath, pathLabels);
+            }
+
+            if (GUILayout.Button(new GUIContent("default", "Clear and set the default path"), EditorStyles.miniButton, GUILayout.Width(55))) {
+                PlayerPrefs.DeleteKey(EXPORT_LABEL_KEY);
                 settingsTarget.ResetPaths(1);
             }
-            EditorGUILayout.EndVertical();
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.EndVertical();
 
-            EditorGUILayout.BeginVertical ();
-            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (400), GUILayout.Height (140));
-            
-            if (GUILayout.Button ("Import", GUILayout.Width (100), GUILayout.Height (50))) {
-               settingsTarget.StartImporting ();
-            }
-            if (GUILayout.Button ("Refresh", GUILayout.Width (100), GUILayout.Height (50))) {
-               settingsTarget.RegeneratePreview ();
-            }
-            GUILayout.Label ("If you are not sure what settings to use, try the defaults!", GUILayout.ExpandWidth (true));
-            EditorGUILayout.EndScrollView ();
-            EditorGUI.BeginChangeCheck ();
-            
-            settingsTarget.chosenFormat = GUILayout.SelectionGrid (settingsTarget.chosenFormat, new[] {"Each pokemon is in a separate folder","Each folder has a type of binary ('Mdls','Tex','Etc')" }, 2, GUI.skin.toggle);
-            if (EditorGUI.EndChangeCheck ()) {
-               settingsTarget.RegeneratePreview ();
-            }
-            
-            EditorGUI.BeginChangeCheck ();
-            DrawDefaultInspector ();
-            if (EditorGUI.EndChangeCheck ()) {
-       
-               if (!wti.ImportModel) {
-                  wti.ApplyMaterials = false;
-                  wti.SkeletalAnimations = false;
-                  wti.MaterialAnimations = false;
-                  wti.RenameGeneratedAnimationFiles = false;
-                  wti.VisibilityAnimations = false;
-                  wti.ImportFireMaterials = false;
-               }
-
-               if (!wti.ImportTextures) {
-                  wti.ImportMaterials = false;
-                  wti.ImportShinyMaterials = false;
-                  wti.ImportFireMaterials = false;
-               }
-               
-               if (!wti.ImportMaterials) {
-                  wti.ApplyMaterials = false;
-               }
-
-               if (!wti.ImportShinyMaterials) {
-                  wti.ApplyShinyMaterials = false;
-               }
-
-               if (!wti.ImportMaterials && !wti.ImportShinyMaterials) {
-                  wti.MaterialAnimations = false;
-                  wti.ImportFireMaterials = false;
-               }
-
-               if (!wti.ApplyMaterials && !wti.ApplyShinyMaterials) {
-                  wti.MaterialAnimations = false;
-               }
-
-               if (!wti.SkeletalAnimations) {
-                  wti.MaterialAnimations = false;
-                  wti.RenameGeneratedAnimationFiles = false;
-                  wti.VisibilityAnimations = false;
-               }
-
-               if (wti.ImportFireMaterials) {
-                  FireImporterSettingsUtil.ThrowWarningAndChangeSettings ();
-               }
-            }
-            EditorGUILayout.BeginScrollView (Vector2.zero, GUILayout.Width (100), GUILayout.Height (10));
-            EditorGUILayout.EndScrollView ();
-            EditorGUILayout.EndVertical ();
-         }
-         serializedObject.Update ();
-         GUILayout.ExpandHeight (true);
-         GUILayout.ExpandWidth (true);
-
-         serializedObject.ApplyModifiedProperties();
-      }
-   }
+            GUILayout.EndHorizontal();
+        }
+    }
 }
