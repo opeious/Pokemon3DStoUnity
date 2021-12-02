@@ -168,10 +168,8 @@ namespace P3DS2U.Editor.SPICA.COLLADA
 
                         for (var Frame = 0; Frame < FramesCount; Frame++) {
                             var StrTrans = string.Empty;
-
                             var PElem = SklAnim.Elements.FirstOrDefault (x => x.Name == Parent?.Name);
-
-                            var InvScale = Vector3.One /** .01f*/;
+                            var InvScale = Vector3.One;
 
                             if (Elem.Content is H3DAnimTransform Transform) {
                                 //Compensate parent bone scale (basically, don't inherit scales)
@@ -241,7 +239,8 @@ namespace P3DS2U.Editor.SPICA.COLLADA
 
                                 switch (i) {
                                     case 0:
-                                        StrTrans = DAEUtils.VectorStr (QuatTransform.GetTranslationValue (Frame) * .01f);
+                                        var scaleFactor = PokemonImporter.CurrentImportSettings.scaleFactor;
+                                        StrTrans = DAEUtils.VectorStr (QuatTransform.GetTranslationValue (Frame) * scaleFactor);
                                         break;
                                     case 1:
                                         StrTrans = DAEUtils.RadToDegStr (QuatTransform.GetRotationValue (Frame)
