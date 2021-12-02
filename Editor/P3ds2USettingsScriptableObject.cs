@@ -233,12 +233,6 @@ namespace P3DS2U.Editor {
     }
 
     [Serializable]
-    public enum ExportFormat {
-        SeparatedFolders,
-        FoldersWithBinaries
-    }
-
-    [Serializable]
     public enum ModelExport {
         Prefab,
         Fbx,
@@ -299,7 +293,8 @@ namespace P3DS2U.Editor {
             }
         }
 
-        public ExportFormat chosenFormat; // 0 or 1
+        [HideInInspector] public int chosenFormat;// 0 or 1
+
         public ModelExport modelExport;
         [Min(.001f)] public float scaleFactor = .01f;
         public bool spawnModelsIntoScene = true;
@@ -427,7 +422,7 @@ namespace P3DS2U.Editor {
 
             ScenesDict = new Dictionary<string, List<string>>();
             
-            if (chosenFormat == ExportFormat.FoldersWithBinaries) {
+            if (chosenFormat == 1) {
                 var allFiles = DirectoryUtils.GetAllFilesRecursive(ImporterSettings.ImportPath);
 
                 foreach (var singleFile in allFiles) {
@@ -481,7 +476,6 @@ namespace P3DS2U.Editor {
         const string IMPORT_LABEL_KEY = "P3DS2U_pathLabelsImport";
         const string EXPORT_LABEL_KEY = "P3DS2U_pathLabelsExport";
 
-        SerializedProperty chosenFormat;
         SerializedProperty modelExport;
         SerializedProperty scaleFactor;
         SerializedProperty spawnModelsIntoScene;
@@ -492,7 +486,6 @@ namespace P3DS2U.Editor {
         SerializedProperty customAnimatorSettings;
 
         void OnEnable() {
-            chosenFormat = serializedObject.FindProperty("chosenFormat");
             modelExport = serializedObject.FindProperty("modelExport");
             scaleFactor = serializedObject.FindProperty("scaleFactor");
             spawnModelsIntoScene = serializedObject.FindProperty("spawnModelsIntoScene");
@@ -544,7 +537,20 @@ namespace P3DS2U.Editor {
             EditorGUILayout.HelpBox("If you are not sure what settings to use, try the defaults!", MessageType.Info);
 
             EditorGUILayout.Space();
-            EditorGUILayout.PropertyField(chosenFormat);
+
+            EditorGUILayout.BeginHorizontal();
+            var chosenFormat1 = settingsTarget.chosenFormat == 0;
+
+            chosenFormat1 = EditorGUILayout.ToggleLeft("Each pokemon is in a separate folder", chosenFormat1);
+            settingsTarget.chosenFormat = chosenFormat1 ? 0 : settingsTarget.chosenFormat;
+
+            var chosenFormat2 = settingsTarget.chosenFormat == 1;
+
+            chosenFormat2 = EditorGUILayout.ToggleLeft("Each folder has a type of binary ('Mdls','Tex','Etc')", chosenFormat2);
+            settingsTarget.chosenFormat = chosenFormat2 ? 1 : settingsTarget.chosenFormat;
+
+            EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.PropertyField(modelExport);
             EditorGUILayout.PropertyField(scaleFactor);
             EditorGUILayout.PropertyField(spawnModelsIntoScene);
