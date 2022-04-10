@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -90,19 +90,6 @@ namespace P3DS2U.Editor
             Tex2Rot,
         }
 
-        public struct AnimationCurveIndex
-        {
-            public AnimationCurveIndex(MatAnimationModifier modifier, string elementName)
-            {
-                Modifier = modifier;
-                ElementName = elementName;
-            }
-
-            public MatAnimationModifier Modifier { get; }
-
-            public string ElementName { get; }
-        }
-
         public static string MatModifierToShaderProp (MatAnimationModifier matAnimationModifier)
         {
             switch (matAnimationModifier) {
@@ -123,20 +110,18 @@ namespace P3DS2U.Editor
             }
         }
         
-        public static AnimationCurve GetOrAddCurve(Dictionary<AnimationCurveIndex, AnimationCurve> curvesDict, MatAnimationModifier modifier, string elementName)
+        public static AnimationCurve GetOrAddCurve(Dictionary<MatAnimationModifier, AnimationCurve> curvesDict, MatAnimationModifier modifier)
         {
-            AnimationCurveIndex key = new AnimationCurveIndex(modifier, elementName);
-
             if (modifier == MatAnimationModifier.Skipped) {
                 Debug.LogError ("Type of anim not supported!");
                 return null;
             }
             
-            if (curvesDict.ContainsKey (key)) {
-                return curvesDict[key];
+            if (curvesDict.ContainsKey (modifier)) {
+                return curvesDict[modifier];
             }
             var newCurve = new AnimationCurve();
-            curvesDict.Add (key, newCurve);
+            curvesDict.Add (modifier, newCurve);
             return newCurve;
         }
 

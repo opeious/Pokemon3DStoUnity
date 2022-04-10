@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -412,7 +412,7 @@ namespace P3DS2U.Editor
                     fileCreated = true;
                 }
                 
-                var newCurves = new Dictionary<AnimationUtils.AnimationCurveIndex, AnimationCurve> ();
+                var newCurves = new Dictionary<AnimationUtils.MatAnimationModifier, AnimationCurve> ();
                 foreach (var animationElement in currentMatAnim.Elements) {
                     switch (animationElement.PrimitiveType) {
                         case H3DPrimitiveType.Vector2D:
@@ -428,18 +428,15 @@ namespace P3DS2U.Editor
                             switch (targetType) {
                                 case H3DTargetType.MaterialTexCoord0Trans:
                                     curveY = AnimationUtils.GetOrAddCurve (newCurves,
-                                        AnimationUtils.MatAnimationModifier.Tex0TranslateY,
-                                        animationElement.Name);
+                                        AnimationUtils.MatAnimationModifier.Tex0TranslateY);
                                     break;
                                 case H3DTargetType.MaterialTexCoord1Trans:
                                     curveY = AnimationUtils.GetOrAddCurve (newCurves,
-                                        AnimationUtils.MatAnimationModifier.Tex1TranslateY,
-                                        animationElement.Name);
+                                        AnimationUtils.MatAnimationModifier.Tex1TranslateY);
                                     break;
                                 case H3DTargetType.MaterialTexCoord2Trans:
                                     curveY = AnimationUtils.GetOrAddCurve (newCurves,
-                                        AnimationUtils.MatAnimationModifier.Tex2TranslateY,
-                                        animationElement.Name);
+                                        AnimationUtils.MatAnimationModifier.Tex2TranslateY);
                                     break;
                             }
 
@@ -447,18 +444,15 @@ namespace P3DS2U.Editor
                             switch (targetType) {
                                 case H3DTargetType.MaterialTexCoord0Trans:
                                     curveX = AnimationUtils.GetOrAddCurve (newCurves,
-                                        AnimationUtils.MatAnimationModifier.Tex0TranslateX,
-                                        animationElement.Name);
+                                        AnimationUtils.MatAnimationModifier.Tex0TranslateX);
                                     break;
                                 case H3DTargetType.MaterialTexCoord1Trans:
                                     curveX = AnimationUtils.GetOrAddCurve (newCurves,
-                                        AnimationUtils.MatAnimationModifier.Tex1TranslateX,
-                                        animationElement.Name);
+                                        AnimationUtils.MatAnimationModifier.Tex1TranslateX);
                                     break;
                                 case H3DTargetType.MaterialTexCoord2Trans:
                                     curveX = AnimationUtils.GetOrAddCurve (newCurves,
-                                        AnimationUtils.MatAnimationModifier.Tex2TranslateX,
-                                        animationElement.Name);
+                                        AnimationUtils.MatAnimationModifier.Tex2TranslateX);
                                     break;
                             }
 
@@ -534,7 +528,7 @@ namespace P3DS2U.Editor
                                     if (skm.sharedMaterial.name.Replace (" (Instance)", "") == animationElement.Name) {
                                         var cbp = AnimationUtility.CalculateTransformPath (skm.transform,
                                             modelTransform);
-                                        var shaderPropName = AnimationUtils.MatModifierToShaderProp (kvp.Key.Modifier);
+                                        var shaderPropName = AnimationUtils.MatModifierToShaderProp (kvp.Key);
                                         animationClip.SetCurve (cbp, typeof(SkinnedMeshRenderer),
                                             shaderPropName, kvp.Value);
                                     }
