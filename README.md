@@ -1,5 +1,8 @@
 ![chx](https://user-images.githubusercontent.com/3764951/110683736-5b67b200-8202-11eb-8801-1ba969f6714c.gif)
 
+Compatibility:
+-
+- https://docs.google.com/spreadsheets/d/1-3NI6vUMltge9d57bbdNkJ9jBEYdKAf59i2BfbgTiGs/edit#gid=1937181896
 
 Installation:
 -
