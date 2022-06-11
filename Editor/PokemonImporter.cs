@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +13,8 @@ using P3DS2U.Editor.SPICA.H3D.Model.Mesh;
 using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
+
+//using UnityEditor.CustomUnityFbxExporter;
 
 /*
  *TODO: Separate the model and the container prefabs, to have the model drag-droppable in the animation previews.
@@ -37,6 +39,8 @@ namespace P3DS2U.Editor
         private static H3D h3DScene = null;
         private static int CurrentAnimationIndex = 0;
         private static string CurrentAnimationExportFolder = "";
+
+        public static P3ds2USettingsScriptableObject CurrentImportSettings { get; private set; }
         public static List<AnimationImportOptions> AnimationImportOptions = new List<AnimationImportOptions>();
 
         [MenuItem ("3DStoUnity/Find Settings Object")]
@@ -54,6 +58,8 @@ namespace P3DS2U.Editor
         
         public static void StartImportingBinaries (P3ds2USettingsScriptableObject importSettings, Dictionary<string, List<string>> scenesDict)
         {
+            CurrentImportSettings = importSettings;
+
             try {
                 string ExportPath = importSettings.ExportPath;
                 AnimationImportOptions.Add(importSettings.ImporterSettings.FightAnimationsToImport);
@@ -144,29 +150,34 @@ namespace P3DS2U.Editor
                     }
 
                     var modelGo = GameObject.Find ("GeneratedUnityObject");
-                    if (modelGo != null) {
+
+                    if (modelGo) {
                         var modelName = kvp.Key.Replace (".bin", "");
+                        
                         if (importSettings.ImporterSettings.SkeletalAnimations) {
                             if (importSettings.customAnimatorSettings.baseController == null)
                             { GenerateAnimationController(modelGo, combinedExportFolder, modelName); }
                             else
                             { GenerateAnimationOverrideController(modelGo, combinedExportFolder, modelName, importSettings.customAnimatorSettings); }
                         }
-                        
-                        var go = new GameObject ("GeneratedUnityObject");
-                        modelGo.transform.SetParent (go.transform);
-                        modelGo.name = "Model";
-                        
-                        go.name = modelName + " (Container)";
+
+                        modelGo.transform.parent = null;
+                        modelGo.name = modelName;
+                        modelGo.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+
                         var prefabPath =
                             AssetDatabase.GenerateUniqueAssetPath (ExportPath + kvp.Key.Replace (".bin", "") + "/" + kvp.Key.Replace (".bin", "") + ".prefab");
-                        PrefabUtility.SaveAsPrefabAssetAndConnect (go, prefabPath, InteractionMode.UserAction);
+                        PrefabUtility.SaveAsPrefabAssetAndConnect (modelGo, prefabPath, InteractionMode.UserAction);
 
-                        go.transform.localPosition = new Vector3 {
-                            x = Random.Range (-100f, 100f),
-                            y = 0,
-                            z = Random.Range (-100f, 100f)
-                        };   
+                        // Export model as FBX?
+                        //ModelExporter.ExportObject(Application.dataPath + "/Model.fbx", modelGo);
+
+                        if (importSettings.spawnModelsIntoScene)
+                            modelGo.transform.position = importSettings.spawnAtRandomPosition
+                                                         ? new Vector3(Random.Range(-100f, 100f), 0f, Random.Range(-100f, 100f))
+                                                         : Vector3.zero;
+                        else
+                            DestroyImmediate(modelGo);
                     }
                 }
             }
@@ -175,6 +186,7 @@ namespace P3DS2U.Editor
                                 e.StackTrace);
             }
 
+            CurrentImportSettings = null;
             EditorUtility.ClearProgressBar();
         }
 
@@ -1002,7 +1014,7 @@ namespace P3DS2U.Editor
             if (skeletonRoot == null) {
                 //Skeleton not present in model
             } else {
-                SpawnBones (skeletonRoot, sceneGo, emptyGo);
+                SpawnBones (skeletonRoot, sceneGo, emptyGo, importSettings);
             }
             
             var currentMeshExportFolder = exportPath + "/Meshes/";
@@ -1014,6 +1026,17 @@ namespace P3DS2U.Editor
                 if (h3DMesh.Type == H3DMeshType.Silhouette) continue;
 
                 var picaVertices = MeshTransform.GetWorldSpaceVertices (h3DModel.Skeleton, h3DMesh);
+
+                for (var i = 0; i < picaVertices.Length; i++) {
+                    var picaVertice = picaVertices[i];
+
+                    picaVertice.Position.X *= importSettings.scaleFactor;
+                    picaVertice.Position.Y *= importSettings.scaleFactor;
+                    picaVertice.Position.Z *= importSettings.scaleFactor;
+
+                    picaVertices[i] = picaVertice;
+                }
+
                 foreach (var subMesh in h3DMesh.SubMeshes) {
                     var subMeshName = h3DModel.MeshNodesTree.Find (h3DMesh.NodeIndex) + "_" +
                                       h3DModel.Meshes.IndexOf (h3DMesh) + "_" + h3DMesh.SubMeshes.IndexOf (subMesh);
@@ -1037,7 +1060,7 @@ namespace P3DS2U.Editor
                         }
                     }
 
-                    var meshFilter = modelGo.AddComponent<MeshFilter> ();
+                    //var meshFilter = modelGo.AddComponent<MeshFilter> ();
                     var mesh = new Mesh ();
 
                     var unityMeshPositions = new List<Vector3> ();
@@ -1135,7 +1158,7 @@ namespace P3DS2U.Editor
                     mesh.bindposes = bonesTransform
                         .Select (t => t.worldToLocalMatrix * bonesTransform[0].localToWorldMatrix).ToArray ();
 
-                    meshFilter.sharedMesh = mesh;
+                    //meshFilter.sharedMesh = mesh;
                     SaveMeshAtPath (mesh, currentMeshExportFolder + subMeshName + ".asset");
                     meshDict.Add (subMeshName, meshRenderer);
                 }
@@ -1145,19 +1168,20 @@ namespace P3DS2U.Editor
             return meshDict;
         }
 
-
-        private static void SpawnBones (SkeletonUtils.SkeletonNode root, GameObject parentGo, GameObject nodeGo)
+        private static void SpawnBones (SkeletonUtils.SkeletonNode root, GameObject parentGo, GameObject nodeGo, P3ds2USettingsScriptableObject importSettings)
         {
             var rootGo = Instantiate (nodeGo, parentGo.transform);
             rootGo.transform.localScale = root.Scale;
 
             var positionAxes = new Vector3 (-1, 1, 1);
             var positionVector = root.Translation;
+
             rootGo.transform.localPosition = new Vector3 {
                 x = positionAxes.x * positionVector.x,
                 y = positionAxes.y * positionVector.y,
                 z = positionAxes.z * positionVector.z
-            };
+            } * importSettings.scaleFactor;
+
             foreach (var singleRotation in root.Rotation) {
                 var rotationVector = VectorExtensions.GetAxisFromRotation (singleRotation);
                 rootGo.transform.Rotate (rotationVector, VectorExtensions.GetScalarFromRotation (singleRotation));
@@ -1166,7 +1190,7 @@ namespace P3DS2U.Editor
             rootGo.name = root.Name;
             if (root.Nodes == null)
                 return;
-            foreach (var singleNode in root.Nodes) SpawnBones (singleNode, rootGo, nodeGo);
+            foreach (var singleNode in root.Nodes) SpawnBones (singleNode, rootGo, nodeGo, importSettings);
         }
 
         private static void SaveMeshAtPath (Mesh mesh, string path)
